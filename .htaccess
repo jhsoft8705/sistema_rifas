@@ -1,0 +1,25 @@
+# .htaccess principal (raíz del proyecto)
+RewriteEngine On
+
+# Bloquear acceso directo a la carpeta web/ y sus archivos
+RewriteCond %{THE_REQUEST} \s/+CONTROL_ASISTENCIA_CAFED/web/ [NC]
+RewriteRule ^ - [F,L]
+ # Bloquear acceso directo al router.php
+RewriteCond %{THE_REQUEST} \s/+CONTROL_ASISTENCIA_CAFED/web/router\.php [NC]
+RewriteRule ^ - [F,L]
+
+# Redirigir todo a web/router.php excepto archivos existentes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Excluir la propia carpeta web de la redirección
+RewriteCond %{REQUEST_URI} !^/CONTROL_ASISTENCIA_CAFED/web/
+RewriteRule ^(.*)$ web/router.php?url=$1 [QSA,L]
+
+# Opcional: Protección adicional para archivos sensibles
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Prevenir navegación de directorios
+Options -Indexes

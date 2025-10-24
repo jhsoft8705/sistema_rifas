@@ -1,0 +1,4 @@
+docs/template/
+node_modules/
+vendor/node_modules/
+public/

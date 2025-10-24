@@ -1,0 +1,24 @@
+/*
+Template Name: Velzon - Admin & Dashboard Template
+Author: Themesbrand
+Website: https://themesbrand.com/
+Contact: support@themesbrand.com
+File: Custom Css File
+*/
+
+/* ========================================
+   Estilos personalizados para DataTables
+   ======================================== */
+
+/* Dropdown de acciones en tabla - Cursor pointer */
+.dropdown-menu .dropdown-item {
+    cursor: pointer !important;
+    user-select: none;
+}
+
+
+
+/* Icono dentro del dropdown */
+.dropdown-menu .dropdown-item i {
+    font-size: 1rem;
+}
