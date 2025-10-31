@@ -14,11 +14,12 @@ class Cargo extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "EXEC list_cargo @sede_id = ?";
+            $sql = "CALL list_cargo(?)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $sede_id, PDO::PARAM_INT);
             $query->execute();
             $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
             
             return [
                 'ok' => true,
@@ -46,12 +47,13 @@ class Cargo extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "EXEC list_cargos_by_id @id = ?, @sede_id = ?";
+            $sql = "CALL list_cargos_by_id(?, ?)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $id, PDO::PARAM_INT);
             $query->bindValue(2, $sede_id, PDO::PARAM_INT);
             $query->execute();
             $data = $query->fetch(PDO::FETCH_ASSOC);
+            $query->closeCursor();
 
             return [
                 'ok' => !empty($data),
@@ -81,27 +83,20 @@ class Cargo extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "
-                DECLARE @mensaje NVARCHAR(255);
-                EXEC register_cargo 
-                    @sede_id = ?, 
-                    @nombre_cargo = ?, 
-                    @descripcion = ?, 
-                    @salario_base = ?, 
-                    @creado_por = ?, 
-                    @mensaje = @mensaje OUTPUT;
-                SELECT @mensaje AS mensaje;
-            ";
-            
+            $sql = "CALL register_cargo(?, ?, ?, ?, ?, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $sede_id, PDO::PARAM_INT);
             $query->bindValue(2, $nombre_cargo, PDO::PARAM_STR);
-            $query->bindValue(3, $descripcion, PDO::PARAM_STR);
-            $query->bindValue(4, $salario_base, PDO::PARAM_STR);
+            $query->bindValue(3, $descripcion, $descripcion !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+            $query->bindValue(4, $salario_base, $salario_base !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
             $query->bindValue(5, $creado_por, PDO::PARAM_STR);
             $query->execute();
+            $query->closeCursor();
 
-            $result = $query->fetch(PDO::FETCH_ASSOC);
+            $mensajeStmt = $conectar->query("SELECT @mensaje AS mensaje");
+            $result = $mensajeStmt->fetch(PDO::FETCH_ASSOC);
+            $mensajeStmt->closeCursor();
+
             $mensaje = $result['mensaje'] ?? 'Error desconocido';
 
             // Determinar si fue exitoso
@@ -136,31 +131,22 @@ class Cargo extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "
-                DECLARE @mensaje NVARCHAR(255);
-                EXEC update_cargo 
-                    @id = ?, 
-                    @sede_id = ?, 
-                    @nombre_cargo = ?, 
-                    @descripcion = ?, 
-                    @salario_base = ?, 
-                    @estado = ?, 
-                    @modificado_por = ?, 
-                    @mensaje = @mensaje OUTPUT;
-                SELECT @mensaje AS mensaje;
-            ";
-            
+            $sql = "CALL update_cargo(?, ?, ?, ?, ?, ?, ?, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $id, PDO::PARAM_INT);
             $query->bindValue(2, $sede_id, PDO::PARAM_INT);
             $query->bindValue(3, $nombre_cargo, PDO::PARAM_STR);
-            $query->bindValue(4, $descripcion, PDO::PARAM_STR);
-            $query->bindValue(5, $salario_base, PDO::PARAM_STR);
+            $query->bindValue(4, $descripcion, $descripcion !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+            $query->bindValue(5, $salario_base, $salario_base !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
             $query->bindValue(6, $estado, PDO::PARAM_INT);
             $query->bindValue(7, $modificado_por, PDO::PARAM_STR);
             $query->execute();
+            $query->closeCursor();
 
-            $result = $query->fetch(PDO::FETCH_ASSOC);
+            $mensajeStmt = $conectar->query("SELECT @mensaje AS mensaje");
+            $result = $mensajeStmt->fetch(PDO::FETCH_ASSOC);
+            $mensajeStmt->closeCursor();
+
             $mensaje = $result['mensaje'] ?? 'Error desconocido';
 
             // Determinar si fue exitoso
@@ -191,23 +177,18 @@ class Cargo extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "
-                DECLARE @mensaje NVARCHAR(255);
-                EXEC delete_cargo 
-                    @id = ?, 
-                    @sede_id = ?, 
-                    @modificado_por = ?, 
-                    @mensaje = @mensaje OUTPUT;
-                SELECT @mensaje AS mensaje;
-            ";
-            
+            $sql = "CALL delete_cargo(?, ?, ?, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $id, PDO::PARAM_INT);
             $query->bindValue(2, $sede_id, PDO::PARAM_INT);
             $query->bindValue(3, $modificado_por, PDO::PARAM_STR);
             $query->execute();
+            $query->closeCursor();
 
-            $result = $query->fetch(PDO::FETCH_ASSOC);
+            $mensajeStmt = $conectar->query("SELECT @mensaje AS mensaje");
+            $result = $mensajeStmt->fetch(PDO::FETCH_ASSOC);
+            $mensajeStmt->closeCursor();
+
             $mensaje = $result['mensaje'] ?? 'Error desconocido';
 
             // Determinar si fue exitoso

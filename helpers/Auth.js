@@ -8,7 +8,7 @@
 
 // Configuración de la API (se obtiene del PHP vía window.API_BASE_URL)
 const API_CONFIG = {
-    BASE_URL: window.API_BASE_URL || (window.location.origin + '/CONTROL_ASISTENCIA_CAFED/api'),
+    BASE_URL: window.API_BASE_URL || (window.location.origin + '/sistema_rifas/api'),
     TIMEOUT: 30000
 };
 
@@ -76,7 +76,7 @@ const Auth = {
         sessionStorage.clear();
         
         // Redirigir al login usando la ruta base dinámica
-        window.location.href = window.BASE_URL || '/CONTROL_ASISTENCIA_CAFED/';
+        window.location.href = window.BASE_URL || '/sistema_rifas/';
     },
 
     /**
@@ -106,7 +106,7 @@ const Auth = {
      */
     requireAuth() {
         if (!this.isAuthenticated()) {
-            window.location.href = window.BASE_URL || '/CONTROL_ASISTENCIA_CAFED/';
+            window.location.href = window.BASE_URL || '/sistema_rifas/';
             return false;
         }
         return true;

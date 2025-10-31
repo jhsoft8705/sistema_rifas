@@ -41,22 +41,21 @@ class Auth extends Conectar
             }
             
             // Llamar al stored procedure
-            $sql = "EXEC sp_Login 
-                @username = ?, 
-                @password = ?, 
-                @ip_address = ?, 
-                @user_agent = ?, 
-                @sede_id = ?";
-            
+            $sql = "CALL sp_Login(?, ?, ?, ?, ?)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $username, PDO::PARAM_STR);
             $query->bindValue(2, $passwordToSend, PDO::PARAM_STR);
             $query->bindValue(3, $ip_address, PDO::PARAM_STR);
             $query->bindValue(4, $user_agent, PDO::PARAM_STR);
-            $query->bindValue(5, $sede_id, PDO::PARAM_INT);
+            if ($sede_id === null) {
+                $query->bindValue(5, null, PDO::PARAM_NULL);
+            } else {
+                $query->bindValue(5, $sede_id, PDO::PARAM_INT);
+            }
             $query->execute();
             
             $data = $query->fetch(PDO::FETCH_ASSOC);
+            $query->closeCursor();
             
             if ($data && $data['resultado'] == 1) {
                 return [
@@ -116,7 +115,7 @@ class Auth extends Conectar
                     INNER JOIN usuarios u ON s.usuario_id = u.id
                     WHERE s.token_sesion = ? 
                       AND s.activa = 1
-                      AND s.fecha_expiracion > GETDATE()";
+                      AND s.fecha_expiracion > NOW()";
             
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $token, PDO::PARAM_STR);
@@ -127,7 +126,7 @@ class Auth extends Conectar
             if ($data && $data['usuario_estado'] == 1) {
                 // Actualizar última actividad
                 $sqlUpdate = "UPDATE sesiones 
-                             SET fecha_ultima_actividad = GETDATE() 
+                             SET fecha_ultima_actividad = NOW() 
                              WHERE token_sesion = ?";
                 $queryUpdate = $conectar->prepare($sqlUpdate);
                 $queryUpdate->bindValue(1, $token, PDO::PARAM_STR);
@@ -172,14 +171,19 @@ class Auth extends Conectar
         try {
             $conectar = parent::Conexion();
             
-            $sql = "EXEC sp_Logout @token_sesion = ?, @ip_address = ?";
+            $sql = "CALL sp_Logout(?, ?)";
             
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $token, PDO::PARAM_STR);
-            $query->bindValue(2, $ip_address, PDO::PARAM_STR);
+            if ($ip_address === null) {
+                $query->bindValue(2, null, PDO::PARAM_NULL);
+            } else {
+                $query->bindValue(2, $ip_address, PDO::PARAM_STR);
+            }
             $query->execute();
             
             $data = $query->fetch(PDO::FETCH_ASSOC);
+            $query->closeCursor();
             
             if ($data && $data['resultado'] == 1) {
                 return [
@@ -212,13 +216,15 @@ class Auth extends Conectar
         try {
             $conectar = parent::Conexion();
             
-            $sql = "EXEC sp_VerificarSesion @token_sesion = ?";
+            $sql = "CALL sp_ValidarSesion(?, ?)";
             
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $token, PDO::PARAM_STR);
+            $query->bindValue(2, null, PDO::PARAM_NULL);
             $query->execute();
             
             $data = $query->fetch(PDO::FETCH_ASSOC);
+            $query->closeCursor();
             
             if ($data && $data['resultado'] == 1) {
                 return [
@@ -227,8 +233,8 @@ class Auth extends Conectar
                     'data' => [
                         'usuario_id' => $data['usuario_id'],
                         'sede_id' => $data['sede_id'],
-                        'empleado_id' => $data['empleado_id'],
-                        'nombre_completo' => $data['nombre_completo']
+                        'empleado_id' => null,
+                        'nombre_completo' => $data['nombre_completo'] ?? null
                     ]
                 ];
             } else {
