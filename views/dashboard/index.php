@@ -7,10 +7,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
 <head>
 
     <meta charset="utf-8" />
-    <title>Dashboard | Control de Asistencia CAFED</title>
+    <title>Dashboard | Rifas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="Sistema de Control de Asistencia CAFED" name="Gestión de cargos de empleados" />
-    <meta content="Cafed" name="Team Otic Cafed" />
+    <meta content="Rifas" name="Gestión de rifas" />
+    <meta content="Rifas" name="Team Rifas" />
     <?php require_once __DIR__. '/../components/head.php' ?>
 
 </head>

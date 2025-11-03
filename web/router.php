@@ -20,7 +20,9 @@ $base_path = $_SERVER['DOCUMENT_ROOT'] . '/' . $base_project;
 // Definir rutas disponibles
 $routes = [
     '' => $base_path . '/views/web/index.php',
-    'dashboard' => $base_path . '/views/dashboard/index.php',
+    'admin-login' => $base_path . '/views/login/index.php',
+    'admin-dashboard' => $base_path . '/views/dashboard/index.php',
+    'cargos' => $base_path . '/views/cargos/index.php',
     'cargos' => $base_path . '/views/cargos/index.php',
     'empleados' => $base_path . '/views/empleados/index.php',
     'empleadosregistro' => $base_path . '/views/empleados/register/index.php',

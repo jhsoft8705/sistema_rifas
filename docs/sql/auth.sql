@@ -2,11 +2,10 @@
 -- PROCEDIMIENTOS DE AUTENTICACIÓN - SISTEMA RIFAS (MySQL)
 -- =====================================================
 
-DELIMITER //
-
 -- =====================================================
 -- 1. PROCEDIMIENTO DE LOGIN
 -- =====================================================
+DELIMITER //
 DROP PROCEDURE IF EXISTS sp_Login //
 CREATE PROCEDURE sp_Login (
     IN p_username VARCHAR(50),
