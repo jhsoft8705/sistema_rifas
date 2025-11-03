@@ -244,7 +244,7 @@ $base_url = Enrutamiento::dominio();
         $(document).ready(function () {
             // Si ya está autenticado, redirigir al dashboard
             if (Auth.isAuthenticated()) {
-                window.location.href = window.BASE_URL + '/dashboard';
+                window.location.href = window.BASE_URL + '/admin-dashboard';
             }
 
             // Manejar el submit del formulario
@@ -285,7 +285,7 @@ $base_url = Enrutamiento::dominio();
 
                     if (resultado.ok) {
                         // Login exitoso - Redirigir inmediatamente
-                        window.location.href = window.BASE_URL + '/dashboard';
+                        window.location.href = window.BASE_URL + '/admin-dashboard';
 
                     } else {
                         // Error en login - Mostrar toast de error
