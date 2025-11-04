@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Rifas - Funcionalidades Completas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .label {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+        }
+        
+        .section-title {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-title .icon {
+            font-size: 1.2em;
+        }
+        
+        .subsection {
+            margin-bottom: 30px;
+        }
+        
+        .subsection-title {
+            font-size: 1.5em;
+            color: #764ba2;
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 4px solid #764ba2;
+        }
+        
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .module-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s;
+        }
+        
+        .module-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .module-card h4 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .module-card p {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .features-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+        
+        .features-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #555;
+        }
+        
+        .features-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+        
+        .badge-landing {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-admin {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .badge-both {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .tech-stack {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+        
+        .tech-stack h3 {
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tech-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tech-item strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .flow-diagram {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px dashed #667eea;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .flow-step .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .flow-step .step-content {
+            flex-grow: 1;
+        }
+        
+        .flow-step .step-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .flow-step .step-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .highlight-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .highlight-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        table thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .icon-emoji {
+            font-size: 1.5em;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>🎟️ SISTEMA DE RIFAS PROFESIONAL</h1>
+            <p>Plataforma Completa Multi-Sede para Gestión de Rifas y Sorteos</p>
+        </div>
+        
+        <!-- ESTADÍSTICAS RÁPIDAS -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number">50+</div>
+                <div class="label">Funcionalidades</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">2</div>
+                <div class="label">Interfaces (Landing + Admin)</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">20+</div>
+                <div class="label">Tablas de Base de Datos</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">100%</div>
+                <div class="label">Auditable y Transparente</div>
+            </div>
+        </div>
+        
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content">
+            
+            <!-- DESCRIPCIÓN GENERAL -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="icon">📋</span>
+                    Descripción General del Sistema
+                </h2>
+                <p style="font-size: 1.1em; line-height: 1.8; color: #555; margin-bottom: 20px;">
+                    Sistema profesional de gestión de rifas y sorteos diseñado para operar en múltiples sedes/países. 
+                    Permite la venta de tickets tanto online (desde una landing page pública) como física (mediante volantarios impresos). 
+                    Incluye sistema completo de numeración de boletos, validación de pagos, sorteos transparentes con múltiples intentos, 
+                    gestión de ganadores, y reportería completa. Ideal para empresas que desean realizar rifas profesionales y transparentes.
+                </p>
+                
+                <div class="highlight-box">
+                    <h4>🎯 Características Destacadas</h4>
+                    <ul class="features-list">
+                        <li><strong>Multi-Sede/Multi-País:</strong> Gestiona rifas en diferentes países con monedas locales</li>
+                        <li><strong>Sistema de Numeración Avanzado:</strong> Boletos numerados con formato personalizable</li>
+                        <li><strong>Doble Canal de Venta:</strong> Online (web) y Física (volantarios impresos)</li>
+                        <li><strong>Sorteos Transparentes:</strong> Sistema de múltiples intentos con hash de verificación</li>
+                        <li><strong>Gestión de Roles y Permisos:</strong> Control granular de accesos</li>
+                        <li><strong>Auditoría Completa:</strong> Registro de todas las operaciones del sistema</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ============================================ -->
+            <!-- FUNCIONALIDADES DE LA LANDING PAGE -->
+            <!-- ============================================ -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="icon">🌐</span>
+                    LANDING PAGE - Funcionalidades Públicas (Usuarios Finales)
+                </h2>
+                <p style="font-size: 1.05em; color: #666; margin-bottom: 30px;">
+                    Interface pública donde los usuarios pueden ver rifas activas, comprar tickets, consultar sus participaciones y ver ganadores.
+                </p>
+                
+                <!-- 1. HOME / INICIO -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🏠 1. Página de Inicio (Home)</h3>
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>🎯 Rifas Destacadas</h4>
+                            <p>Visualización de rifas activas con información destacada</p>
+                            <ul class="features-list">
+                                <li>Cards de rifas con imagen del premio</li>
+                                <li>Precio por ticket</li>
+                                <li>Contador regresivo hasta el sorteo</li>
+                                <li>Cantidad de tickets disponibles</li>
+                                <li>Barra de progreso de venta</li>
+                                <li>Badge de estado (Activa, Próxima, Cerrada)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🏆 Premios Destacados</h4>
+                            <p>Galería de premios principales que se rifan</p>
+                            <ul class="features-list">
+                                <li>Categorías: Electrónica, Vehículos, Viajes, Dinero</li>
+                                <li>Imágenes de alta calidad</li>
+                                <li>Valor estimado del premio</li>
+                                <li>Especificaciones técnicas</li>
+                                <li>Galerías de imágenes adicionales</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Estadísticas Generales</h4>
+                            <p>Números que generan confianza</p>
+                            <ul class="features-list">
+                                <li>Total de rifas realizadas</li>
+                                <li>Participantes satisfechos</li>
+                                <li>Premios entregados</li>
+                                <li>Valor total en premios</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🎥 Transmisiones EN VIVO</h4>
+                            <p>Información sobre sorteos públicos</p>
+                            <ul class="features-list">
+                                <li>Enlaces a TikTok Live</li>
+                                <li>Enlaces a Facebook Live</li>
+                                <li>Enlaces a Instagram Live</li>
+                                <li>Próximos sorteos programados</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2. VER DETALLES DE RIFA -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🔍 2. Detalles de Rifa</h3>
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>📝 Información Completa</h4>
+                            <ul class="features-list">
+                                <li>Nombre y descripción de la rifa</li>
+                                <li>Premio(s) principal(es) y secundarios</li>
+                                <li>Precio por ticket</li>
+                                <li>Cantidad total de tickets</li>
+                                <li>Tickets disponibles vs vendidos</li>
+                                <li>Fecha y hora del sorteo</li>
+                                <li>Contador regresivo en tiempo real</li>
+                                <li>Términos y condiciones</li>
+                                <li>Reglas de participación</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🖼️ Galería de Premios</h4>
+                            <p>Modal con imágenes detalladas</p>
+                            <ul class="features-list">
+                                <li>Imágenes en alta resolución</li>
+                                <li>Vista previa expandible</li>
+                                <li>Descripciones de cada premio</li>
+                                <li>Videos promocionales (opcional)</li>
+                                <li>Posición del premio (1°, 2°, 3°)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. SISTEMA DE COMPRA -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🛒 3. Proceso de Compra de Tickets</h3>
+                    
+                    <div class="highlight-box">
+                        <h4>⭐ Sistema de Numeración de Boletos (NUEVA FUNCIONALIDAD)</h4>
+                        <p>Los usuarios pueden elegir su número de la suerte o dejar que el sistema asigne uno aleatorio.</p>
+                    </div>
+                    
+                    <div class="flow-diagram">
+                        <h4 style="margin-bottom: 15px; color: #667eea;">Flujo de Compra Online</h4>
+                        
+                        <div class="flow-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <div class="step-title">Selección de Número</div>
+                                <div class="step-desc">
+                                    Usuario puede elegir número específico (ej: 0777) o solicitar asignación aleatoria
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <div class="step-title">Reserva Temporal</div>
+                                <div class="step-desc">
+                                    El número se reserva por 10 minutos mientras completa la compra
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <div class="step-title">Datos del Participante</div>
+                                <div class="step-desc">
+                                    Formulario con: nombre, email, teléfono, documento, ciudad y direccion para enviar el premio.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <div class="step-title">Selección de Cantidad</div>
+                                <div class="step-desc">
+                                    Elegir cuántos tickets desea comprar (cálculo automático del total)
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <div class="step-title">Métodos de Pago</div>
+                                <div class="step-desc">
+                                    Ver información de cuentas bancarias, Yape, Plin (con QR), etc.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-step">
+                            <div class="step-number">6</div>
+                            <div class="step-content">
+                                <div class="step-title">Subir Comprobante</div>
+                                <div class="step-desc">
+                                    Cargar foto/PDF del comprobante de pago (opcional en el momento)
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-step">
+                            <div class="step-number">7</div>
+                            <div class="step-content">
+                                <div class="step-title">Confirmación</div>
+                                <div class="step-desc">
+                                    Recibe código único de ticket y correo de confirmación
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>🔢 Selección de Números</h4>
+                            <ul class="features-list">
+                                <li>Grid visual con números disponibles</li>
+                                <li>Búsqueda de número específico</li>
+                                <li>Filtros (pares, impares, múltiplos)</li>
+                                <li>Números destacados (777, 888, etc.)</li>
+                                <li>Botón "Asignar Aleatorio"</li>
+                                <li>Temporizador de reserva visible</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📋 Formulario de Compra</h4>
+                            <ul class="features-list">
+                                <li>Validación en tiempo real</li>
+                                <li>Cálculo automático del total</li>
+                                <li>Botones +/- para cantidad</li>
+                                <li>Preview de número(s) seleccionado(s)</li>
+                                <li>Información del premio destacada</li>
+                                <li>Checkbox de términos y condiciones</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>💳 Métodos de Pago</h4>
+                            <ul class="features-list">
+                                <li>Transferencia bancaria (Interbank, BCP)</li>
+                                <li>Yape (con QR y número)</li>
+                                <li>Plin (con QR y número)</li>
+                                <li>PayPal (opcional)</li>
+                                <li>Instrucciones claras por método</li>
+                                <li>Datos de cuenta visibles</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📄 Gestión de Comprobantes</h4>
+                            <ul class="features-list">
+                                <li>Upload de imagen/PDF</li>
+                                <li>Preview antes de enviar</li>
+                                <li>Validación de formato y tamaño</li>
+                                <li>Opción de enviar después</li>
+                                <li>Envío por correo alternativo</li>
+                                <li>Envío por WhatsApp</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 4. CONSULTAR MIS TICKETS -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🎫 4. Consultar Mis Tickets</h3>
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>🔎 Sistema de Búsqueda</h4>
+                            <p>Los participantes pueden consultar sus compras</p>
+                            <ul class="features-list">
+                                <li>Búsqueda por número de documento (DNI/Pasaporte)</li>
+                                <li>Búsqueda por código de ticket</li>
+                                <li>Búsqueda por email</li>
+                                <li>Validación de datos para seguridad</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Información de Tickets</h4>
+                            <p>Detalle completo de cada compra</p>
+                            <ul class="features-list">
+                                <li>Código único del ticket</li>
+                                <li>Número(s) de boleto asignado(s)</li>
+                                <li>Nombre de la rifa</li>
+                                <li>Premio por el que participa</li>
+                                <li>Estado del ticket (Pendiente, Pagado, Aprobado, etc.)</li>
+                                <li>Fecha de compra</li>
+                                <li>Fecha del sorteo</li>
+                                <li>Estado del pago</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>✅ Estados del Ticket</h4>
+                            <ul class="features-list">
+                                <li><strong style="color: #ffa500;">PENDIENTE:</strong> Esperando pago</li>
+                                <li><strong style="color: #2196f3;">PAGADO:</strong> Pago registrado</li>
+                                <li><strong style="color: #4caf50;">APROBADO:</strong> Participando en sorteo</li>
+                                <li><strong style="color: #f44336;">RECHAZADO:</strong> Comprobante inválido</li>
+                                <li><strong style="color: #9c27b0;">PARTICIPANDO:</strong> En sorteo activo</li>
+                                <li><strong style="color: #ffd700;">GANADOR:</strong> ¡Felicidades! Has ganado</li>
+                                <li><strong style="color: #9e9e9e;">EXPIRADO:</strong> Ticket vencido</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 5. GALERÍA DE GANADORES -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🏆 5. Galería de Ganadores</h3>
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>👥 Últimos Ganadores</h4>
+                            <ul class="features-list">
+                                <li>Fotos de ganadores (con su permiso)</li>
+                                <li>Nombre del ganador</li>
+                                <li>Premio ganado</li>
+                                <li>Fecha del sorteo</li>
+                                <li>Ciudad/País del ganador</li>
+                                <li>Testimonio (opcional)</li>
+                                <li>Foto recibiendo el premio</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🎬 Videos de Entregas</h4>
+                            <ul class="features-list">
+                                <li>Videos de sorteos EN VIVO</li>
+                                <li>Videos de entrega de premios</li>
+                                <li>Links a redes sociales</li>
+                                <li>Testimonios en video</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 6. PREGUNTAS FRECUENTES -->
+                <div class="subsection">
+                    <h3 class="subsection-title">❓ 6. Preguntas Frecuentes (FAQs)</h3>
+                    <div class="module-card">
+                        <h4>💬 Sección de Ayuda</h4>
+                        <ul class="features-list">
+                            <li>¿Cómo puedo participar?</li>
+                            <li>¿Cuántos tickets puedo comprar?</li>
+                            <li>¿Cómo se realiza el sorteo?</li>
+                            <li>¿Los premios son reales?</li>
+                            <li>¿Cómo me entregan el premio si gano?</li>
+                            <li>¿Puedo verificar la transparencia?</li>
+                            <li>¿Qué métodos de pago aceptan?</li>
+                            <li>¿Cuánto tarda la validación del pago?</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 7. CONTACTO -->
+                <div class="subsection">
+                    <h3 class="subsection-title">📞 7. Contacto</h3>
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>📧 Formulario de Contacto</h4>
+                            <ul class="features-list">
+                                <li>Nombre</li>
+                                <li>Email</li>
+                                <li>Asunto</li>
+                                <li>Mensaje</li>
+                                <li>Envío por email al administrador</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🌐 Redes Sociales</h4>
+                            <ul class="features-list">
+                                <li>TikTok (sorteos EN VIVO)</li>
+                                <li>Facebook Live</li>
+                                <li>Instagram</li>
+                                <li>WhatsApp Business</li>
+                                <li>Email de soporte</li>
+                                <li>Horarios de atención</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 8. TRANSPARENCIA -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🔒 8. Transparencia y Seguridad</h3>
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>✅ Garantías</h4>
+                            <ul class="features-list">
+                                <li>Certificado SSL (HTTPS)</li>
+                                <li>Política de privacidad visible</li>
+                                <li>Términos y condiciones claros</li>
+                                <li>Bases del sorteo públicas</li>
+                                <li>Información legal de la empresa</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🎥 Transmisión en Vivo</h4>
+                            <ul class="features-list">
+                                <li>Todos los sorteos se transmiten en vivo</li>
+                                <li>Links a plataformas (TikTok, Facebook, Instagram)</li>
+                                <li>Grabaciones archivadas</li>
+                                <li>Hash de verificación del sorteo</li>
+                                <li>Auditoría pública</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ============================================ -->
+            <!-- FUNCIONALIDADES DEL PANEL ADMINISTRATIVO -->
+            <!-- ============================================ -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="icon">⚙️</span>
+                    PANEL ADMINISTRATIVO - Funcionalidades de Gestión
+                </h2>
+                <p style="font-size: 1.05em; color: #666; margin-bottom: 30px;">
+                    Sistema completo de administración para gestionar rifas, validar pagos, realizar sorteos y generar reportes.
+                </p>
+                
+                <!-- 1. DASHBOARD -->
+                <div class="subsection">
+                    <h3 class="subsection-title">📊 1. Dashboard Principal</h3>
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>📈 Estadísticas Generales</h4>
+                            <ul class="features-list">
+                                <li>Total de rifas activas</li>
+                                <li>Tickets vendidos hoy/mes</li>
+                                <li>Ingresos totales</li>
+                                <li>Tickets pendientes de validación</li>
+                                <li>Próximos sorteos programados</li>
+                                <li>Ganadores sin premio entregado</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Gráficos y Reportes</h4>
+                            <ul class="features-list">
+                                <li>Ventas por día/semana/mes</li>
+                                <li>Rifas más populares</li>
+                                <li>Canales de venta (web vs físico)</li>
+                                <li>Métodos de pago más usados</li>
+                                <li>Conversión de visitantes a compradores</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔔 Notificaciones</h4>
+                            <ul class="features-list">
+                                <li>Nuevas compras</li>
+                                <li>Comprobantes subidos</li>
+                                <li>Sorteos próximos a realizarse</li>
+                                <li>Premios pendientes de entrega</li>
+                                <li>Alertas de sistema</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>⚡ Acciones Rápidas</h4>
+                            <ul class="features-list">
+                                <li>Validar comprobantes pendientes</li>
+                                <li>Crear nueva rifa</li>
+                                <li>Realizar sorteo</li>
+                                <li>Ver tickets del día</li>
+                                <li>Generar reporte</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2. GESTIÓN DE RIFAS -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🎯 2. Gestión de Rifas (CRUD Completo)</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>➕ Crear Rifa</h4>
+                            <ul class="features-list">
+                                <li>Información básica (nombre, código, descripción)</li>
+                                <li>Selección de premio(s)</li>
+                                <li>Configuración de precios</li>
+                                <li>Definir cantidad de tickets</li>
+                                <li>Fechas (inicio venta, fin venta, sorteo)</li>
+                                <li>Configuración de sorteo (intentos, intento ganador)</li>
+                                <li>Términos y condiciones</li>
+                                <li>Reglas de participación</li>
+                                <li>Publicidad (banner, texto promocional)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔢 Sistema de Numeración</h4>
+                            <p><strong>NUEVA FUNCIONALIDAD</strong></p>
+                            <ul class="features-list">
+                                <li>Activar/desactivar numeración</li>
+                                <li>Definir rango (ej: 1-1000)</li>
+                                <li>Cantidad de dígitos (3, 4, 5)</li>
+                                <li>Prefijo personalizado (ej: RIFA-)</li>
+                                <li>Sufijo personalizado (ej: -2025)</li>
+                                <li>Permitir selección manual</li>
+                                <li>Asignación automática</li>
+                                <li>Mostrar números disponibles</li>
+                                <li>Generar números al crear rifa</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📋 Listar Rifas</h4>
+                            <ul class="features-list">
+                                <li>Vista de tabla con todas las rifas</li>
+                                <li>Filtros por estado (Activa, Cerrada, etc.)</li>
+                                <li>Búsqueda por nombre/código</li>
+                                <li>Ordenar por fecha, ventas, etc.</li>
+                                <li>Paginación</li>
+                                <li>Acciones rápidas (editar, eliminar, clonar)</li>
+                                <li>Badge de estado visual</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>✏️ Editar Rifa</h4>
+                            <ul class="features-list">
+                                <li>Modificar información general</li>
+                                <li>Cambiar fechas</li>
+                                <li>Ajustar precios</li>
+                                <li>Modificar premios</li>
+                                <li>Editar términos y condiciones</li>
+                                <li>Cambiar estado de la rifa</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🗑️ Eliminar/Archivar Rifa</h4>
+                            <ul class="features-list">
+                                <li>Cancelar rifa (con motivo)</li>
+                                <li>Archivar rifas finalizadas</li>
+                                <li>Soft delete (no elimina datos)</li>
+                                <li>Historial de cambios</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Estadísticas por Rifa</h4>
+                            <ul class="features-list">
+                                <li>Tickets vendidos / disponibles</li>
+                                <li>Porcentaje de venta</li>
+                                <li>Ingresos generados</li>
+                                <li>Canal de venta (web vs físico)</li>
+                                <li>Números más vendidos</li>
+                                <li>Participantes únicos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. GESTIÓN DE PREMIOS -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🏆 3. Gestión de Premios</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>➕ Crear Premio</h4>
+                            <ul class="features-list">
+                                <li>Código único del premio</li>
+                                <li>Nombre y descripción</li>
+                                <li>Categoría (Electrónica, Vehículos, etc.)</li>
+                                <li>Valor estimado</li>
+                                <li>Marca y modelo</li>
+                                <li>Color y especificaciones</li>
+                                <li>Imagen principal</li>
+                                <li>Galería de imágenes (múltiples)</li>
+                                <li>Video promocional (URL)</li>
+                                <li>Términos del premio</li>
+                                <li>Restricciones</li>
+                                <li>Marcar como destacado</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📋 Listar Premios</h4>
+                            <ul class="features-list">
+                                <li>Vista de catálogo con imágenes</li>
+                                <li>Filtros por categoría</li>
+                                <li>Búsqueda por nombre/código</li>
+                                <li>Estado (Disponible, En uso, Entregado)</li>
+                                <li>Ordenar por valor, fecha, etc.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🏷️ Categorías de Premios</h4>
+                            <ul class="features-list">
+                                <li>Crear categorías personalizadas</li>
+                                <li>Asignar iconos</li>
+                                <li>Definir colores</li>
+                                <li>Ordenar por prioridad</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📸 Gestión de Imágenes</h4>
+                            <ul class="features-list">
+                                <li>Upload múltiple de imágenes</li>
+                                <li>Redimensionamiento automático</li>
+                                <li>Optimización de imágenes</li>
+                                <li>Establecer imagen principal</li>
+                                <li>Galería ordenable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 4. GESTIÓN DE TICKETS Y VALIDACIÓN -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🎫 4. Gestión de Tickets y Validación de Pagos</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>📋 Listar Todos los Tickets</h4>
+                            <ul class="features-list">
+                                <li>Vista completa de todas las compras</li>
+                                <li>Filtros por estado, fecha, rifa</li>
+                                <li>Búsqueda por código, documento, email</li>
+                                <li>Información del participante</li>
+                                <li>Número de boleto asignado</li>
+                                <li>Monto pagado</li>
+                                <li>Canal de venta (web/físico)</li>
+                                <li>Estado del comprobante</li>
+                                <li>Exportar a Excel/PDF</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>✅ Validar Comprobantes</h4>
+                            <p><strong>FUNCIÓN CRÍTICA</strong></p>
+                            <ul class="features-list">
+                                <li>Cola de comprobantes pendientes</li>
+                                <li>Visualizar imagen del comprobante</li>
+                                <li>Zoom y rotación de imagen</li>
+                                <li>Verificar datos (monto, fecha, banco)</li>
+                                <li>Aprobar comprobante (ticket válido)</li>
+                                <li>Rechazar comprobante (con motivo)</li>
+                                <li>Solicitar aclaración al usuario</li>
+                                <li>Notificación automática al usuario</li>
+                                <li>Registro en auditoría</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Gestión por Estado</h4>
+                            <ul class="features-list">
+                                <li><strong>PENDIENTE:</strong> Esperando pago</li>
+                                <li><strong>PAGO_SUBIDO:</strong> Comprobante recibido</li>
+                                <li><strong>VALIDANDO:</strong> En revisión</li>
+                                <li><strong>APROBADO:</strong> Listo para sorteo</li>
+                                <li><strong>RECHAZADO:</strong> Comprobante inválido</li>
+                                <li><strong>PARTICIPANDO:</strong> En sorteo</li>
+                                <li><strong>GANADOR:</strong> Premio ganado</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📧 Notificaciones Automáticas</h4>
+                            <ul class="features-list">
+                                <li>Email al comprar ticket</li>
+                                <li>Email al aprobar pago</li>
+                                <li>Email al rechazar pago</li>
+                                <li>SMS/WhatsApp (opcional)</li>
+                                <li>Notificación de sorteo</li>
+                                <li>Notificación de resultado</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 5. SISTEMA DE NUMERACIÓN AVANZADO -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🔢 5. Sistema de Numeración de Boletos</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>🎲 Gestión de Números</h4>
+                            <ul class="features-list">
+                                <li>Ver todos los números de una rifa</li>
+                                <li>Estado de cada número (Disponible, Reservado, Vendido)</li>
+                                <li>Filtrar por estado</li>
+                                <li>Buscar número específico</li>
+                                <li>Ver quién compró cada número</li>
+                                <li>Liberar números reservados manualmente</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔒 Bloquear Números</h4>
+                            <ul class="features-list">
+                                <li>Bloquear números específicos</li>
+                                <li>Bloquear rangos (ej: 100-200)</li>
+                                <li>Especificar motivo del bloqueo</li>
+                                <li>Desbloquear números</li>
+                                <li>Números especiales/promocionales</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Estadísticas de Numeración</h4>
+                            <ul class="features-list">
+                                <li>Total de números generados</li>
+                                <li>Números disponibles</li>
+                                <li>Números reservados</li>
+                                <li>Números vendidos</li>
+                                <li>Números bloqueados</li>
+                                <li>Porcentaje de venta</li>
+                                <li>Números más vendidos</li>
+                                <li>Números menos vendidos</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>⏱️ Gestión de Reservas</h4>
+                            <ul class="features-list">
+                                <li>Ver reservas activas</li>
+                                <li>Tiempo restante por reserva</li>
+                                <li>Liberar reservas expiradas (automático)</li>
+                                <li>Extender tiempo de reserva</li>
+                                <li>Cancelar reserva manualmente</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 6. GESTIÓN DE VOLANTARIOS -->
+                <div class="subsection">
+                    <h3 class="subsection-title">📄 6. Gestión de Volantarios (Venta Física)</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>➕ Crear Volantario</h4>
+                            <ul class="features-list">
+                                <li>Seleccionar rifa</li>
+                                <li>Código del volantario</li>
+                                <li>Definir rango de números (ej: 1-100)</li>
+                                <li>Cantidad de números por página</li>
+                                <li>Formato de impresión (A4, Letter)</li>
+                                <li>Orientación (vertical/horizontal)</li>
+                                <li>Incluir logo, QR, términos</li>
+                                <li>Asignar a vendedor</li>
+                                <li>Ubicación de venta</li>
+                                <li>Generar PDF automático</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📋 Listar Volantarios</h4>
+                            <ul class="features-list">
+                                <li>Todos los volantarios por rifa</li>
+                                <li>Estado (Borrador, Generado, Impreso, En venta, Agotado)</li>
+                                <li>Vendedor asignado</li>
+                                <li>Rango de números</li>
+                                <li>Cantidad vendida / total</li>
+                                <li>Porcentaje de venta</li>
+                                <li>Descargar PDF</li>
+                                <li>Editar asignación</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>👥 Gestión de Vendedores</h4>
+                            <ul class="features-list">
+                                <li>Asignar volantarios a vendedores</li>
+                                <li>Ver ventas por vendedor</li>
+                                <li>Liquidación de volantarios</li>
+                                <li>Monto esperado vs recibido</li>
+                                <li>Comisiones (si aplica)</li>
+                                <li>Historial de entregas</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🖨️ Generación de PDF</h4>
+                            <ul class="features-list">
+                                <li>Diseño profesional de boletos</li>
+                                <li>Logo de la empresa</li>
+                                <li>QR único por boleto (validación)</li>
+                                <li>Información de la rifa</li>
+                                <li>Número del boleto destacado</li>
+                                <li>Premio principal</li>
+                                <li>Fecha de sorteo</li>
+                                <li>Términos y condiciones</li>
+                                <li>Línea de corte punteada</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>💰 Liquidación de Vendedores</h4>
+                            <ul class="features-list">
+                                <li>Registrar liquidación</li>
+                                <li>Monto total recaudado</li>
+                                <li>Cantidad de boletos vendidos</li>
+                                <li>Boletos no vendidos (devolución)</li>
+                                <li>Fecha de liquidación</li>
+                                <li>Observaciones</li>
+                                <li>Generar recibo de liquidación</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📱 App Móvil para Vendedores (Futuro)</h4>
+                            <ul class="features-list">
+                                <li>Escanear QR del boleto</li>
+                                <li>Registrar venta inmediata</li>
+                                <li>Ver volantarios asignados</li>
+                                <li>Dashboard de ventas del día</li>
+                                <li>Notificaciones de asignaciones</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 7. SISTEMA DE SORTEOS -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🎲 7. Sistema de Sorteos (Transparente)</h3>
+                    
+                    <div class="highlight-box">
+                        <h4>⚡ Sistema de Múltiples Intentos</h4>
+                        <p>
+                            El sistema permite realizar múltiples sorteos (intentos) antes de determinar al ganador final. 
+                            Esto genera más emoción y suspense, pudiendo transmitir cada intento en vivo.
+                        </p>
+                        <p><strong>Ejemplo:</strong> 5 intentos, ganador determinado en el intento #5</p>
+                    </div>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>🎯 Configuración del Sorteo</h4>
+                            <ul class="features-list">
+                                <li>Definir cantidad de intentos (ej: 5)</li>
+                                <li>Definir intento ganador (ej: intento #5)</li>
+                                <li>Fecha y hora del sorteo</li>
+                                <li>Ubicación física (opcional)</li>
+                                <li>Link de transmisión en vivo</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🎬 Realizar Sorteo</h4>
+                            <p><strong>PROCESO PASO A PASO</strong></p>
+                            <ul class="features-list">
+                                <li>Verificar participantes activos</li>
+                                <li>Generar lista de participantes</li>
+                                <li>Iniciar transmisión en vivo</li>
+                                <li>Ejecutar sorteo aleatorio</li>
+                                <li>Registrar cada intento con hash</li>
+                                <li>Determinar ganador en intento final</li>
+                                <li>Generar hash de verificación</li>
+                                <li>Notificar al ganador</li>
+                                <li>Actualizar estado de la rifa</li>
+                                <li>Publicar resultado</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔐 Transparencia y Verificación</h4>
+                            <ul class="features-list">
+                                <li>Hash SHA-256 de cada intento</li>
+                                <li>Timestamp del sorteo</li>
+                                <li>IP desde donde se realizó</li>
+                                <li>Usuario que lo ejecutó</li>
+                                <li>Seed aleatorio verificable</li>
+                                <li>Registro inmutable en BD</li>
+                                <li>Auditoría completa</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Resultados del Sorteo</h4>
+                            <ul class="features-list">
+                                <li>Ver todos los intentos realizados</li>
+                                <li>Participante seleccionado por intento</li>
+                                <li>Número sorteado en cada intento</li>
+                                <li>Intento ganador destacado</li>
+                                <li>Información del ganador</li>
+                                <li>Exportar resultados</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📹 Integración con Streaming</h4>
+                            <ul class="features-list">
+                                <li>Links a TikTok Live</li>
+                                <li>Links a Facebook Live</li>
+                                <li>Links a Instagram Live</li>
+                                <li>Programar transmisiones</li>
+                                <li>Notificar participantes</li>
+                                <li>Archivar grabaciones</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 8. GESTIÓN DE GANADORES -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🏆 8. Gestión de Ganadores</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>👤 Información del Ganador</h4>
+                            <ul class="features-list">
+                                <li>Datos completos del participante</li>
+                                <li>Número de boleto ganador</li>
+                                <li>Premio ganado</li>
+                                <li>Valor del premio</li>
+                                <li>Fecha del sorteo</li>
+                                <li>Rifa ganadora</li>
+                                <li>Estado de entrega</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📞 Contacto con el Ganador</h4>
+                            <ul class="features-list">
+                                <li>Llamada telefónica</li>
+                                <li>Email de notificación</li>
+                                <li>WhatsApp</li>
+                                <li>Registro de intentos de contacto</li>
+                                <li>Estado de confirmación</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🎁 Entrega del Premio</h4>
+                            <ul class="features-list">
+                                <li>Programar fecha de entrega</li>
+                                <li>Lugar de entrega</li>
+                                <li>Persona que entrega</li>
+                                <li>Documentación (acta de entrega)</li>
+                                <li>Foto de entrega</li>
+                                <li>Firma digital del ganador</li>
+                                <li>Observaciones</li>
+                                <li>Marcar como entregado</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📸 Galería Pública</h4>
+                            <ul class="features-list">
+                                <li>Publicar ganador en la web</li>
+                                <li>Foto con el premio</li>
+                                <li>Testimonio del ganador</li>
+                                <li>Video de entrega (opcional)</li>
+                                <li>Mensaje de felicitación</li>
+                                <li>Opción de anonimato (si lo solicita)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📝 Historial de Ganadores</h4>
+                            <ul class="features-list">
+                                <li>Listado completo de todos los ganadores</li>
+                                <li>Filtros por fecha, rifa, premio</li>
+                                <li>Búsqueda por nombre/documento</li>
+                                <li>Estado de entrega</li>
+                                <li>Exportar a Excel/PDF</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 9. REPORTES Y ANÁLISIS -->
+                <div class="subsection">
+                    <h3 class="subsection-title">📊 9. Reportes y Análisis</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>💰 Reportes Financieros</h4>
+                            <ul class="features-list">
+                                <li>Ingresos por período (día/mes/año)</li>
+                                <li>Ingresos por rifa</li>
+                                <li>Ingresos por método de pago</li>
+                                <li>Ingresos por canal (web vs físico)</li>
+                                <li>Comparativa con períodos anteriores</li>
+                                <li>Proyecciones de ingresos</li>
+                                <li>Gráficos interactivos</li>
+                                <li>Exportar a Excel/PDF</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🎫 Reportes de Ventas</h4>
+                            <ul class="features-list">
+                                <li>Tickets vendidos por período</li>
+                                <li>Tickets por rifa</li>
+                                <li>Tickets por vendedor</li>
+                                <li>Tickets por ubicación</li>
+                                <li>Tasa de conversión</li>
+                                <li>Horarios de mayor venta</li>
+                                <li>Días de mayor venta</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>👥 Reportes de Participantes</h4>
+                            <ul class="features-list">
+                                <li>Total de participantes únicos</li>
+                                <li>Participantes por ubicación</li>
+                                <li>Participantes recurrentes</li>
+                                <li>Demografía (ciudad, país)</li>
+                                <li>Método de pago preferido</li>
+                                <li>Ticket promedio por usuario</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📈 Reportes de Desempeño</h4>
+                            <ul class="features-list">
+                                <li>Rifas más exitosas</li>
+                                <li>Premios más atractivos</li>
+                                <li>Horarios óptimos de publicación</li>
+                                <li>Efectividad de campañas</li>
+                                <li>ROI por rifa</li>
+                                <li>Tiempo promedio de validación</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔍 Reportes de Operaciones</h4>
+                            <ul class="features-list">
+                                <li>Comprobantes pendientes de validar</li>
+                                <li>Tiempo promedio de validación</li>
+                                <li>Tickets rechazados (motivos)</li>
+                                <li>Sorteos realizados</li>
+                                <li>Premios pendientes de entrega</li>
+                                <li>Volantarios en circulación</li>
+                                <li>Liquidaciones pendientes</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📤 Exportación de Datos</h4>
+                            <ul class="features-list">
+                                <li>Excel (.xlsx)</li>
+                                <li>PDF con gráficos</li>
+                                <li>CSV para análisis</li>
+                                <li>JSON para integraciones</li>
+                                <li>Programar reportes automáticos</li>
+                                <li>Envío por email</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 10. GESTIÓN DE MÉTODOS DE PAGO -->
+                <div class="subsection">
+                    <h3 class="subsection-title">💳 10. Gestión de Métodos de Pago</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>➕ Agregar Método de Pago</h4>
+                            <ul class="features-list">
+                                <li>Nombre del método (Yape, Plin, Banco, etc.)</li>
+                                <li>Descripción e instrucciones</li>
+                                <li>Si requiere comprobante</li>
+                                <li>Datos bancarios (si aplica)</li>
+                                <li>Número de celular (Yape/Plin)</li>
+                                <li>Upload de código QR</li>
+                                <li>Email para PayPal, etc.</li>
+                                <li>Orden de visualización</li>
+                                <li>Activar/desactivar</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📋 Listar Métodos</h4>
+                            <ul class="features-list">
+                                <li>Todos los métodos configurados</li>
+                                <li>Estado (activo/inactivo)</li>
+                                <li>Cantidad de usos</li>
+                                <li>Editar información</li>
+                                <li>Reordenar métodos</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Estadísticas por Método</h4>
+                            <ul class="features-list">
+                                <li>Transacciones por método</li>
+                                <li>Monto total por método</li>
+                                <li>Método más usado</li>
+                                <li>Tiempo promedio de validación</li>
+                                <li>Tasa de rechazo por método</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 11. GESTIÓN DE USUARIOS Y ROLES -->
+                <div class="subsection">
+                    <h3 class="subsection-title">👥 11. Gestión de Usuarios y Roles</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>👤 Gestión de Usuarios</h4>
+                            <ul class="features-list">
+                                <li>Crear usuarios del sistema</li>
+                                <li>Asignar rol (SUPERADMIN, ADMIN, VALIDADOR, OPERADOR, CONSULTA)</li>
+                                <li>Información personal (nombre, email, teléfono)</li>
+                                <li>Contraseña segura (encriptada)</li>
+                                <li>Estado (activo/inactivo/bloqueado)</li>
+                                <li>Último acceso</li>
+                                <li>Bloqueo automático por intentos fallidos</li>
+                                <li>Forzar cambio de contraseña</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔑 Gestión de Roles</h4>
+                            <p>Roles predefinidos del sistema:</p>
+                            <ul class="features-list">
+                                <li><strong>SUPERADMIN:</strong> Control total del sistema</li>
+                                <li><strong>ADMIN:</strong> Administrador de sede</li>
+                                <li><strong>VALIDADOR:</strong> Solo valida pagos</li>
+                                <li><strong>OPERADOR:</strong> Gestiona rifas y sorteos</li>
+                                <li><strong>CONSULTA:</strong> Solo lectura</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🛡️ Gestión de Permisos</h4>
+                            <p>Control granular de accesos</p>
+                            <ul class="features-list">
+                                <li>Permisos por módulo (RIFAS, PREMIOS, PARTICIPANTES, etc.)</li>
+                                <li>Permisos por acción (CREAR, LEER, ACTUALIZAR, ELIMINAR, APROBAR)</li>
+                                <li>Asignar permisos a roles</li>
+                                <li>Permisos especiales a usuarios</li>
+                                <li>Permisos temporales (con vencimiento)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔐 Seguridad</h4>
+                            <ul class="features-list">
+                                <li>Sesiones seguras con tokens</li>
+                                <li>Expiración automática de sesión</li>
+                                <li>Registro de intentos de acceso</li>
+                                <li>Bloqueo por intentos fallidos</li>
+                                <li>Auditoría de acciones</li>
+                                <li>Doble factor (2FA) - opcional</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 12. CONFIGURACIÓN DEL SISTEMA -->
+                <div class="subsection">
+                    <h3 class="subsection-title">⚙️ 12. Configuración del Sistema</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>🏢 Gestión de Sedes</h4>
+                            <p>Sistema Multi-Sede/Multi-País</p>
+                            <ul class="features-list">
+                                <li>Crear/editar sedes</li>
+                                <li>Código único por sede</li>
+                                <li>País y ciudad</li>
+                                <li>Moneda local (Soles, Pesos, Dólares)</li>
+                                <li>Símbolo de moneda</li>
+                                <li>Zona horaria</li>
+                                <li>Logo y favicon personalizados</li>
+                                <li>URL de landing personalizada</li>
+                                <li>Configuración de red</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🎨 Configuración Visual</h4>
+                            <ul class="features-list">
+                                <li>Logo de la empresa</li>
+                                <li>Colores corporativos</li>
+                                <li>Favicon</li>
+                                <li>Banner principal</li>
+                                <li>Imágenes de fondo</li>
+                                <li>Tipografías</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📍 Ubicaciones de Rifa</h4>
+                            <ul class="features-list">
+                                <li>Agregar ubicaciones físicas</li>
+                                <li>Dirección completa</li>
+                                <li>Coordenadas GPS (latitud/longitud)</li>
+                                <li>Teléfono y email de ubicación</li>
+                                <li>Horarios de atención</li>
+                                <li>Mapa de Google Maps</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>⚙️ Configuraciones Avanzadas</h4>
+                            <ul class="features-list">
+                                <li>Parámetros del sistema (clave-valor)</li>
+                                <li>Configuración por sede</li>
+                                <li>Tipos de dato (STRING, INTEGER, DECIMAL, BOOLEAN, JSON)</li>
+                                <li>Configuraciones obligatorias</li>
+                                <li>Valores por defecto</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📧 Configuración de Emails</h4>
+                            <ul class="features-list">
+                                <li>Servidor SMTP</li>
+                                <li>Email remitente</li>
+                                <li>Plantillas de email personalizadas</li>
+                                <li>Email de soporte</li>
+                                <li>Notificaciones automáticas</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔔 Configuración de Notificaciones</h4>
+                            <ul class="features-list">
+                                <li>Notificaciones por email</li>
+                                <li>Notificaciones por WhatsApp (API)</li>
+                                <li>SMS (opcional)</li>
+                                <li>Push notifications</li>
+                                <li>Frecuencia de notificaciones</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 13. AUDITORÍA Y LOGS -->
+                <div class="subsection">
+                    <h3 class="subsection-title">📝 13. Auditoría y Logs del Sistema</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>📋 Registro de Auditoría</h4>
+                            <p>Todas las operaciones quedan registradas</p>
+                            <ul class="features-list">
+                                <li>Tabla afectada</li>
+                                <li>Tipo de operación (INSERT, UPDATE, DELETE)</li>
+                                <li>Datos anteriores</li>
+                                <li>Datos nuevos</li>
+                                <li>Usuario que realizó la acción</li>
+                                <li>IP y user agent</li>
+                                <li>Fecha y hora exacta</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔍 Consultar Auditoría</h4>
+                            <ul class="features-list">
+                                <li>Filtrar por tabla</li>
+                                <li>Filtrar por usuario</li>
+                                <li>Filtrar por fecha</li>
+                                <li>Filtrar por operación</li>
+                                <li>Búsqueda de texto</li>
+                                <li>Ver diferencias (antes vs después)</li>
+                                <li>Exportar resultados</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔐 Intentos de Acceso</h4>
+                            <ul class="features-list">
+                                <li>Registro de todos los intentos de login</li>
+                                <li>Exitosos y fallidos</li>
+                                <li>Username intentado</li>
+                                <li>IP de origen</li>
+                                <li>Motivo de fallo</li>
+                                <li>Detección de ataques</li>
+                                <li>Bloqueo automático</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Análisis de Seguridad</h4>
+                            <ul class="features-list">
+                                <li>IPs sospechosas</li>
+                                <li>Usuarios con más intentos fallidos</li>
+                                <li>Horarios de mayor actividad</li>
+                                <li>Accesos fuera de horario</li>
+                                <li>Cambios críticos en el sistema</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 14. BACKUP Y MANTENIMIENTO -->
+                <div class="subsection">
+                    <h3 class="subsection-title">💾 14. Backup y Mantenimiento</h3>
+                    
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <h4>💾 Backups Automáticos</h4>
+                            <ul class="features-list">
+                                <li>Backup diario de base de datos</li>
+                                <li>Backup de archivos subidos</li>
+                                <li>Retención configurable</li>
+                                <li>Compresión de backups</li>
+                                <li>Almacenamiento en la nube</li>
+                                <li>Notificación de backup exitoso</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🔄 Restauración</h4>
+                            <ul class="features-list">
+                                <li>Listar backups disponibles</li>
+                                <li>Restaurar desde backup</li>
+                                <li>Restauración selectiva (tablas específicas)</li>
+                                <li>Punto de restauración</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🧹 Mantenimiento</h4>
+                            <ul class="features-list">
+                                <li>Limpieza de sesiones expiradas</li>
+                                <li>Limpieza de reservas vencidas</li>
+                                <li>Optimización de base de datos</li>
+                                <li>Limpieza de archivos temporales</li>
+                                <li>Rotación de logs</li>
+                                <li>Verificación de integridad</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- STACK TECNOLÓGICO -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="icon">💻</span>
+                    Stack Tecnológico
+                </h2>
+                
+                <div class="tech-stack">
+                    <h3>Tecnologías Utilizadas</h3>
+                    <div class="tech-grid">
+                        <div class="tech-item">
+                            <strong>Backend</strong>
+                            PHP 8.x
+                        </div>
+                        <div class="tech-item">
+                            <strong>Base de Datos</strong>
+                            MySQL 8.0
+                        </div>
+                        <div class="tech-item">
+                            <strong>Frontend</strong>
+                            HTML5, CSS3, JavaScript
+                        </div>
+                        <div class="tech-item">
+                            <strong>Framework CSS</strong>
+                            Bootstrap 5
+                        </div>
+                        <div class="tech-item">
+                            <strong>Iconos</strong>
+                            Remix Icons
+                        </div>
+                        <div class="tech-item">
+                            <strong>Seguridad</strong>
+                            BCrypt, PDO, SSL
+                        </div>
+                        <div class="tech-item">
+                            <strong>Generación PDF</strong>
+                            TCPDF / mPDF
+                        </div>
+                        <div class="tech-item">
+                            <strong>Servidor Web</strong>
+                            Apache / Nginx
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CARACTERÍSTICAS TÉCNICAS -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="icon">🔧</span>
+                    Características Técnicas Destacadas
+                </h2>
+                
+                <div class="module-grid">
+                    <div class="module-card">
+                        <h4>🌍 Multi-Sede/Multi-País</h4>
+                        <ul class="features-list">
+                            <li>Gestión centralizada de múltiples sedes</li>
+                            <li>Cada sede con su moneda local</li>
+                            <li>Zona horaria por sede</li>
+                            <li>Configuración independiente</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="module-card">
+                        <h4>🔐 Seguridad Avanzada</h4>
+                        <ul class="features-list">
+                            <li>Contraseñas encriptadas con BCrypt</li>
+                            <li>Protección contra SQL Injection (PDO)</li>
+                            <li>Protección XSS</li>
+                            <li>CSRF tokens</li>
+                            <li>Sesiones seguras</li>
+                            <li>Bloqueo automático de cuentas</li>
+                            <li>Auditoría completa</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="module-card">
+                        <h4>⚡ Alto Rendimiento</h4>
+                        <ul class="features-list">
+                            <li>Índices optimizados en BD</li>
+                            <li>Consultas preparadas (PDO)</li>
+                            <li>Caching de datos frecuentes</li>
+                            <li>Lazy loading de imágenes</li>
+                            <li>Minificación de assets</li>
+                            <li>CDN para recursos estáticos</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="module-card">
+                        <h4>📱 Responsive Design</h4>
+                        <ul class="features-list">
+                            <li>Adaptable a móviles</li>
+                            <li>Adaptable a tablets</li>
+                            <li>Optimizado para desktop</li>
+                            <li>Touch-friendly</li>
+                            <li>Progressive Web App (PWA) - opcional</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="module-card">
+                        <h4>🔄 API REST</h4>
+                        <ul class="features-list">
+                            <li>Endpoints bien documentados</li>
+                            <li>Respuestas JSON</li>
+                            <li>Autenticación por tokens</li>
+                            <li>Rate limiting</li>
+                            <li>Versionado de API</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="module-card">
+                        <h4>📊 Base de Datos Optimizada</h4>
+                        <ul class="features-list">
+                            <li>20+ tablas relacionadas</li>
+                            <li>Integridad referencial</li>
+                            <li>Stored procedures</li>
+                            <li>Triggers para auditoría</li>
+                            <li>Vistas materializadas</li>
+                            <li>Índices estratégicos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RESUMEN DE MÓDULOS -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="icon">📦</span>
+                    Resumen de Módulos del Sistema
+                </h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Módulo</th>
+                            <th>Interface</th>
+                            <th>Funcionalidades Principales</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Landing Page</strong></td>
+                            <td>Pública</td>
+                            <td>Ver rifas, comprar tickets, consultar participaciones</td>
+                            <td><span class="badge badge-landing">Activo</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dashboard Admin</strong></td>
+                            <td>Privada</td>
+                            <td>Estadísticas, gráficos, notificaciones</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gestión de Rifas</strong></td>
+                            <td>Privada</td>
+                            <td>CRUD completo de rifas, configuración numeración</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gestión de Premios</strong></td>
+                            <td>Privada</td>
+                            <td>CRUD premios, categorías, imágenes</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sistema de Numeración</strong></td>
+                            <td>Ambas</td>
+                            <td>Selección de números, reservas, volantarios</td>
+                            <td><span class="badge badge-both">Dual</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Validación de Pagos</strong></td>
+                            <td>Privada</td>
+                            <td>Aprobar/rechazar comprobantes, notificaciones</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gestión de Volantarios</strong></td>
+                            <td>Privada</td>
+                            <td>Crear, asignar, imprimir, liquidar</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sistema de Sorteos</strong></td>
+                            <td>Privada</td>
+                            <td>Configurar, ejecutar, múltiples intentos, hash</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gestión de Ganadores</strong></td>
+                            <td>Privada</td>
+                            <td>Contactar, programar entrega, documentar</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Reportes y Análisis</strong></td>
+                            <td>Privada</td>
+                            <td>Financieros, ventas, operaciones, exportación</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Usuarios y Roles</strong></td>
+                            <td>Privada</td>
+                            <td>CRUD usuarios, roles, permisos, seguridad</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Configuración</strong></td>
+                            <td>Privada</td>
+                            <td>Sedes, métodos pago, ubicaciones, parámetros</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Auditoría y Logs</strong></td>
+                            <td>Privada</td>
+                            <td>Registro de operaciones, seguridad, análisis</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+        
+        <!-- FOOTER -->
+        <div class="footer">
+            <h3>Sistema de Rifas Profesional</h3>
+            <p>Documentación Técnica v1.0</p>
+            <p>Generado el: <?php echo date('d/m/Y H:i:s'); ?></p>
+            <p style="margin-top: 20px; opacity: 0.8;">
+                🎟️ Sistema completo con más de 50 funcionalidades<br>
+                🌐 Landing Page + Panel Administrativo<br>
+                🔐 Seguro, Escalable y Auditable<br>
+                🌍 Multi-Sede / Multi-País
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

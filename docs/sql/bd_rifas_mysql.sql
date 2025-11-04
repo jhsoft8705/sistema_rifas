@@ -17,6 +17,8 @@ DROP TABLE IF EXISTS ganadores;
 DROP TABLE IF EXISTS intentos_sorteo;
 DROP TABLE IF EXISTS participantes;
 DROP TABLE IF EXISTS comprobantes_pago;
+DROP TABLE IF EXISTS numeros_rifa;
+DROP TABLE IF EXISTS volantarios;
 DROP TABLE IF EXISTS tickets;
 DROP TABLE IF EXISTS rifas;
 DROP TABLE IF EXISTS premios;
@@ -464,6 +466,31 @@ CREATE TABLE rifas (
     tickets_vendidos INT DEFAULT 0,
     cantidad_maxima_por_persona INT DEFAULT 1 COMMENT 'Máximo de tickets por participante',
     
+    -- ====== SISTEMA DE NUMERACIÓN DE BOLETOS ======
+    -- Control de números de boletos
+    usa_numeracion_boletos TINYINT(1) DEFAULT 1 COMMENT 'Si usa sistema de números de boletos',
+    tipo_numeracion VARCHAR(20) DEFAULT 'CORRELATIVO' COMMENT 'CORRELATIVO, ALEATORIO, PERSONALIZADO',
+    numero_inicial INT NOT NULL DEFAULT 1 COMMENT 'Número inicial del rango (ej: 1, 100, 1000)',
+    numero_final INT NOT NULL DEFAULT 1000 COMMENT 'Número final del rango (ej: 500, 9999)',
+    cantidad_digitos INT DEFAULT 4 COMMENT 'Dígitos para formato: 4=0001, 5=00001',
+    prefijo_numero VARCHAR(20) NULL COMMENT 'Prefijo opcional (ej: RIFA-, BOL-)',
+    sufijo_numero VARCHAR(20) NULL COMMENT 'Sufijo opcional (ej: -2025, -A)',
+    
+    -- Configuración de selección
+    permitir_seleccion_numero TINYINT(1) DEFAULT 1 COMMENT 'Permitir que usuario elija número',
+    asignacion_automatica TINYINT(1) DEFAULT 1 COMMENT 'Asignar número automático si no elige',
+    mostrar_numeros_disponibles TINYINT(1) DEFAULT 1 COMMENT 'Mostrar números disponibles en web',
+    
+    -- Configuración de volantarios físicos
+    generar_volantarios TINYINT(1) DEFAULT 0 COMMENT 'Si se generan volantarios para venta física',
+    numeros_por_volantario INT DEFAULT 100 COMMENT 'Cantidad de números por volantario',
+    formato_impresion VARCHAR(50) DEFAULT 'A4' COMMENT 'Formato: A4, LETTER, CUSTOM',
+    numeros_por_pagina INT DEFAULT 10 COMMENT 'Números por página al imprimir',
+    
+    -- Bloqueo de números
+    numeros_bloqueados TEXT NULL COMMENT 'JSON con números bloqueados/reservados',
+    numeros_especiales TEXT NULL COMMENT 'JSON con números especiales (ej: promocionales, regalos)',
+    
     -- Fechas importantes
     fecha_inicio_venta DATETIME NOT NULL,
     fecha_fin_venta DATETIME NOT NULL,
@@ -515,6 +542,12 @@ CREATE TABLE tickets (
     -- Código único del ticket
     codigo_ticket VARCHAR(50) NOT NULL COMMENT 'Código único para validación',
     
+    -- ====== NÚMERO DE BOLETO ======
+    numero_boleto VARCHAR(50) NULL COMMENT 'Número del boleto asignado (ej: 0001, RIFA-0523)',
+    numero_boleto_entero INT NULL COMMENT 'Número entero para búsquedas y ordenamiento',
+    numero_seleccionado_usuario TINYINT(1) DEFAULT 0 COMMENT 'Si el usuario eligió el número o fue asignado',
+    volantario_id INT NULL COMMENT 'ID del volantario si fue compra física',
+    
     -- Información del participante (usuario final)
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -530,6 +563,8 @@ CREATE TABLE tickets (
     precio_pagado DECIMAL(10, 2) NOT NULL,
     fecha_compra DATETIME DEFAULT CURRENT_TIMESTAMP,
     ip_compra VARCHAR(45) NULL,
+    canal_venta VARCHAR(20) DEFAULT 'WEB' COMMENT 'WEB, FISICO, TELEFONO, WHATSAPP',
+    vendedor_id INT NULL COMMENT 'ID usuario que realizó la venta (para venta física)',
     
     -- Estado del ticket
     estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE_PAGO' 
@@ -563,12 +598,16 @@ CREATE TABLE tickets (
     FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE RESTRICT,
     FOREIGN KEY (estado_ticket_id) REFERENCES estados_ticket(id) ON DELETE SET NULL,
     UNIQUE KEY unique_codigo_ticket (codigo_ticket),
+    UNIQUE KEY unique_numero_boleto_rifa (rifa_id, numero_boleto_entero),
     INDEX idx_tickets_sede (sede_id),
     INDEX idx_tickets_rifa (rifa_id),
     INDEX idx_tickets_documento (numero_documento),
     INDEX idx_tickets_email (email),
     INDEX idx_tickets_estado (estado),
-    INDEX idx_tickets_codigo (codigo_ticket)
+    INDEX idx_tickets_codigo (codigo_ticket),
+    INDEX idx_tickets_numero_boleto (numero_boleto),
+    INDEX idx_tickets_canal (canal_venta),
+    INDEX idx_tickets_volantario (volantario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Tabla de comprobantes de pago
@@ -614,6 +653,127 @@ CREATE TABLE comprobantes_pago (
     INDEX idx_comprobantes_ticket (ticket_id),
     INDEX idx_comprobantes_estado (estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================
+-- TABLAS PARA SISTEMA DE NUMERACIÓN Y VOLANTARIOS
+-- =====================================================
+
+-- Tabla de números de rifa/boletos
+CREATE TABLE numeros_rifa (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sede_id INT NOT NULL,
+    rifa_id INT NOT NULL,
+    ticket_id INT NULL COMMENT 'NULL si está disponible, ID si está vendido',
+    
+    -- Información del número
+    numero_entero INT NOT NULL COMMENT 'Número entero del boleto (ej: 523)',
+    numero_formateado VARCHAR(50) NOT NULL COMMENT 'Número con formato (ej: RIFA-0523, 0523)',
+    
+    -- Estado del número
+    estado VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE' 
+        COMMENT 'DISPONIBLE, RESERVADO, VENDIDO, BLOQUEADO, ESPECIAL',
+    motivo_bloqueo VARCHAR(255) NULL COMMENT 'Razón si está bloqueado',
+    es_numero_especial TINYINT(1) DEFAULT 0 COMMENT 'Si es número especial/promocional',
+    descripcion_especial VARCHAR(255) NULL,
+    
+    -- Reserva temporal (para proceso de compra online)
+    reservado_hasta DATETIME NULL COMMENT 'Fecha hasta que está reservado (timeout compra)',
+    reservado_por_sesion VARCHAR(255) NULL COMMENT 'ID de sesión que reservó',
+    
+    -- Volantario
+    volantario_id INT NULL COMMENT 'ID del volantario al que pertenece',
+    
+    -- Fechas
+    fecha_reserva DATETIME NULL,
+    fecha_venta DATETIME NULL,
+    fecha_bloqueo DATETIME NULL,
+    
+    -- Control
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
+    FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL,
+    UNIQUE KEY unique_numero_rifa (rifa_id, numero_entero),
+    INDEX idx_numeros_sede (sede_id),
+    INDEX idx_numeros_rifa (rifa_id),
+    INDEX idx_numeros_estado (estado),
+    INDEX idx_numeros_disponibles (rifa_id, estado),
+    INDEX idx_numeros_volantario (volantario_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Gestión de cada número de boleto individual';
+
+-- Tabla de volantarios (para venta física)
+CREATE TABLE volantarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sede_id INT NOT NULL,
+    rifa_id INT NOT NULL,
+    
+    -- Información del volantario
+    codigo_volantario VARCHAR(50) NOT NULL COMMENT 'Código único del volantario',
+    nombre VARCHAR(200) NULL COMMENT 'Nombre descriptivo del volantario',
+    descripcion TEXT NULL,
+    
+    -- Rango de números incluidos
+    numero_inicial INT NOT NULL COMMENT 'Primer número del volantario',
+    numero_final INT NOT NULL COMMENT 'Último número del volantario',
+    cantidad_numeros INT NOT NULL COMMENT 'Cantidad total de números en este volantario',
+    numeros_vendidos INT DEFAULT 0 COMMENT 'Cantidad de números vendidos',
+    numeros_disponibles INT NOT NULL COMMENT 'Cantidad de números disponibles',
+    
+    -- Configuración de impresión
+    formato_impresion VARCHAR(50) DEFAULT 'A4' COMMENT 'A4, LETTER, CUSTOM',
+    orientacion VARCHAR(20) DEFAULT 'VERTICAL' COMMENT 'VERTICAL, HORIZONTAL',
+    numeros_por_pagina INT DEFAULT 10,
+    total_paginas INT NULL COMMENT 'Cantidad de páginas al imprimir',
+    
+    -- Diseño y personalización
+    incluir_logo TINYINT(1) DEFAULT 1,
+    incluir_qr TINYINT(1) DEFAULT 1 COMMENT 'QR para validación',
+    incluir_terminos TINYINT(1) DEFAULT 1,
+    texto_adicional TEXT NULL COMMENT 'Texto adicional para imprimir',
+    
+    -- Asignación para venta
+    asignado_vendedor_id INT NULL COMMENT 'Usuario vendedor asignado',
+    ubicacion_venta VARCHAR(255) NULL COMMENT 'Lugar donde se venderá',
+    
+    -- Estado del volantario
+    estado VARCHAR(30) NOT NULL DEFAULT 'BORRADOR' 
+        COMMENT 'BORRADOR, GENERADO, IMPRESO, EN_VENTA, AGOTADO, ANULADO',
+    
+    -- Fechas de impresión y entrega
+    fecha_generacion DATETIME NULL COMMENT 'Fecha de generación del PDF',
+    fecha_impresion DATETIME NULL COMMENT 'Fecha de impresión física',
+    fecha_entrega_vendedor DATETIME NULL COMMENT 'Fecha de entrega al vendedor',
+    fecha_inicio_venta DATETIME NULL,
+    fecha_fin_venta DATETIME NULL,
+    
+    -- Archivo PDF generado
+    archivo_pdf VARCHAR(255) NULL COMMENT 'URL del PDF generado',
+    tamano_archivo INT NULL COMMENT 'Tamaño del PDF en bytes',
+    
+    -- Liquidación (opcional para control de vendedores)
+    requiere_liquidacion TINYINT(1) DEFAULT 0,
+    liquidado TINYINT(1) DEFAULT 0,
+    fecha_liquidacion DATETIME NULL,
+    monto_total_esperado DECIMAL(12, 2) NULL,
+    monto_total_recibido DECIMAL(12, 2) NULL,
+    
+    -- Control
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    creado_por VARCHAR(50) NULL,
+    modificado_por VARCHAR(50) NULL,
+    
+    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
+    FOREIGN KEY (asignado_vendedor_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+    UNIQUE KEY unique_codigo_volantario_sede (sede_id, codigo_volantario),
+    INDEX idx_volantarios_sede (sede_id),
+    INDEX idx_volantarios_rifa (rifa_id),
+    INDEX idx_volantarios_estado (estado),
+    INDEX idx_volantarios_vendedor (asignado_vendedor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Gestión de volantarios impresos para venta física';
 
 -- Tabla de participantes (tickets aprobados listos para sorteo)
 CREATE TABLE participantes (

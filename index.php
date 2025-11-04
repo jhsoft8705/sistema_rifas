@@ -25,6 +25,8 @@
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
+    
+ 
 
 </head>
 
@@ -547,317 +549,770 @@
         </section>
         <!-- end services -->
 
-        <!-- Modal para Comprar Tickets -->
+        <!-- Modal para Comprar Tickets - Estilo Checkout -->
         <div class="modal fade" id="modal_comprar_ticket" tabindex="-1" aria-labelledby="modal_comprar_ticket_label" aria-hidden="true">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                    <div class="modal-header bg-success-subtle">
+                    <div class="modal-header border-0 pb-0">
                         <h5 class="modal-title" id="modal_comprar_ticket_label">
-                            <i class="ri-ticket-2-line me-2"></i><span id="modal_titulo_rifa">Comprar Tickets</span>
+                            <i class="ri-shopping-cart-line me-2 text-success"></i><span id="modal_titulo_rifa">Checkout - Comprar Tickets</span>
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+                    
                     <form id="form_comprar_ticket">
-                        <div class="modal-body">
+                        <div class="modal-body p-4">
                             <input type="hidden" id="rifa_id" name="rifa_id">
-
-                            <!-- Información de la Rifa - Compacta -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-lg-6">
-                                    <div class="card border border-success mb-0">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <p class="text-muted mb-0 small"><i class="ri-price-tag-3-line text-success"></i> Precio</p>
-                                                    <h5 class="mb-0 text-success fw-bold">$<span id="precio_ticket">0.00</span></h5>
-                                                </div>
-                                                <i class="ri-money-dollar-circle-line text-success fs-24"></i>
+                            
+                            <div class="row">
+                                <!-- Columna Izquierda - Formulario con Tabs -->
+                                <div class="col-xl-8">
+                                    <div class="card">
+                                        <div class="card-body checkout-tab">
+                                            
+                                            <!-- Navigation Tabs -->
+                                            <div class="step-arrow-nav mt-n3 mx-n3 mb-3">
+                                                <ul class="nav nav-pills nav-justified custom-nav" role="tablist">
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link fs-15 p-3 active" id="pills-personal-tab" 
+                                                                data-bs-toggle="pill" data-bs-target="#pills-personal" 
+                                                                type="button" role="tab" aria-controls="pills-personal" 
+                                                                aria-selected="true" data-position="0">
+                                                            <i class="ri-user-2-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
+                                                            <span class="d-none d-sm-inline">Información</span>
+                                                            <span class="d-inline d-sm-none"><i class="ri-user-2-line me-1"></i>Info</span>
+                                                        </button>
+                                                    </li>
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link fs-15 p-3" id="pills-order-tab" 
+                                                                data-bs-toggle="pill" data-bs-target="#pills-order" 
+                                                                type="button" role="tab" aria-controls="pills-order" 
+                                                                aria-selected="false" data-position="1" disabled>
+                                                            <i class="ri-shopping-cart-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
+                                                            <span class="d-none d-sm-inline">Tu Orden</span>
+                                                            <span class="d-inline d-sm-none"><i class="ri-shopping-cart-line me-1"></i>Orden</span>
+                                                        </button>
+                                                    </li>
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link fs-15 p-3" id="pills-payment-tab" 
+                                                                data-bs-toggle="pill" data-bs-target="#pills-payment" 
+                                                                type="button" role="tab" aria-controls="pills-payment" 
+                                                                aria-selected="false" data-position="2" disabled>
+                                                            <i class="ri-bank-card-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
+                                                            <span class="d-none d-sm-inline">Pago</span>
+                                                            <span class="d-inline d-sm-none"><i class="ri-bank-card-line me-1"></i>Pago</span>
+                                                        </button>
+                                                    </li>
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link fs-15 p-3" id="pills-finish-tab" 
+                                                                data-bs-toggle="pill" data-bs-target="#pills-finish" 
+                                                                type="button" role="tab" aria-controls="pills-finish" 
+                                                                aria-selected="false" data-position="3" disabled>
+                                                            <i class="ri-checkbox-circle-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
+                                                            <span class="d-none d-sm-inline">Confirmar</span>
+                                                            <span class="d-inline d-sm-none"><i class="ri-checkbox-circle-line me-1"></i>OK</span>
+                                                        </button>
+                                                    </li>
+                                                </ul>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="card border border-primary mb-0">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <p class="text-muted mb-0 small"><i class="ri-ticket-line text-primary"></i> Disponibles</p>
-                                                    <h5 class="mb-0 text-primary fw-bold"><span id="tickets_disponibles">0</span>/<span id="tickets_total">0</span></h5>
+
+                                            <!-- Tab Content -->
+                                            <div class="tab-content">
+                                                
+                                                <!-- Tab 1: Información Personal -->
+                                                <div class="tab-pane fade show active" id="pills-personal" role="tabpanel">
+                                                    <div>
+                                                        <h5 class="mb-1">Información Personal</h5>
+                                                        <p class="text-muted mb-4">Por favor, ingresa tus datos para participar</p>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="nombre_completo" class="form-label">
+                                                            Nombre Completo <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text" class="form-control" id="nombre_completo" 
+                                                               name="nombre_completo" placeholder="Ingrese su nombre completo">
+                                                        <div class="text-danger small mt-1" id="nombre_completo_error" style="display: none;"></div>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="email_participante" class="form-label">
+                                                                    Correo Electrónico <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="email" class="form-control" id="email_participante" 
+                                                                       name="email_participante" placeholder="correo@ejemplo.com">
+                                                                <div class="text-danger small mt-1" id="email_participante_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="telefono" class="form-label">
+                                                                    Teléfono / WhatsApp <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="tel" class="form-control" id="telefono" 
+                                                                       name="telefono" placeholder="+52 1 55 1234 5678">
+                                                                <div class="text-danger small mt-1" id="telefono_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="tipo_documento" class="form-label">
+                                                                    Tipo de Documento <span class="text-danger">*</span>
+                                                                </label>
+                                                                <select class="form-select" id="tipo_documento" name="tipo_documento">
+                                                                    <option value="">Seleccionar...</option>
+                                                                    <option value="DNI">DNI</option>
+                                                                    <option value="CE">Carnet de Extranjería</option>
+                                                                    <option value="PASAPORTE">Pasaporte</option>
+                                                                    <option value="RUC">RUC</option>
+                                                                </select>
+                                                                <div class="text-danger small mt-1" id="tipo_documento_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="numero_documento" class="form-label">
+                                                                    Número de Documento <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="text" class="form-control" id="numero_documento" 
+                                                                       name="numero_documento" placeholder="Ej: 12345678">
+                                                                <div class="text-danger small mt-1" id="numero_documento_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="ciudad" class="form-label">
+                                                                    Ciudad <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="text" class="form-control" id="ciudad" 
+                                                                       name="ciudad" placeholder="Ej: Ciudad de México, Guadalajara...">
+                                                                <div class="text-danger small mt-1" id="ciudad_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="estado" class="form-label">
+                                                                    Estado/Provincia <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="text" class="form-control" id="estado" 
+                                                                       name="estado" placeholder="Ej: CDMX, Jalisco...">
+                                                                <div class="text-danger small mt-1" id="estado_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="direccion_envio" class="form-label">
+                                                            Dirección de Envío Completa <span class="text-danger">*</span>
+                                                        </label>
+                                                        <textarea class="form-control" id="direccion_envio" name="direccion_envio" 
+                                                                  rows="3" placeholder="Calle, número, colonia, código postal, referencias..."></textarea>
+                                                        <div class="text-danger small mt-1" id="direccion_envio_error" style="display: none;"></div>
+                                                        <small class="text-muted">
+                                                            <i class="ri-map-pin-line"></i> Esta dirección se usará para la entrega del premio en caso de resultar ganador(a)
+                                                        </small>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex align-items-start gap-3 mt-3">
+                                                        <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" 
+                                                                data-nexttab="pills-order-tab" id="btn_continuar_personal" disabled>
+                                                            <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
+                                                            <span class="d-none d-sm-inline">Continuar a tu Orden</span>
+                                                            <span class="d-inline d-sm-none">Continuar</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <i class="ri-coupon-line text-primary fs-24"></i>
+                                                
+                                                <!-- Tab 2: Tu Orden -->
+                                                <div class="tab-pane fade" id="pills-order" role="tabpanel">
+                                                    <div>
+                                                        <h5 class="mb-1">Información de tu Orden</h5>
+                                                        <p class="text-muted mb-4">Selecciona la cantidad de tickets</p>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-sm-12">
+                                                            <div class="mb-4">
+                                                                <label for="cantidad_tickets" class="form-label">
+                                                                    ¿Cuántos tickets deseas comprar? <span class="text-danger">*</span>
+                                                                </label>
+                                                                <div class="input-group input-group-lg">
+                                                                    <button class="btn btn-outline-secondary" type="button" id="btn_menos">
+                                                                        <i class="ri-subtract-line"></i>
+                                                                    </button>
+                                                                    <input type="number" class="form-control text-center fs-20 fw-semibold" 
+                                                                           id="cantidad_tickets" name="cantidad_tickets" value="1" min="1" max="999">
+                                                                    <button class="btn btn-outline-secondary" type="button" id="btn_mas">
+                                                                        <i class="ri-add-line"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="text-danger small mt-1" id="cantidad_tickets_error" style="display: none;"></div>
+                                                                <small class="text-muted d-block mt-2">
+                                                                    <i class="ri-information-line"></i> Mientras más tickets compres, mayores probabilidades de ganar
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Tickets Disponibles Info -->
+                                                    <div class="alert alert-info border-0 mb-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="ri-ticket-line fs-20 me-2"></i>
+                                                            <div>
+                                                                <strong>Tickets Disponibles:</strong> 
+                                                                <span id="tickets_disponibles_tab">0</span> de <span id="tickets_total_tab">0</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- SISTEMA DE SELECCIÓN DE NÚMEROS DE BOLETO -->
+                                                    <div class="card border border-success mb-4" id="seccion_seleccion_numero">
+                                                        <div class="card-body">
+                                                            <h6 class="mb-3">
+                                                                <i class="ri-hashtag text-success me-1"></i> Selecciona tu Número de la Suerte
+                                                            </h6>
+                                                            
+                                                            <!-- Opciones de Selección -->
+                                                            <div class="row g-3 mb-3">
+                                                                <div class="col-md-6">
+                                                                    <div class="card bg-light border h-100">
+                                                                        <div class="card-body text-center p-3">
+                                                                            <div class="avatar-sm mx-auto mb-2">
+                                                                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                                                    <i class="ri-grid-line fs-18"></i>
+                                                                                </div>
+                                                                            </div>
+                                                                            <h6 class="mb-2">¿Tienes un número favorito?</h6>
+                                                                            <p class="text-muted small mb-3">Elige tu número de la suerte</p>
+                                                                            <button type="button" class="btn btn-primary btn-sm" onclick="mostrarGridNumeros()">
+                                                                                <i class="ri-search-line me-1"></i> Ver Números Disponibles
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="col-md-6">
+                                                                    <div class="card bg-light border h-100">
+                                                                        <div class="card-body text-center p-3">
+                                                                            <div class="avatar-sm mx-auto mb-2">
+                                                                                <div class="avatar-title bg-success-subtle text-success rounded-circle">
+                                                                                    <i class="ri-shuffle-line fs-18"></i>
+                                                                                </div>
+                                                                            </div>
+                                                                            <h6 class="mb-2">¿Prefieres la sorpresa?</h6>
+                                                                            <p class="text-muted small mb-3">Nosotros elegimos por ti</p>
+                                                                            <button type="button" class="btn btn-success btn-sm" onclick="asignarNumeroAleatorio()">
+                                                                                <i class="ri-refresh-line me-1"></i> Asignar Número Aleatorio
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Número Seleccionado/Reservado -->
+                                                            <div id="numero_seleccionado_display" style="display: none;">
+                                                                <div class="alert alert-warning border-0 mb-0">
+                                                                    <div class="d-flex align-items-center justify-content-between">
+                                                                        <div class="d-flex align-items-center">
+                                                                            <i class="ri-ticket-2-line fs-20 me-2"></i>
+                                                                            <div>
+                                                                                <strong>Tu número:</strong> 
+                                                                                <span class="badge bg-success fs-16 px-3 py-2 ms-2" id="numero_elegido_text">0000</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <button type="button" class="btn btn-sm btn-light" onclick="cancelarSeleccionNumero()">
+                                                                            <i class="ri-close-line"></i> Cambiar
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="mt-2">
+                                                                        <small>
+                                                                            <i class="ri-time-line me-1"></i> 
+                                                                            Reservado por: <strong id="timer_reserva">10:00</strong>
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <input type="hidden" id="numero_reservado" name="numero_reservado">
+                                                            <input type="hidden" id="numero_formateado" name="numero_formateado">
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex align-items-start gap-3 mt-4">
+                                                        <button type="button" class="btn btn-light btn-label previestab" 
+                                                                data-previous="pills-personal-tab">
+                                                            <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
+                                                            <span class="d-none d-sm-inline">Volver a Información Personal</span>
+                                                            <span class="d-inline d-sm-none">Volver</span>
+                                                        </button>
+                                                        <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" 
+                                                                data-nexttab="pills-payment-tab" id="btn_continuar_orden">
+                                                            <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>
+                                                            <span class="d-none d-sm-inline">Continuar a Pago</span>
+                                                            <span class="d-inline d-sm-none">Continuar</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Tab 3: Información de Pago -->
+                                                <div class="tab-pane fade" id="pills-payment" role="tabpanel">
+                                                    <div>
+                                                        <h5 class="mb-1">Información de Pago</h5>
+                                                        <p class="text-muted mb-4">Selecciona tu método de pago preferido</p>
+                                                    </div>
+                                                    
+                                                    <h6 class="fs-14 mb-3">Métodos de Pago Disponibles</h6>
+                                                    
+                                                    <div class="row g-4">
+                                                        <!-- Yape -->
+                                                        <div class="col-lg-6 col-sm-6">
+                                                            <div class="card border shadow-none h-100">
+                                                                <div class="card-body text-center p-3">
+                                                                    <div class="avatar-sm mx-auto mb-3">
+                                                                        <div class="avatar-title bg-success-subtle text-success rounded-circle fs-20">
+                                                                            <i class="ri-smartphone-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                    <h6 class="mb-3">Yape</h6>
+                                                                    <img src="assets/images/qr/yape-qr.png" alt="QR Yape" 
+                                                                         class="img-fluid rounded border mb-2" 
+                                                                         style="max-width: 120px; height: auto;"
+                                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                                    <div class="alert alert-secondary border-0 p-2" style="display: none;">
+                                                                        <small><i class="ri-qr-code-line"></i> QR no disponible</small>
+                                                                    </div>
+                                                                    <p class="mb-1 small text-muted">
+                                                                        Número: <strong class="text-dark">519 873 862</strong>
+                                                                    </p>
+                                                                    <small class="text-success">
+                                                                        <i class="ri-qr-scan-line"></i> Escanea el QR o usa el número
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Plin -->
+                                                        <div class="col-lg-6 col-sm-6">
+                                                            <div class="card border shadow-none h-100">
+                                                                <div class="card-body text-center p-3">
+                                                                    <div class="avatar-sm mx-auto mb-3">
+                                                                        <div class="avatar-title bg-info-subtle text-info rounded-circle fs-20">
+                                                                            <i class="ri-smartphone-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                    <h6 class="mb-3">Plin</h6>
+                                                                    <img src="assets/images/qr/plin-qr.png" alt="QR Plin" 
+                                                                         class="img-fluid rounded border mb-2" 
+                                                                         style="max-width: 120px; height: auto;"
+                                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                                    <div class="alert alert-secondary border-0 p-2" style="display: none;">
+                                                                        <small><i class="ri-qr-code-line"></i> QR no disponible</small>
+                                                                    </div>
+                                                                    <p class="mb-1 small text-muted">
+                                                                        Número: <strong class="text-dark">987 555 555</strong>
+                                                                    </p>
+                                                                    <small class="text-info">
+                                                                        <i class="ri-qr-scan-line"></i> Escanea el QR o usa el número
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Interbank -->
+                                                        <div class="col-lg-6 col-sm-6">
+                                                            <div class="card border shadow-none h-100">
+                                                                <div class="card-body p-3">
+                                                                    <div class="d-flex align-items-center mb-3">
+                                                                        <div class="avatar-sm me-3">
+                                                                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                                                <i class="ri-bank-line fs-18"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <h6 class="mb-0">Banco Interbank</h6>
+                                                                    </div>
+                                                                    <p class="mb-1 small text-muted">
+                                                                        Cuenta: <strong class="text-dark">[Ingresar cuenta]</strong>
+                                                                    </p>
+                                                                    <p class="mb-0 small text-muted">
+                                                                        CCI: <strong class="text-dark">[Ingresar CCI]</strong>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- BCP -->
+                                                        <div class="col-lg-6 col-sm-6">
+                                                            <div class="card border shadow-none h-100">
+                                                                <div class="card-body p-3">
+                                                                    <div class="d-flex align-items-center mb-3">
+                                                                        <div class="avatar-sm me-3">
+                                                                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                                                <i class="ri-bank-line fs-18"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <h6 class="mb-0">Banco BCP</h6>
+                                                                    </div>
+                                                                    <p class="mb-1 small text-muted">
+                                                                        Cuenta: <strong class="text-dark">[Ingresar cuenta]</strong>
+                                                                    </p>
+                                                                    <p class="mb-0 small text-muted">
+                                                                        CCI: <strong class="text-dark">[Ingresar CCI]</strong>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Subir Comprobante -->
+                                                    <div class="mt-4">
+                                                        <label for="comprobante_pago" class="form-label">
+                                                            <i class="ri-image-add-line me-1"></i> Comprobante de Pago 
+                                                            <span class="text-muted">(Opcional)</span>
+                                                        </label>
+                                                        <input type="file" class="form-control" id="comprobante_pago" 
+                                                               name="comprobante_pago" accept="image/*,.pdf">
+                                                        <div class="text-danger small mt-1" id="comprobante_pago_error" style="display: none;"></div>
+                                                        <small class="text-muted d-block mt-2">
+                                                            Si ya realizaste el pago, puedes subir tu comprobante ahora. Formatos: JPG, PNG, PDF (máx. 5MB)
+                                                        </small>
+                                                        
+                                                        <!-- Vista previa -->
+                                                        <div id="preview_comprobante" class="mt-3" style="display: none;">
+                                                            <div class="alert alert-success border-0">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="ri-file-check-line fs-20 me-2"></i>
+                                                                    <div>
+                                                                        <strong>Archivo seleccionado:</strong>
+                                                                        <p class="mb-0 small" id="nombre_archivo"></p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="alert alert-warning border-0 mt-3">
+                                                        <small>
+                                                            <i class="ri-information-line me-1"></i>
+                                                            <strong>Importante:</strong> Una vez realizado el pago, sube tu comprobante o envíalo por WhatsApp para validar tu compra.
+                                                        </small>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex align-items-start gap-3 mt-4">
+                                                        <button type="button" class="btn btn-light btn-label previestab" 
+                                                                data-previous="pills-order-tab">
+                                                            <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
+                                                            <span class="d-none d-sm-inline">Volver a tu Orden</span>
+                                                            <span class="d-inline d-sm-none">Volver</span>
+                                                        </button>
+                                                        <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" 
+                                                                data-nexttab="pills-finish-tab" id="btn_continuar_pago">
+                                                            <i class="ri-checkbox-circle-line label-icon align-middle fs-16 ms-2"></i>
+                                                            <span class="d-none d-sm-inline">Revisar Orden</span>
+                                                            <span class="d-inline d-sm-none">Continuar</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Tab 4: Confirmar -->
+                                                <div class="tab-pane fade" id="pills-finish" role="tabpanel">
+                                                    <div class="text-center py-4">
+                                                        <div class="mb-4">
+                                                            <i class="ri-checkbox-circle-line text-success" style="font-size: 72px;"></i>
+                                                        </div>
+                                                        <h5 class="mb-2">Revisa tu Orden</h5>
+                                                        <p class="text-muted">Verifica que toda la información sea correcta antes de confirmar</p>
+                                                    </div>
+                                                    
+                                                    <!-- Resumen Final -->
+                                                    <div class="card bg-light border-0 mb-4">
+                                                        <div class="card-body">
+                                                            <h6 class="mb-3">Resumen de tu Compra</h6>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-borderless mb-0">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td class="text-muted">Rifa:</td>
+                                                                            <td class="text-end fw-semibold" id="resumen_rifa_nombre">-</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Participante:</td>
+                                                                            <td class="text-end fw-semibold" id="resumen_nombre">-</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Email:</td>
+                                                                            <td class="text-end" id="resumen_email">-</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Teléfono:</td>
+                                                                            <td class="text-end" id="resumen_telefono">-</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Documento:</td>
+                                                                            <td class="text-end" id="resumen_documento">-</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Dirección de Envío:</td>
+                                                                            <td class="text-end" id="resumen_direccion">-</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Ciudad/Estado:</td>
+                                                                            <td class="text-end" id="resumen_ubicacion">-</td>
+                                                                        </tr>
+                                                                        <tr id="resumen_numero_row" style="display: none;">
+                                                                            <td class="text-muted">
+                                                                                <i class="ri-hashtag me-1"></i>Número de Boleto:
+                                                                            </td>
+                                                                            <td class="text-end">
+                                                                                <span class="badge bg-success fs-14 px-3 py-2" id="resumen_numero_boleto">-</span>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Cantidad de Tickets:</td>
+                                                                            <td class="text-end fw-semibold" id="resumen_cantidad">1</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-muted">Precio por Ticket:</td>
+                                                                            <td class="text-end" id="resumen_precio">$0.00</td>
+                                                                        </tr>
+                                                                        <tr class="border-top">
+                                                                            <td class="fw-semibold fs-15">Total a Pagar:</td>
+                                                                            <td class="text-end fw-bold text-success fs-18" id="resumen_total">$0.00</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Términos y Condiciones -->
+                                                    <div class="form-check mb-4">
+                                                        <input class="form-check-input" type="checkbox" id="acepto_terminos" name="acepto_terminos">
+                                                        <label class="form-check-label" for="acepto_terminos">
+                                                            Acepto los <a href="terminos" target="_blank" class="text-primary">términos y condiciones</a> 
+                                                            y las <a href="terminos" target="_blank" class="text-primary">bases del sorteo</a> 
+                                                            <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="text-danger small mt-1" id="acepto_terminos_error" style="display: none;"></div>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex align-items-start gap-3 mt-4">
+                                                        <button type="button" class="btn btn-light btn-label previestab" 
+                                                                data-previous="pills-payment-tab">
+                                                            <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
+                                                            <span class="d-none d-sm-inline">Volver a Pago</span>
+                                                            <span class="d-inline d-sm-none">Volver</span>
+                                                        </button>
+                                                        <button type="submit" class="btn btn-success btn-label right ms-auto" id="btn_realizar_compra" disabled>
+                                                            <i class="ri-shopping-bag-line label-icon align-middle fs-16 ms-2"></i>
+                                                            <span id="btn_compra_text" class="d-none d-sm-inline">Confirmar Compra</span>
+                                                            <span id="btn_compra_text_mobile" class="d-inline d-sm-none">Confirmar</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
                                             </div>
+                                            <!-- end tab content -->
+                                            
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Premios de la Rifa - Compacta -->
-                            <div class="alert alert-success border-0 mb-3 py-2">
-                                <div class="d-flex align-items-center flex-wrap gap-2">
-                                    <strong class="me-2"><i class="ri-trophy-line"></i> Premios:</strong>
-                                    <div id="lista_premios" class="d-flex flex-wrap gap-2">
-                                        <!-- Se llenará dinámicamente -->
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="mb-4">
-
-                            <h5 class="mb-3"><i class="ri-user-line"></i> Datos del Participante</h5>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label for="nombre_completo" class="form-label fs-13">
-                                            Nombre Completo <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control bg-light border-light" id="nombre_completo" name="nombre_completo"
-                                            placeholder="Ingrese su nombre completo">
-                                        <div class="text-danger small mt-1" id="nombre_completo_error" style="display: none;"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label for="email_participante" class="form-label fs-13">
-                                            Correo Electrónico <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="email" class="form-control bg-light border-light" id="email_participante" name="email_participante"
-                                            placeholder="correo@ejemplo.com">
-                                        <div class="text-danger small mt-1" id="email_participante_error" style="display: none;"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label for="telefono" class="form-label fs-13">
-                                            Teléfono / WhatsApp <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="tel" class="form-control bg-light border-light" id="telefono" name="telefono"
-                                            placeholder="+52 1 55 1234 5678">
-                                        <div class="text-danger small mt-1" id="telefono_error" style="display: none;"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label for="ciudad" class="form-label fs-13">
-                                            Ciudad
-                                        </label>
-                                        <input type="text" class="form-control bg-light border-light" id="ciudad" name="ciudad"
-                                            placeholder="Ingrese su ciudad">
-                                        <div class="text-danger small mt-1" id="ciudad_error" style="display: none;"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="mb-4">
-
-                            <h5 class="mb-3"><i class="ri-shopping-cart-line"></i> Cantidad de Tickets</h5>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label for="cantidad_tickets" class="form-label fs-13">
-                                            ¿Cuántos tickets deseas comprar? <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <button class="btn btn-outline-secondary bg-light border-light" type="button" id="btn_menos">
-                                                <i class="ri-subtract-line"></i>
-                                            </button>
-                                            <input type="number" class="form-control bg-light border-light text-center" id="cantidad_tickets" 
-                                                   name="cantidad_tickets" value="1" min="1" max="999">
-                                            <button class="btn btn-outline-secondary bg-light border-light" type="button" id="btn_mas">
-                                                <i class="ri-add-line"></i>
-                                            </button>
+                                
+                                <!-- Columna Derecha - Resumen de la Orden -->
+                                <div class="col-xl-4">
+                                    <div class="card">
+                                        <div class="card-header bg-success-subtle border-0">
+                                            <h5 class="card-title mb-0">
+                                                <i class="ri-shopping-bag-line me-2"></i>Resumen de Orden
+                                            </h5>
                                         </div>
-                                        <div class="text-danger small mt-1" id="cantidad_tickets_error" style="display: none;"></div>
-                                        <small class="text-muted">Mientras más tickets, mayores probabilidades de ganar</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label class="form-label fs-13">Total a Pagar</label>
-                                        <div class="card bg-primary-subtle border-0">
-                                            <div class="card-body py-3">
-                                                <h2 class="mb-0 text-primary">$<span id="total_pagar">0.00</span></h2>
-                                                <small class="text-muted">
-                                                    <span id="cantidad_display">1</span> ticket(s) × $<span id="precio_display">0.00</span>
+                                        <div class="card-body">
+                                            
+                                            <!-- Premios -->
+                                            <div class="mb-3">
+                                                <h6 class="fs-14 mb-3">
+                                                    <i class="ri-trophy-line text-warning me-1"></i> Premios de esta Rifa
+                                                </h6>
+                                                <div id="lista_premios" class="d-flex flex-column gap-2">
+                                                    <!-- Se llenará dinámicamente -->
+                                                </div>
+                                            </div>
+                                            
+                                            <hr class="my-3">
+                                            
+                                            <!-- Detalles de Precio -->
+                                            <div class="table-responsive table-card">
+                                                <table class="table table-borderless align-middle mb-0">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="text-muted">Precio por Ticket:</td>
+                                                            <td class="text-end fw-semibold">$<span id="precio_ticket">0.00</span></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-muted">Cantidad:</td>
+                                                            <td class="text-end fw-semibold"><span id="cantidad_display">1</span></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-muted">Tickets Disponibles:</td>
+                                                            <td class="text-end">
+                                                                <span class="badge bg-primary-subtle text-primary">
+                                                                    <span id="tickets_disponibles">0</span>/<span id="tickets_total">0</span>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <tr class="table-active">
+                                                            <th class="fs-15">Total:</th>
+                                                            <th class="text-end">
+                                                                <span class="fw-semibold text-success fs-18">
+                                                                    $<span id="total_pagar">0.00</span>
+                                                                </span>
+                                                            </th>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            
+                                            <div class="alert alert-success border-0 mt-3 mb-0">
+                                                <small class="mb-0">
+                                                    <i class="ri-information-line me-1"></i>
+                                                    Recibirás un correo de confirmación al completar tu compra
                                                 </small>
                                             </div>
+                                            
                                         </div>
                                     </div>
                                 </div>
+                                
                             </div>
-
-                            <hr class="mb-4">
-
-                            <h5 class="mb-3"><i class="ri-bank-card-line"></i> Método de Pago</h5>
-
-                            <div class="row mb-3">
-                                <div class="col-12">
-                                    <div class="alert alert-info border-0" role="alert">
-                                        <h6 class="alert-heading mb-3"><i class="ri-bank-card-line me-1"></i> Métodos de Pago Disponibles</h6>
-                                        
-                                        <div class="row mb-3">
-                                            <div class="col-md-6 mb-2">
-                                                <div class="card bg-white border h-100">
-                                                    <div class="card-body p-3">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <div class="avatar-xs me-2">
-                                                                <div class="avatar-title bg-primary-subtle text-primary rounded">
-                                                                    <i class="ri-bank-line"></i>
-                                                                </div>
-                                                            </div>
-                                                            <strong>Banco Interbank</strong>
-                                                        </div>
-                                                        <p class="mb-1 small text-muted">Cuenta: <strong class="text-dark">[Ingresar cuenta]</strong></p>
-                                                        <p class="mb-0 small text-muted">CCI: <strong class="text-dark">[Ingresar CCI]</strong></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <div class="card bg-white border h-100">
-                                                    <div class="card-body p-3">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <div class="avatar-xs me-2">
-                                                                <div class="avatar-title bg-primary-subtle text-primary rounded">
-                                                                    <i class="ri-bank-line"></i>
-                                                                </div>
-                                                            </div>
-                                                            <strong>Banco BCP</strong>
-                                                        </div>
-                                                        <p class="mb-1 small text-muted">Cuenta: <strong class="text-dark">[Ingresar cuenta]</strong></p>
-                                                        <p class="mb-0 small text-muted">CCI: <strong class="text-dark">[Ingresar CCI]</strong></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6 mb-2">
-                                                <div class="card bg-white border h-100">
-                                                    <div class="card-body p-3 text-center">
-                                                        <div class="d-flex align-items-center justify-content-center mb-2">
-                                                            <div class="avatar-xs me-2">
-                                                                <div class="avatar-title bg-success-subtle text-success rounded">
-                                                                    <i class="ri-smartphone-line"></i>
-                                                                </div>
-                                                            </div>
-                                                            <strong>Yape</strong>
-                                                        </div>
-                                                        
-                                                        <!-- QR Code Yape -->
-                                                        <div class="mb-2">
-                                                            <img src="assets/images/qr/yape-qr.png" alt="QR Yape" 
-                                                                 class="img-fluid rounded border" 
-                                                                 style="max-width: 150px; height: auto;"
-                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                                            <div class="alert alert-secondary border-0 p-2 mb-0" style="display: none;">
-                                                                <small><i class="ri-qr-code-line"></i> QR no disponible</small>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <p class="mb-0 small text-muted">Número: <strong class="text-dark">519 873 862</strong></p>
-                                                        <small class="text-success"><i class="ri-qr-scan-line"></i> Escanea el QR o usa el número</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <div class="card bg-white border h-100">
-                                                    <div class="card-body p-3 text-center">
-                                                        <div class="d-flex align-items-center justify-content-center mb-2">
-                                                            <div class="avatar-xs me-2">
-                                                                <div class="avatar-title bg-info-subtle text-info rounded">
-                                                                    <i class="ri-smartphone-line"></i>
-                                                                </div>
-                                                            </div>
-                                                            <strong>Plin</strong>
-                                                        </div>
-                                                        
-                                                        <!-- QR Code Plin -->
-                                                        <div class="mb-2">
-                                                            <img src="assets/images/qr/plin-qr.png" alt="QR Plin" 
-                                                                 class="img-fluid rounded border" 
-                                                                 style="max-width: 150px; height: auto;"
-                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                                            <div class="alert alert-secondary border-0 p-2 mb-0" style="display: none;">
-                                                                <small><i class="ri-qr-code-line"></i> QR no disponible</small>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <p class="mb-0 small text-muted">Número: <strong class="text-dark">987 555 555</strong></p>
-                                                        <small class="text-info"><i class="ri-qr-scan-line"></i> Escanea el QR o usa el número</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="alert alert-warning border-0 mt-3 mb-0">
-                                            <small>
-                                                <i class="ri-information-line me-1"></i>
-                                                <strong>Importante:</strong> Una vez realizado el pago, sube tu comprobante abajo o envíalo por correo/WhatsApp para validar tu compra.
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-12">
-                                    <div class="mb-4">
-                                        <label for="comprobante_pago" class="form-label fs-13">
-                                            <i class="ri-image-add-line me-1"></i> Comprobante de Pago (Opcional)
-                                        </label>
-                                        <input type="file" class="form-control bg-light border-light" id="comprobante_pago" name="comprobante_pago"
-                                            accept="image/*,.pdf">
-                                        <div class="text-danger small mt-1" id="comprobante_pago_error" style="display: none;"></div>
-                                        <small class="text-muted">Si ya realizaste el pago, puedes subir tu comprobante ahora o enviarlo después por correo/WhatsApp. Formatos: JPG, PNG, PDF (máx. 5MB)</small>
-                                        
-                                        <!-- Vista previa del archivo -->
-                                        <div id="preview_comprobante" class="mt-3" style="display: none;">
-                                            <div class="alert alert-success border-0">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="ri-file-check-line fs-20 me-2"></i>
-                                                    <div>
-                                                        <strong>Archivo seleccionado:</strong>
-                                                        <p class="mb-0 small" id="nombre_archivo"></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="mb-4">
-
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="acepto_terminos" name="acepto_terminos">
-                                        <label class="form-check-label" for="acepto_terminos">
-                                            Acepto los <a href="terminos" target="_blank" class="text-primary">términos y condiciones</a> y las 
-                                            <a href="terminos" target="_blank" class="text-primary">bases del sorteo</a> <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="text-danger small mt-1" id="acepto_terminos_error" style="display: none;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                                <i class="ri-close-line me-1"></i>Cancelar
-                            </button>
-                            <button type="submit" class="btn btn-success" id="btn_realizar_compra">
-                                <i class="ri-shopping-bag-line me-1"></i><span id="btn_compra_text">Realizar Compra</span>
-                            </button>
+                            
                         </div>
                     </form>
                 </div>
             </div>
         </div>
         <!-- end modal -->
+
+        <!-- Modal para Seleccionar Número de Boleto -->
+        <div class="modal fade" id="modal_seleccionar_numero" tabindex="-1" aria-labelledby="modal_seleccionar_numero_label" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary-subtle border-0">
+                        <h5 class="modal-title" id="modal_seleccionar_numero_label">
+                            <i class="ri-hashtag me-2"></i>Selecciona tu Número de la Suerte
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        
+                        <!-- Buscador de Número -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="ri-search-line"></i></span>
+                                    <input type="text" class="form-control" id="buscar_numero" 
+                                           placeholder="Busca tu número favorito (ej: 777, 888, 1234...)">
+                                    <button class="btn btn-primary" type="button" onclick="buscarNumero()">
+                                        Buscar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="filtrarNumeros('todos')">
+                                        Todos
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="filtrarNumeros('pares')">
+                                        Pares
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="filtrarNumeros('impares')">
+                                        Impares
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="filtrarNumeros('multiplos5')">
+                                        Múltiplos de 5
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Estadísticas de Números -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <div class="card border mb-0">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="text-muted small">Disponibles</div>
+                                        <h5 class="mb-0 text-success" id="stat_disponibles">0</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border mb-0">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="text-muted small">Vendidos</div>
+                                        <h5 class="mb-0 text-danger" id="stat_vendidos">0</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border mb-0">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="text-muted small">Reservados</div>
+                                        <h5 class="mb-0 text-warning" id="stat_reservados">0</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border mb-0">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="text-muted small">% Vendido</div>
+                                        <h5 class="mb-0 text-primary" id="stat_porcentaje">0%</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Grid de Números -->
+                        <div class="alert alert-info border-0 mb-3">
+                            <small>
+                                <i class="ri-information-line me-1"></i>
+                                <strong>Leyenda:</strong> 
+                                <span class="badge bg-success ms-2">Disponible</span>
+                                <span class="badge bg-secondary ms-1">Vendido</span>
+                                <span class="badge bg-warning ms-1">Reservado</span>
+                                <span class="badge bg-dark ms-1">Bloqueado</span>
+                            </small>
+                        </div>
+                        
+                        <div class="card border">
+                            <div class="card-body p-3" style="max-height: 400px; overflow-y: auto;">
+                                <div id="grid_numeros_disponibles" class="row g-2">
+                                    <!-- Se llenará dinámicamente con JavaScript -->
+                                    <div class="col-12 text-center py-5">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                        <p class="text-muted mt-2">Cargando números disponibles...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i>Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end modal seleccionar número -->
 
         <!-- Modal para Ver Premios -->
         <div class="modal fade" id="modal_ver_premios" tabindex="-1" aria-labelledby="modal_ver_premios_label" aria-hidden="true">
@@ -1798,6 +2253,67 @@
         document.addEventListener('DOMContentLoaded', function() {
             let precioUnitario = 0;
             let ticketsDisponibles = 0;
+            let rifaNombreGlobal = '';
+
+            // ======= NAVEGACIÓN ENTRE TABS =======
+            
+            // Prevenir navegación directa a tabs (solo permitir navegación por botones)
+            document.querySelectorAll('#modal_comprar_ticket .nav-link').forEach(tabButton => {
+                // Prevenir clic en tabs deshabilitados
+                tabButton.addEventListener('click', function(e) {
+                    if (this.disabled || this.hasAttribute('disabled')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        return false;
+                    }
+                });
+                
+                // Prevenir evento show.bs.tab en tabs deshabilitados
+                tabButton.addEventListener('show.bs.tab', function(e) {
+                    if (this.disabled || this.hasAttribute('disabled')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+            });
+            
+            // Botones de "Siguiente Tab"
+            document.querySelectorAll('.nexttab').forEach(button => {
+                button.addEventListener('click', function() {
+                    const nextTabId = this.getAttribute('data-nexttab');
+                    const nextTabButton = document.getElementById(nextTabId);
+                    const currentTab = document.querySelector('#modal_comprar_ticket .nav-link.active');
+                    
+                    // Marcar el tab actual como completado
+                    if (currentTab && !currentTab.classList.contains('done')) {
+                        currentTab.classList.add('done');
+                    }
+                    
+                    // Habilitar el siguiente tab antes de mostrarlo
+                    nextTabButton.disabled = false;
+                    nextTabButton.removeAttribute('disabled');
+                    
+                    const nextTab = new bootstrap.Tab(nextTabButton);
+                    nextTab.show();
+                    
+                    // Scroll al inicio del modal
+                    document.querySelector('#modal_comprar_ticket .modal-body').scrollTop = 0;
+                });
+            });
+
+            // Botones de "Tab Anterior"
+            document.querySelectorAll('.previestab').forEach(button => {
+                button.addEventListener('click', function() {
+                    const prevTabId = this.getAttribute('data-previous');
+                    const prevTab = new bootstrap.Tab(document.getElementById(prevTabId));
+                    prevTab.show();
+                    
+                    // Scroll al inicio del modal
+                    document.querySelector('#modal_comprar_ticket .modal-body').scrollTop = 0;
+                });
+            });
 
             // Evento al abrir el modal
             const modalElement = document.getElementById('modal_comprar_ticket');
@@ -1813,13 +2329,19 @@
                 const rifaTotal = button.getAttribute('data-rifa-total');
                 const rifaPremios = JSON.parse(button.getAttribute('data-rifa-premios'));
 
+                // Guardar nombre de rifa globalmente
+                rifaNombreGlobal = rifaNombre;
+
                 // Actualizar el modal
                 document.getElementById('modal_titulo_rifa').textContent = rifaNombre;
                 document.getElementById('rifa_id').value = rifaId;
                 document.getElementById('precio_ticket').textContent = rifaPrecio;
                 document.getElementById('tickets_disponibles').textContent = rifaDisponibles;
                 document.getElementById('tickets_total').textContent = rifaTotal;
-                document.getElementById('precio_display').textContent = rifaPrecio;
+                
+                // Actualizar tabs duplicados
+                document.getElementById('tickets_disponibles_tab').textContent = rifaDisponibles;
+                document.getElementById('tickets_total_tab').textContent = rifaTotal;
 
                 // Guardar valores para cálculos
                 precioUnitario = parseFloat(rifaPrecio);
@@ -1833,17 +2355,47 @@
                 listaPremios.innerHTML = '';
                 
                 rifaPremios.forEach((premio, index) => {
-                    const badgeClass = index === 0 ? 'bg-warning text-white' : index === 1 ? 'bg-secondary text-white' : 'bg-dark text-white';
+                    const iconClass = index === 0 ? 'ri-trophy-fill text-warning' : 
+                                     index === 1 ? 'ri-medal-line text-secondary' : 
+                                     'ri-award-line text-dark';
                     listaPremios.innerHTML += `
-                        <span class="badge ${badgeClass} fs-13 px-2 py-2">
-                            ${premio.posicion}° ${premio.nombre}
-                        </span>
+                        <div class="d-flex align-items-center gap-2 small">
+                            <i class="${iconClass} fs-16"></i>
+                            <span class="text-muted">${premio.posicion}°</span>
+                            <strong>${premio.nombre}</strong>
+                        </div>
                     `;
                 });
 
                 // Resetear cantidad a 1
                 document.getElementById('cantidad_tickets').value = 1;
                 calcularTotal();
+                
+                // Resetear navegación de tabs - Solo el primero habilitado
+                const personalTab = document.getElementById('pills-personal-tab');
+                const orderTab = document.getElementById('pills-order-tab');
+                const paymentTab = document.getElementById('pills-payment-tab');
+                const finishTab = document.getElementById('pills-finish-tab');
+                
+                personalTab.disabled = false;
+                personalTab.removeAttribute('disabled');
+                personalTab.classList.remove('done');
+                
+                orderTab.disabled = true;
+                orderTab.setAttribute('disabled', 'disabled');
+                orderTab.classList.remove('done');
+                
+                paymentTab.disabled = true;
+                paymentTab.setAttribute('disabled', 'disabled');
+                paymentTab.classList.remove('done');
+                
+                finishTab.disabled = true;
+                finishTab.setAttribute('disabled', 'disabled');
+                finishTab.classList.remove('done');
+                
+                // Volver al primer tab
+                const firstTab = new bootstrap.Tab(personalTab);
+                firstTab.show();
             });
 
             // Función para calcular el total
@@ -1854,6 +2406,241 @@
                 document.getElementById('total_pagar').textContent = total;
                 document.getElementById('cantidad_display').textContent = cantidad;
             }
+            
+            // Función para actualizar el resumen final
+            function actualizarResumenFinal() {
+                const ciudad = document.getElementById('ciudad').value || '-';
+                const estado = document.getElementById('estado').value || '-';
+                const ubicacion = ciudad !== '-' && estado !== '-' ? `${ciudad}, ${estado}` : '-';
+                
+                // Documento
+                const tipoDoc = document.getElementById('tipo_documento').value || '';
+                const numDoc = document.getElementById('numero_documento').value || '';
+                const documento = tipoDoc && numDoc ? `${tipoDoc}: ${numDoc}` : '-';
+                
+                // Número de boleto
+                const numeroReservado = document.getElementById('numero_reservado').value;
+                const numeroFormateado = document.getElementById('numero_formateado').value;
+                
+                document.getElementById('resumen_rifa_nombre').textContent = rifaNombreGlobal;
+                document.getElementById('resumen_nombre').textContent = document.getElementById('nombre_completo').value || '-';
+                document.getElementById('resumen_email').textContent = document.getElementById('email_participante').value || '-';
+                document.getElementById('resumen_telefono').textContent = document.getElementById('telefono').value || '-';
+                document.getElementById('resumen_documento').textContent = documento;
+                document.getElementById('resumen_direccion').textContent = document.getElementById('direccion_envio').value || '-';
+                document.getElementById('resumen_ubicacion').textContent = ubicacion;
+                
+                // Mostrar número de boleto si se seleccionó
+                if (numeroReservado && numeroFormateado) {
+                    document.getElementById('resumen_numero_boleto').textContent = numeroFormateado;
+                    document.getElementById('resumen_numero_row').style.display = '';
+                } else {
+                    document.getElementById('resumen_numero_row').style.display = 'none';
+                }
+                
+                document.getElementById('resumen_cantidad').textContent = document.getElementById('cantidad_tickets').value;
+                document.getElementById('resumen_precio').textContent = '$' + precioUnitario.toFixed(2);
+                document.getElementById('resumen_total').textContent = '$' + document.getElementById('total_pagar').textContent;
+            }
+            
+            // Actualizar resumen cuando se llega al tab final
+            document.getElementById('pills-finish-tab').addEventListener('shown.bs.tab', function() {
+                actualizarResumenFinal();
+            });
+            
+            // ======= VALIDACIÓN EN TIEMPO REAL Y HABILITACIÓN DE BOTONES =======
+            
+            // Función para validar Tab 1 - Información Personal
+            function validarTabPersonal() {
+                const nombreInput = document.getElementById('nombre_completo');
+                const emailInput = document.getElementById('email_participante');
+                const telefonoInput = document.getElementById('telefono');
+                const ciudadInput = document.getElementById('ciudad');
+                const estadoInput = document.getElementById('estado');
+                const direccionInput = document.getElementById('direccion_envio');
+                
+                const nombreCompleto = nombreInput.value.trim();
+                const email = emailInput.value.trim();
+                const telefono = telefonoInput.value.trim();
+                const ciudad = ciudadInput.value.trim();
+                const estado = estadoInput.value.trim();
+                const direccion = direccionInput.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                const nombreValido = nombreCompleto.length >= 3;
+                const emailValido = emailRegex.test(email);
+                const telefonoValido = telefono.length >= 8;
+                const ciudadValida = ciudad.length >= 3;
+                const estadoValido = estado.length >= 3;
+                const direccionValida = direccion.length >= 10;
+                
+                // Feedback visual para nombre
+                if (nombreCompleto.length > 0) {
+                    if (nombreValido) {
+                        nombreInput.classList.remove('border-danger');
+                        nombreInput.classList.add('border-success');
+                    } else {
+                        nombreInput.classList.remove('border-success');
+                    }
+                } else {
+                    nombreInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                // Feedback visual para email
+                if (email.length > 0) {
+                    if (emailValido) {
+                        emailInput.classList.remove('border-danger');
+                        emailInput.classList.add('border-success');
+                    } else {
+                        emailInput.classList.remove('border-success');
+                        emailInput.classList.add('border-danger');
+                    }
+                } else {
+                    emailInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                // Feedback visual para teléfono
+                if (telefono.length > 0) {
+                    if (telefonoValido) {
+                        telefonoInput.classList.remove('border-danger');
+                        telefonoInput.classList.add('border-success');
+                    } else {
+                        telefonoInput.classList.remove('border-success');
+                    }
+                } else {
+                    telefonoInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                // Feedback visual para ciudad
+                if (ciudad.length > 0) {
+                    if (ciudadValida) {
+                        ciudadInput.classList.remove('border-danger');
+                        ciudadInput.classList.add('border-success');
+                    } else {
+                        ciudadInput.classList.remove('border-success');
+                    }
+                } else {
+                    ciudadInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                // Feedback visual para estado
+                if (estado.length > 0) {
+                    if (estadoValido) {
+                        estadoInput.classList.remove('border-danger');
+                        estadoInput.classList.add('border-success');
+                    } else {
+                        estadoInput.classList.remove('border-success');
+                    }
+                } else {
+                    estadoInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                // Feedback visual para dirección
+                if (direccion.length > 0) {
+                    if (direccionValida) {
+                        direccionInput.classList.remove('border-danger');
+                        direccionInput.classList.add('border-success');
+                    } else {
+                        direccionInput.classList.remove('border-success');
+                    }
+                } else {
+                    direccionInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                const esValido = nombreValido && emailValido && telefonoValido && ciudadValida && estadoValido && direccionValida;
+                
+                // Habilitar o deshabilitar botón
+                const btnContinuar = document.getElementById('btn_continuar_personal');
+                btnContinuar.disabled = !esValido;
+                
+                // Cambiar el texto del botón si está deshabilitado (responsive)
+                if (!esValido) {
+                    btnContinuar.innerHTML = `
+                        <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
+                        <span class="d-none d-sm-inline">Complete los datos obligatorios</span>
+                        <span class="d-inline d-sm-none">Complete datos</span>
+                    `;
+                } else {
+                    btnContinuar.innerHTML = `
+                        <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
+                        <span class="d-none d-sm-inline">Continuar a tu Orden</span>
+                        <span class="d-inline d-sm-none">Continuar</span>
+                    `;
+                }
+                
+                return esValido;
+            }
+            
+            // Función para validar Tab 2 - Tu Orden (cantidad de tickets)
+            function validarTabOrden() {
+                const cantidad = parseInt(document.getElementById('cantidad_tickets').value);
+                const esValido = cantidad >= 1 && cantidad <= ticketsDisponibles;
+                
+                // Este tab siempre tiene un valor válido por defecto, pero validamos por si acaso
+                document.getElementById('btn_continuar_orden').disabled = !esValido;
+                
+                return esValido;
+            }
+            
+            // Función para validar Tab 4 - Confirmar (términos y condiciones)
+            function validarTabConfirmar() {
+                const aceptoTerminos = document.getElementById('acepto_terminos').checked;
+                
+                // Habilitar o deshabilitar botón de compra
+                const btnCompra = document.getElementById('btn_realizar_compra');
+                btnCompra.disabled = !aceptoTerminos;
+                
+                // Cambiar el texto del botón si está deshabilitado (desktop y móvil)
+                const btnTextDesktop = document.getElementById('btn_compra_text');
+                const btnTextMobile = document.getElementById('btn_compra_text_mobile');
+                
+                if (!aceptoTerminos) {
+                    btnTextDesktop.textContent = 'Acepta los términos para continuar';
+                    btnTextMobile.textContent = 'Acepta términos';
+                } else {
+                    btnTextDesktop.textContent = 'Confirmar Compra';
+                    btnTextMobile.textContent = 'Confirmar';
+                }
+                
+                return aceptoTerminos;
+            }
+            
+            // ======= EVENTOS DE VALIDACIÓN EN TIEMPO REAL =======
+            
+            // Validar campos del Tab 1 en tiempo real
+            document.getElementById('nombre_completo').addEventListener('input', function() {
+                validarTabPersonal();
+            });
+            
+            document.getElementById('email_participante').addEventListener('input', function() {
+                validarTabPersonal();
+            });
+            
+            document.getElementById('telefono').addEventListener('input', function() {
+                validarTabPersonal();
+            });
+            
+            document.getElementById('ciudad').addEventListener('input', function() {
+                validarTabPersonal();
+            });
+            
+            document.getElementById('estado').addEventListener('input', function() {
+                validarTabPersonal();
+            });
+            
+            document.getElementById('direccion_envio').addEventListener('input', function() {
+                validarTabPersonal();
+            });
+            
+            // Validar cantidad de tickets en tiempo real
+            document.getElementById('cantidad_tickets').addEventListener('input', function() {
+                validarTabOrden();
+            });
+            
+            // Validar checkbox de términos
+            document.getElementById('acepto_terminos').addEventListener('change', function() {
+                validarTabConfirmar();
+            });
 
             // Botón aumentar cantidad
             document.getElementById('btn_mas').addEventListener('click', function() {
@@ -1864,6 +2651,7 @@
                 if (valor < max) {
                     input.value = valor + 1;
                     calcularTotal();
+                    validarTabOrden();
                 }
             });
 
@@ -1875,6 +2663,7 @@
                 if (valor > 1) {
                     input.value = valor - 1;
                     calcularTotal();
+                    validarTabOrden();
                 }
             });
 
@@ -1955,6 +2744,47 @@
                     esValido = false;
                 }
 
+                // Validar tipo de documento
+                const tipoDocumento = document.getElementById('tipo_documento').value;
+                if (tipoDocumento === '') {
+                    mostrarError('tipo_documento', 'Por favor, seleccione el tipo de documento');
+                    esValido = false;
+                }
+
+                // Validar número de documento
+                const numeroDocumento = document.getElementById('numero_documento').value.trim();
+                if (numeroDocumento === '') {
+                    mostrarError('numero_documento', 'Por favor, ingrese su número de documento');
+                    esValido = false;
+                } else if (numeroDocumento.length < 6) {
+                    mostrarError('numero_documento', 'El número de documento debe tener al menos 6 caracteres');
+                    esValido = false;
+                }
+
+                // Validar ciudad
+                const ciudad = document.getElementById('ciudad').value.trim();
+                if (ciudad === '') {
+                    mostrarError('ciudad', 'Por favor, ingrese su ciudad');
+                    esValido = false;
+                }
+
+                // Validar estado
+                const estado = document.getElementById('estado').value.trim();
+                if (estado === '') {
+                    mostrarError('estado', 'Por favor, ingrese su estado o provincia');
+                    esValido = false;
+                }
+
+                // Validar dirección de envío
+                const direccion = document.getElementById('direccion_envio').value.trim();
+                if (direccion === '') {
+                    mostrarError('direccion_envio', 'Por favor, ingrese su dirección completa de envío');
+                    esValido = false;
+                } else if (direccion.length < 10) {
+                    mostrarError('direccion_envio', 'La dirección debe ser más específica (mínimo 10 caracteres)');
+                    esValido = false;
+                }
+
                 // Validar cantidad de tickets
                 const cantidadTickets = parseInt(document.getElementById('cantidad_tickets').value);
                 if (isNaN(cantidadTickets) || cantidadTickets < 1) {
@@ -1975,8 +2805,8 @@
                 return esValido;
             }
 
-            // Limpiar error cuando el usuario empieza a escribir
-            document.querySelectorAll('#form_comprar_ticket input').forEach(input => {
+            // Limpiar error cuando el usuario empieza a escribir (inputs y textareas)
+            document.querySelectorAll('#form_comprar_ticket input, #form_comprar_ticket textarea').forEach(input => {
                 input.addEventListener('input', function() {
                     this.classList.remove('border-danger');
                     const errorDiv = document.getElementById(this.id + '_error');
@@ -2026,6 +2856,8 @@
                 formData.append('email', document.getElementById('email_participante').value);
                 formData.append('telefono', document.getElementById('telefono').value);
                 formData.append('ciudad', document.getElementById('ciudad').value);
+                formData.append('estado', document.getElementById('estado').value);
+                formData.append('direccion_envio', document.getElementById('direccion_envio').value);
                 formData.append('cantidad_tickets', document.getElementById('cantidad_tickets').value);
                 formData.append('total', document.getElementById('total_pagar').textContent);
                 
@@ -2049,6 +2881,8 @@
                     email: document.getElementById('email_participante').value,
                     telefono: document.getElementById('telefono').value,
                     ciudad: document.getElementById('ciudad').value,
+                    estado: document.getElementById('estado').value,
+                    direccion_envio: document.getElementById('direccion_envio').value,
                     cantidad_tickets: document.getElementById('cantidad_tickets').value,
                     total: document.getElementById('total_pagar').textContent,
                     tiene_comprobante: comprobanteInput.files.length > 0
@@ -2074,6 +2908,51 @@
                 const form = document.getElementById('form_comprar_ticket');
                 form.reset();
                 limpiarErrores();
+                
+                // Resetear navegación - solo primer tab habilitado
+                const personalTab = document.getElementById('pills-personal-tab');
+                const orderTab = document.getElementById('pills-order-tab');
+                const paymentTab = document.getElementById('pills-payment-tab');
+                const finishTab = document.getElementById('pills-finish-tab');
+                
+                personalTab.disabled = false;
+                personalTab.removeAttribute('disabled');
+                personalTab.classList.remove('done');
+                
+                orderTab.disabled = true;
+                orderTab.setAttribute('disabled', 'disabled');
+                orderTab.classList.remove('done');
+                
+                paymentTab.disabled = true;
+                paymentTab.setAttribute('disabled', 'disabled');
+                paymentTab.classList.remove('done');
+                
+                finishTab.disabled = true;
+                finishTab.setAttribute('disabled', 'disabled');
+                finishTab.classList.remove('done');
+                
+                // Deshabilitar botones de continuar
+                document.getElementById('btn_continuar_personal').disabled = true;
+                document.getElementById('btn_continuar_orden').disabled = false;
+                document.getElementById('btn_continuar_pago').disabled = false;
+                document.getElementById('btn_realizar_compra').disabled = true;
+                
+                // Volver al primer tab
+                const firstTab = new bootstrap.Tab(personalTab);
+                firstTab.show();
+            });
+            
+            // Validar estado inicial cuando se muestran los tabs
+            document.getElementById('pills-personal-tab').addEventListener('shown.bs.tab', function() {
+                validarTabPersonal();
+            });
+            
+            document.getElementById('pills-order-tab').addEventListener('shown.bs.tab', function() {
+                validarTabOrden();
+            });
+            
+            document.getElementById('pills-finish-tab').addEventListener('shown.bs.tab', function() {
+                validarTabConfirmar();
             });
         });
     </script>
@@ -2255,6 +3134,439 @@
                     }
                 });
             });
+        });
+    </script>
+
+    <!-- Estilos inline para Grid de Números -->
+    <style>
+        #grid_numeros_disponibles .numero-btn {
+            padding: 12px 8px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+        
+        #grid_numeros_disponibles .numero-disponible {
+            border-color: #28a745;
+            background: white;
+            color: #28a745;
+        }
+        
+        #grid_numeros_disponibles .numero-disponible:hover {
+            background: #28a745;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+        
+        #grid_numeros_disponibles .numero-vendido {
+            border-color: #6c757d;
+            background: #e9ecef;
+            color: #6c757d;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #grid_numeros_disponibles .numero-reservado {
+            border-color: #ffc107;
+            background: #fff3cd;
+            color: #856404;
+            cursor: not-allowed;
+        }
+        
+        #grid_numeros_disponibles .numero-bloqueado {
+            border-color: #343a40;
+            background: #f8f9fa;
+            color: #343a40;
+            cursor: not-allowed;
+        }
+        
+        #grid_numeros_disponibles .numero-especial {
+            border-color: #17a2b8;
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            box-shadow: 0 0 10px rgba(23, 162, 184, 0.5);
+        }
+        
+        #grid_numeros_disponibles .numero-especial:hover {
+            transform: scale(1.1);
+        }
+    </style>
+
+    <!-- Script para Sistema de Selección de Números de Boleto -->
+    <script>
+        // Variables globales para gestión de números
+        let numerosDisponibles = [];
+        let numeroSeleccionado = null;
+        let timerReserva = null;
+        let tiempoRestante = 600; // 10 minutos en segundos
+        let rifaActual = null;
+        
+        // Función para mostrar modal con grid de números
+        function mostrarGridNumeros() {
+            const rifaId = document.getElementById('rifa_id').value;
+            rifaActual = rifaId;
+            
+            // Abrir modal
+            const modal = new bootstrap.Modal(document.getElementById('modal_seleccionar_numero'));
+            modal.show();
+            
+            // Cargar números disponibles
+            cargarNumerosDisponibles(rifaId);
+        }
+        
+        // Cargar números desde la API (simulado por ahora)
+        async function cargarNumerosDisponibles(rifaId) {
+            const gridContainer = document.getElementById('grid_numeros_disponibles');
+            gridContainer.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div><p class="text-muted mt-2">Cargando números disponibles...</p></div>';
+            
+            // SIMULACIÓN - En producción esto vendría de: /api/rifas/{rifaId}/numeros-disponibles
+            // TODO: Reemplazar con llamada real a API
+            setTimeout(() => {
+                // Simulación de datos
+                const numerosSimulados = generarNumerosSimulados(1, 100, rifaId);
+                mostrarGridNumeros_Render(numerosSimulados);
+            }, 500);
+        }
+        
+        // Generar números simulados (TEMPORAL - reemplazar con API real)
+        function generarNumerosSimulados(inicio, fin, rifaId) {
+            const numeros = [];
+            for (let i = inicio; i <= fin; i++) {
+                // Simular algunos vendidos/reservados
+                let estado = 'DISPONIBLE';
+                if (i % 13 === 0) estado = 'VENDIDO';
+                else if (i % 17 === 0) estado = 'RESERVADO';
+                else if (i % 37 === 0) estado = 'BLOQUEADO';
+                
+                numeros.push({
+                    numero_entero: i,
+                    numero_formateado: String(i).padStart(4, '0'),
+                    estado: estado,
+                    es_especial: (i % 50 === 0) // 50, 100, 150 son especiales
+                });
+            }
+            numerosDisponibles = numeros;
+            return numeros;
+        }
+        
+        // Renderizar grid de números
+        function mostrarGridNumeros_Render(numeros) {
+            const gridContainer = document.getElementById('grid_numeros_disponibles');
+            gridContainer.innerHTML = '';
+            
+            // Calcular estadísticas
+            const disponibles = numeros.filter(n => n.estado === 'DISPONIBLE').length;
+            const vendidos = numeros.filter(n => n.estado === 'VENDIDO').length;
+            const reservados = numeros.filter(n => n.estado === 'RESERVADO').length;
+            const porcentaje = Math.round((vendidos / numeros.length) * 100);
+            
+            document.getElementById('stat_disponibles').textContent = disponibles;
+            document.getElementById('stat_vendidos').textContent = vendidos;
+            document.getElementById('stat_reservados').textContent = reservados;
+            document.getElementById('stat_porcentaje').textContent = porcentaje + '%';
+            
+            // Renderizar números en grid (Bootstrap col)
+            numeros.forEach(num => {
+                const col = document.createElement('div');
+                col.className = 'col-lg-1 col-md-2 col-sm-3 col-4';
+                
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = num.numero_formateado;
+                button.dataset.numero = num.numero_entero;
+                button.dataset.formateado = num.numero_formateado;
+                button.dataset.estado = num.estado;
+                
+                // Clases según estado
+                if (num.estado === 'VENDIDO') {
+                    button.className = 'numero-btn numero-vendido';
+                    button.disabled = true;
+                } else if (num.estado === 'RESERVADO') {
+                    button.className = 'numero-btn numero-reservado';
+                    button.disabled = true;
+                } else if (num.estado === 'BLOQUEADO') {
+                    button.className = 'numero-btn numero-bloqueado';
+                    button.disabled = true;
+                } else if (num.es_especial) {
+                    button.className = 'numero-btn numero-especial numero-disponible';
+                    button.onclick = () => seleccionarNumero(num.numero_entero, num.numero_formateado);
+                } else {
+                    button.className = 'numero-btn numero-disponible';
+                    button.onclick = () => seleccionarNumero(num.numero_entero, num.numero_formateado);
+                }
+                
+                col.appendChild(button);
+                gridContainer.appendChild(col);
+            });
+        }
+        
+        // Seleccionar número específico
+        async function seleccionarNumero(numeroEntero, numeroFormateado) {
+            const rifaId = document.getElementById('rifa_id').value;
+            const sesionId = obtenerOGenerarSesionId();
+            
+            // SIMULACIÓN - En producción: POST /api/rifas/reservar-numero
+            // TODO: Reemplazar con llamada real a API
+            console.log('Reservando número:', {rifaId, numeroEntero, sesionId});
+            
+            // Simulación de respuesta exitosa
+            setTimeout(() => {
+                const result = {exito: true, mensaje: 'Número reservado exitosamente'};
+                
+                if (result.exito) {
+                    // Guardar número seleccionado
+                    numeroSeleccionado = {
+                        entero: numeroEntero,
+                        formateado: numeroFormateado
+                    };
+                    
+                    // Actualizar campos ocultos
+                    document.getElementById('numero_reservado').value = numeroEntero;
+                    document.getElementById('numero_formateado').value = numeroFormateado;
+                    
+                    // Mostrar número seleccionado
+                    document.getElementById('numero_elegido_text').textContent = numeroFormateado;
+                    document.getElementById('numero_seleccionado_display').style.display = 'block';
+                    
+                    // Cerrar modal de números
+                    bootstrap.Modal.getInstance(document.getElementById('modal_seleccionar_numero')).hide();
+                    
+                    // Iniciar temporizador de reserva
+                    iniciarTemporizadorReserva();
+                    
+                    // Mostrar alerta de éxito
+                    mostrarNotificacion('Número ' + numeroFormateado + ' reservado exitosamente', 'success');
+                } else {
+                    alert(result.mensaje);
+                }
+            }, 300);
+        }
+        
+        // Asignar número aleatorio
+        async function asignarNumeroAleatorio() {
+            const rifaId = document.getElementById('rifa_id').value;
+            const sesionId = obtenerOGenerarSesionId();
+            
+            // SIMULACIÓN - En producción: POST /api/rifas/numero-aleatorio
+            // TODO: Reemplazar con llamada real a API
+            console.log('Solicitando número aleatorio:', {rifaId, sesionId});
+            
+            // Simulación de asignación aleatoria
+            setTimeout(() => {
+                // Buscar un número disponible aleatorio
+                const numerosDisp = numerosDisponibles.filter(n => n.estado === 'DISPONIBLE');
+                if (numerosDisp.length === 0) {
+                    alert('No hay números disponibles');
+                    return;
+                }
+                
+                const numeroAleatorio = numerosDisp[Math.floor(Math.random() * numerosDisp.length)];
+                
+                // Guardar número seleccionado
+                numeroSeleccionado = {
+                    entero: numeroAleatorio.numero_entero,
+                    formateado: numeroAleatorio.numero_formateado
+                };
+                
+                // Actualizar campos ocultos
+                document.getElementById('numero_reservado').value = numeroAleatorio.numero_entero;
+                document.getElementById('numero_formateado').value = numeroAleatorio.numero_formateado;
+                
+                // Mostrar número seleccionado
+                document.getElementById('numero_elegido_text').textContent = numeroAleatorio.numero_formateado;
+                document.getElementById('numero_seleccionado_display').style.display = 'block';
+                
+                // Iniciar temporizador
+                iniciarTemporizadorReserva();
+                
+                // Mostrar notificación
+                mostrarNotificacion('Se te asignó el número: ' + numeroAleatorio.numero_formateado, 'success');
+            }, 300);
+        }
+        
+        // Cancelar selección de número
+        function cancelarSeleccionNumero() {
+            if (confirm('¿Estás seguro de que quieres cambiar de número?')) {
+                // Limpiar selección
+                numeroSeleccionado = null;
+                document.getElementById('numero_reservado').value = '';
+                document.getElementById('numero_formateado').value = '';
+                document.getElementById('numero_seleccionado_display').style.display = 'none';
+                
+                // Detener temporizador
+                if (timerReserva) {
+                    clearInterval(timerReserva);
+                    timerReserva = null;
+                }
+                
+                // TODO: En producción, liberar el número en el backend
+            }
+        }
+        
+        // Iniciar temporizador de reserva (10 minutos)
+        function iniciarTemporizadorReserva() {
+            tiempoRestante = 600; // 10 minutos
+            
+            // Limpiar temporizador anterior si existe
+            if (timerReserva) {
+                clearInterval(timerReserva);
+            }
+            
+            // Actualizar cada segundo
+            timerReserva = setInterval(() => {
+                tiempoRestante--;
+                
+                // Formatear tiempo
+                const minutos = Math.floor(tiempoRestante / 60);
+                const segundos = tiempoRestante % 60;
+                const tiempoFormateado = minutos + ':' + String(segundos).padStart(2, '0');
+                
+                document.getElementById('timer_reserva').textContent = tiempoFormateado;
+                
+                // Si el tiempo se agotó
+                if (tiempoRestante <= 0) {
+                    clearInterval(timerReserva);
+                    alert('⏰ Tu reserva ha expirado. Por favor, selecciona otro número.');
+                    cancelarSeleccionNumero();
+                    location.reload();
+                }
+                
+                // Alerta a los 2 minutos
+                if (tiempoRestante === 120) {
+                    mostrarNotificacion('⚠️ Solo quedan 2 minutos de tu reserva', 'warning');
+                }
+            }, 1000);
+        }
+        
+        // Buscar número específico
+        function buscarNumero() {
+            const busqueda = document.getElementById('buscar_numero').value.trim();
+            if (busqueda === '') {
+                mostrarNotificacion('Ingresa un número para buscar', 'warning');
+                return;
+            }
+            
+            const numeroEncontrado = numerosDisponibles.find(n => 
+                n.numero_formateado.includes(busqueda) || 
+                String(n.numero_entero) === busqueda
+            );
+            
+            if (!numeroEncontrado) {
+                mostrarNotificacion('No se encontró el número: ' + busqueda, 'error');
+                return;
+            }
+            
+            // Hacer scroll al número
+            const grid = document.getElementById('grid_numeros_disponibles');
+            const buttons = grid.querySelectorAll('button');
+            buttons.forEach(btn => {
+                if (btn.dataset.numero == numeroEncontrado.numero_entero) {
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    btn.classList.add('animate__animated', 'animate__pulse');
+                    setTimeout(() => {
+                        btn.classList.remove('animate__animated', 'animate__pulse');
+                    }, 1000);
+                }
+            });
+        }
+        
+        // Filtrar números
+        function filtrarNumeros(filtro) {
+            let numerosFiltrados = [...numerosDisponibles];
+            
+            if (filtro === 'pares') {
+                numerosFiltrados = numerosFiltrados.filter(n => n.numero_entero % 2 === 0);
+            } else if (filtro === 'impares') {
+                numerosFiltrados = numerosFiltrados.filter(n => n.numero_entero % 2 !== 0);
+            } else if (filtro === 'multiplos5') {
+                numerosFiltrados = numerosFiltrados.filter(n => n.numero_entero % 5 === 0);
+            }
+            
+            mostrarGridNumeros_Render(numerosFiltrados);
+        }
+        
+        // Obtener o generar ID de sesión único
+        function obtenerOGenerarSesionId() {
+            let sesionId = sessionStorage.getItem('session_id_rifas');
+            
+            if (!sesionId) {
+                sesionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('session_id_rifas', sesionId);
+            }
+            
+            return sesionId;
+        }
+        
+        // Mostrar notificación (usando alert por ahora, luego puede ser toast)
+        function mostrarNotificacion(mensaje, tipo) {
+            // TODO: Implementar sistema de toasts/notificaciones
+            if (tipo === 'error') {
+                alert('❌ ' + mensaje);
+            } else if (tipo === 'warning') {
+                alert('⚠️ ' + mensaje);
+            } else {
+                console.log('✅ ' + mensaje);
+            }
+        }
+        
+        // Actualizar resumen cuando se selecciona número
+        document.addEventListener('DOMContentLoaded', function() {
+            // Observar cambios en número seleccionado
+            const observer = new MutationObserver(function(mutations) {
+                const numeroDisplay = document.getElementById('numero_seleccionado_display');
+                if (numeroDisplay && numeroDisplay.style.display !== 'none') {
+                    // Actualizar resumen en Tab 4 si es necesario
+                    const numeroTexto = document.getElementById('numero_elegido_text').textContent;
+                    // Puede agregarse una fila en el resumen final para mostrar el número
+                }
+            });
+        });
+    </script>
+
+    <!-- Script para Actualizar Resumen con Número de Boleto -->
+    <script>
+        // Modificar la función de envío para incluir campos de documento y número
+        document.addEventListener('DOMContentLoaded', function() {
+            const formCompra = document.getElementById('form_comprar_ticket');
+            if (formCompra) {
+                formCompra.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Validar que se haya seleccionado un número (si la rifa lo requiere)
+                    const numeroReservado = document.getElementById('numero_reservado').value;
+                    // Por ahora lo hacemos opcional, pero se puede hacer obligatorio
+                    
+                    // Agregar los nuevos campos al FormData
+                    const formData = new FormData(this);
+                    
+                    // Agregar campos adicionales
+                    if (numeroReservado) {
+                        formData.append('numero_boleto', numeroReservado);
+                        formData.append('numero_boleto_formateado', document.getElementById('numero_formateado').value);
+                        formData.append('numero_seleccionado_usuario', '1'); // Sí lo seleccionó
+                    } else {
+                        formData.append('numero_seleccionado_usuario', '0'); // Se asignará automático
+                    }
+                    
+                    // Log para debug
+                    console.log('Datos de compra completos:', {
+                        tipo_documento: formData.get('tipo_documento'),
+                        numero_documento: formData.get('numero_documento'),
+                        numero_boleto: formData.get('numero_boleto'),
+                        numero_seleccionado_usuario: formData.get('numero_seleccionado_usuario')
+                    });
+                    
+                    // Aquí continúa el proceso normal de envío
+                    // (Ya está implementado en el código existente)
+                });
+            }
         });
     </script>
 </body>
