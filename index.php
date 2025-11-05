@@ -787,7 +787,7 @@
                                                                         <div class="card-body text-center p-3">
                                                                             <div class="avatar-sm mx-auto mb-2">
                                                                                 <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
-                                                                                    <i class="ri-grid-line fs-18"></i>
+                                                                                    <i class="ri-hashtag fs-18"></i>
                                                                                 </div>
                                                                             </div>
                                                                             <h6 class="mb-2">¿Tienes un número favorito?</h6>
@@ -809,28 +809,31 @@
                                                                             </div>
                                                                             <h6 class="mb-2">¿Prefieres la sorpresa?</h6>
                                                                             <p class="text-muted small mb-3">Nosotros elegimos por ti</p>
-                                                                            <button type="button" class="btn btn-success btn-sm" onclick="asignarNumeroAleatorio()">
-                                                                                <i class="ri-refresh-line me-1"></i> Asignar Número Aleatorio
+                                                                            <button type="button" class="btn btn-success btn-sm" onclick="asignarNumerosAleatorios()">
+                                                                                <i class="ri-refresh-line me-1"></i> Asignar Números Aleatorios
                                                                             </button>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                             
-                                                            <!-- Número Seleccionado/Reservado -->
+                                                            <!-- Números Seleccionados/Reservados -->
                                                             <div id="numero_seleccionado_display" style="display: none;">
                                                                 <div class="alert alert-warning border-0 mb-0">
-                                                                    <div class="d-flex align-items-center justify-content-between">
+                                                                    <div class="d-flex align-items-center justify-content-between mb-2">
                                                                         <div class="d-flex align-items-center">
                                                                             <i class="ri-ticket-2-line fs-20 me-2"></i>
                                                                             <div>
-                                                                                <strong>Tu número:</strong> 
-                                                                                <span class="badge bg-success fs-16 px-3 py-2 ms-2" id="numero_elegido_text">0000</span>
+                                                                                <strong>Tus números seleccionados:</strong>
+                                                                                <span class="badge bg-info ms-2" id="contador_numeros">0/0</span>
                                                                             </div>
                                                                         </div>
-                                                                        <button type="button" class="btn btn-sm btn-light" onclick="cancelarSeleccionNumero()">
-                                                                            <i class="ri-close-line"></i> Cambiar
+                                                                        <button type="button" class="btn btn-sm btn-light" onclick="cancelarTodasLasSelecciones()">
+                                                                            <i class="ri-close-line"></i> Limpiar Todo
                                                                         </button>
+                                                                    </div>
+                                                                    <div class="d-flex flex-wrap gap-2 mb-2" id="lista_numeros_seleccionados">
+                                                                        <!-- Se llenará dinámicamente -->
                                                                     </div>
                                                                     <div class="mt-2">
                                                                         <small>
@@ -841,8 +844,8 @@
                                                                 </div>
                                                             </div>
                                                             
-                                                            <input type="hidden" id="numero_reservado" name="numero_reservado">
-                                                            <input type="hidden" id="numero_formateado" name="numero_formateado">
+                                                            <input type="hidden" id="numeros_reservados" name="numeros_reservados">
+                                                            <input type="hidden" id="numeros_formateados" name="numeros_formateados">
                                                         </div>
                                                     </div>
                                                     
@@ -1068,10 +1071,12 @@
                                                                         </tr>
                                                                         <tr id="resumen_numero_row" style="display: none;">
                                                                             <td class="text-muted">
-                                                                                <i class="ri-hashtag me-1"></i>Número de Boleto:
+                                                                                <i class="ri-hashtag me-1"></i>Números de Boleto:
                                                                             </td>
                                                                             <td class="text-end">
-                                                                                <span class="badge bg-success fs-14 px-3 py-2" id="resumen_numero_boleto">-</span>
+                                                                                <div class="d-flex flex-wrap gap-1 justify-content-end" id="resumen_numeros_boletos">
+                                                                                    <!-- Se llenará dinámicamente -->
+                                                                                </div>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
@@ -2418,9 +2423,9 @@
                 const numDoc = document.getElementById('numero_documento').value || '';
                 const documento = tipoDoc && numDoc ? `${tipoDoc}: ${numDoc}` : '-';
                 
-                // Número de boleto
-                const numeroReservado = document.getElementById('numero_reservado').value;
-                const numeroFormateado = document.getElementById('numero_formateado').value;
+                // Números de boleto seleccionados
+                const numerosReservadosJSON = document.getElementById('numeros_reservados').value;
+                const numerosFormateadosJSON = document.getElementById('numeros_formateados').value;
                 
                 document.getElementById('resumen_rifa_nombre').textContent = rifaNombreGlobal;
                 document.getElementById('resumen_nombre').textContent = document.getElementById('nombre_completo').value || '-';
@@ -2430,10 +2435,25 @@
                 document.getElementById('resumen_direccion').textContent = document.getElementById('direccion_envio').value || '-';
                 document.getElementById('resumen_ubicacion').textContent = ubicacion;
                 
-                // Mostrar número de boleto si se seleccionó
-                if (numeroReservado && numeroFormateado) {
-                    document.getElementById('resumen_numero_boleto').textContent = numeroFormateado;
-                    document.getElementById('resumen_numero_row').style.display = '';
+                // Mostrar números de boleto si se seleccionaron
+                if (numerosFormateadosJSON && numerosFormateadosJSON !== '') {
+                    try {
+                        const numerosArray = JSON.parse(numerosFormateadosJSON);
+                        const containerNumeros = document.getElementById('resumen_numeros_boletos');
+                        containerNumeros.innerHTML = '';
+                        
+                        numerosArray.forEach(num => {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge bg-success fs-14 px-3 py-2';
+                            badge.textContent = num;
+                            containerNumeros.appendChild(badge);
+                        });
+                        
+                        document.getElementById('resumen_numero_row').style.display = '';
+                    } catch (e) {
+                        console.error('Error parsing números:', e);
+                        document.getElementById('resumen_numero_row').style.display = 'none';
+                    }
                 } else {
                     document.getElementById('resumen_numero_row').style.display = 'none';
                 }
@@ -3203,15 +3223,27 @@
     <script>
         // Variables globales para gestión de números
         let numerosDisponibles = [];
-        let numeroSeleccionado = null;
+        let numerosSeleccionados = []; // Ahora es un array de múltiples números
         let timerReserva = null;
         let tiempoRestante = 600; // 10 minutos en segundos
         let rifaActual = null;
+        let cantidadTicketsRequerida = 1;
         
         // Función para mostrar modal con grid de números
         function mostrarGridNumeros() {
             const rifaId = document.getElementById('rifa_id').value;
+            const cantidadTickets = parseInt(document.getElementById('cantidad_tickets').value) || 1;
+            
             rifaActual = rifaId;
+            cantidadTicketsRequerida = cantidadTickets;
+            
+            // Actualizar título del modal
+            const tituloModal = document.getElementById('modal_seleccionar_numero_label');
+            if (cantidadTickets > 1) {
+                tituloModal.innerHTML = `<i class="ri-hashtag me-2"></i>Selecciona ${cantidadTickets} Números de la Suerte`;
+            } else {
+                tituloModal.innerHTML = `<i class="ri-hashtag me-2"></i>Selecciona tu Número de la Suerte`;
+            }
             
             // Abrir modal
             const modal = new bootstrap.Modal(document.getElementById('modal_seleccionar_numero'));
@@ -3309,11 +3341,23 @@
         
         // Seleccionar número específico
         async function seleccionarNumero(numeroEntero, numeroFormateado) {
+            // Verificar si ya está seleccionado
+            const yaSeleccionado = numerosSeleccionados.find(n => n.entero === numeroEntero);
+            if (yaSeleccionado) {
+                mostrarNotificacion('Este número ya fue seleccionado', 'warning');
+                return;
+            }
+            
+            // Verificar si ya completó la cantidad requerida
+            if (numerosSeleccionados.length >= cantidadTicketsRequerida) {
+                mostrarNotificacion(`Solo puedes seleccionar ${cantidadTicketsRequerida} número(s)`, 'warning');
+                return;
+            }
+            
             const rifaId = document.getElementById('rifa_id').value;
             const sesionId = obtenerOGenerarSesionId();
             
             // SIMULACIÓN - En producción: POST /api/rifas/reservar-numero
-            // TODO: Reemplazar con llamada real a API
             console.log('Reservando número:', {rifaId, numeroEntero, sesionId});
             
             // Simulación de respuesta exitosa
@@ -3321,83 +3365,153 @@
                 const result = {exito: true, mensaje: 'Número reservado exitosamente'};
                 
                 if (result.exito) {
-                    // Guardar número seleccionado
-                    numeroSeleccionado = {
+                    // Agregar a la lista de seleccionados
+                    numerosSeleccionados.push({
                         entero: numeroEntero,
                         formateado: numeroFormateado
-                    };
+                    });
                     
-                    // Actualizar campos ocultos
-                    document.getElementById('numero_reservado').value = numeroEntero;
-                    document.getElementById('numero_formateado').value = numeroFormateado;
+                    // Actualizar display
+                    actualizarDisplayNumeros();
                     
-                    // Mostrar número seleccionado
-                    document.getElementById('numero_elegido_text').textContent = numeroFormateado;
-                    document.getElementById('numero_seleccionado_display').style.display = 'block';
+                    // Si ya completó la cantidad, cerrar modal
+                    if (numerosSeleccionados.length >= cantidadTicketsRequerida) {
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('modal_seleccionar_numero'));
+                            if (modal) modal.hide();
+                        }, 500);
+                    }
                     
-                    // Cerrar modal de números
-                    bootstrap.Modal.getInstance(document.getElementById('modal_seleccionar_numero')).hide();
+                    // Iniciar temporizador si es el primer número
+                    if (numerosSeleccionados.length === 1) {
+                        iniciarTemporizadorReserva();
+                    }
                     
-                    // Iniciar temporizador de reserva
-                    iniciarTemporizadorReserva();
-                    
-                    // Mostrar alerta de éxito
-                    mostrarNotificacion('Número ' + numeroFormateado + ' reservado exitosamente', 'success');
+                    // Mostrar notificación
+                    mostrarNotificacion(`Número ${numeroFormateado} reservado (${numerosSeleccionados.length}/${cantidadTicketsRequerida})`, 'success');
                 } else {
                     alert(result.mensaje);
                 }
             }, 300);
         }
         
-        // Asignar número aleatorio
-        async function asignarNumeroAleatorio() {
+        // Actualizar el display de números seleccionados
+        function actualizarDisplayNumeros() {
+            const display = document.getElementById('numero_seleccionado_display');
+            const lista = document.getElementById('lista_numeros_seleccionados');
+            const contador = document.getElementById('contador_numeros');
+            
+            if (numerosSeleccionados.length === 0) {
+                display.style.display = 'none';
+                return;
+            }
+            
+            // Mostrar display
+            display.style.display = 'block';
+            
+            // Actualizar contador
+            contador.textContent = `${numerosSeleccionados.length}/${cantidadTicketsRequerida}`;
+            
+            // Actualizar lista de badges
+            lista.innerHTML = '';
+            numerosSeleccionados.forEach((num, index) => {
+                const badge = document.createElement('div');
+                badge.className = 'd-inline-flex align-items-center';
+                badge.innerHTML = `
+                    <span class="badge bg-success fs-16 px-3 py-2 me-1">${num.formateado}</span>
+                    <button type="button" class="btn btn-sm btn-danger p-1" onclick="eliminarNumero(${index})" style="width: 24px; height: 24px; line-height: 1;">
+                        <i class="ri-close-line" style="font-size: 12px;"></i>
+                    </button>
+                `;
+                lista.appendChild(badge);
+            });
+            
+            // Actualizar campos ocultos
+            const enterosArray = numerosSeleccionados.map(n => n.entero);
+            const formateadosArray = numerosSeleccionados.map(n => n.formateado);
+            
+            document.getElementById('numeros_reservados').value = JSON.stringify(enterosArray);
+            document.getElementById('numeros_formateados').value = JSON.stringify(formateadosArray);
+        }
+        
+        // Eliminar un número específico de la selección
+        function eliminarNumero(index) {
+            if (confirm('¿Deseas eliminar este número de tu selección?')) {
+                numerosSeleccionados.splice(index, 1);
+                actualizarDisplayNumeros();
+                
+                // Si no quedan números, detener temporizador
+                if (numerosSeleccionados.length === 0) {
+                    if (timerReserva) {
+                        clearInterval(timerReserva);
+                        timerReserva = null;
+                    }
+                }
+            }
+        }
+        
+        // Asignar múltiples números aleatorios
+        async function asignarNumerosAleatorios() {
             const rifaId = document.getElementById('rifa_id').value;
+            const cantidadTickets = parseInt(document.getElementById('cantidad_tickets').value) || 1;
             const sesionId = obtenerOGenerarSesionId();
             
-            // SIMULACIÓN - En producción: POST /api/rifas/numero-aleatorio
-            // TODO: Reemplazar con llamada real a API
-            console.log('Solicitando número aleatorio:', {rifaId, sesionId});
+            // SIMULACIÓN - En producción: POST /api/rifas/numeros-aleatorios
+            console.log('Solicitando números aleatorios:', {rifaId, cantidad: cantidadTickets, sesionId});
             
             // Simulación de asignación aleatoria
             setTimeout(() => {
-                // Buscar un número disponible aleatorio
+                // Buscar números disponibles
                 const numerosDisp = numerosDisponibles.filter(n => n.estado === 'DISPONIBLE');
-                if (numerosDisp.length === 0) {
-                    alert('No hay números disponibles');
+                
+                if (numerosDisp.length < cantidadTickets) {
+                    alert(`No hay suficientes números disponibles. Solo hay ${numerosDisp.length} disponibles.`);
                     return;
                 }
                 
-                const numeroAleatorio = numerosDisp[Math.floor(Math.random() * numerosDisp.length)];
+                // Limpiar selección anterior
+                numerosSeleccionados = [];
                 
-                // Guardar número seleccionado
-                numeroSeleccionado = {
-                    entero: numeroAleatorio.numero_entero,
-                    formateado: numeroAleatorio.numero_formateado
-                };
+                // Seleccionar números aleatorios
+                const numerosUsados = [];
+                for (let i = 0; i < cantidadTickets; i++) {
+                    let numeroAleatorio;
+                    do {
+                        const randomIndex = Math.floor(Math.random() * numerosDisp.length);
+                        numeroAleatorio = numerosDisp[randomIndex];
+                    } while (numerosUsados.includes(numeroAleatorio.numero_entero));
+                    
+                    numerosUsados.push(numeroAleatorio.numero_entero);
+                    numerosSeleccionados.push({
+                        entero: numeroAleatorio.numero_entero,
+                        formateado: numeroAleatorio.numero_formateado
+                    });
+                }
                 
-                // Actualizar campos ocultos
-                document.getElementById('numero_reservado').value = numeroAleatorio.numero_entero;
-                document.getElementById('numero_formateado').value = numeroAleatorio.numero_formateado;
-                
-                // Mostrar número seleccionado
-                document.getElementById('numero_elegido_text').textContent = numeroAleatorio.numero_formateado;
-                document.getElementById('numero_seleccionado_display').style.display = 'block';
+                // Actualizar display
+                cantidadTicketsRequerida = cantidadTickets;
+                actualizarDisplayNumeros();
                 
                 // Iniciar temporizador
                 iniciarTemporizadorReserva();
                 
                 // Mostrar notificación
-                mostrarNotificacion('Se te asignó el número: ' + numeroAleatorio.numero_formateado, 'success');
+                const numerosTexto = numerosSeleccionados.map(n => n.formateado).join(', ');
+                mostrarNotificacion(`Se te asignaron los números: ${numerosTexto}`, 'success');
             }, 300);
         }
         
-        // Cancelar selección de número
-        function cancelarSeleccionNumero() {
-            if (confirm('¿Estás seguro de que quieres cambiar de número?')) {
+        // Cancelar todas las selecciones
+        function cancelarTodasLasSelecciones() {
+            if (confirm('¿Estás seguro de que quieres limpiar todos los números seleccionados?')) {
                 // Limpiar selección
-                numeroSeleccionado = null;
-                document.getElementById('numero_reservado').value = '';
-                document.getElementById('numero_formateado').value = '';
+                numerosSeleccionados = [];
+                
+                // Limpiar campos ocultos
+                document.getElementById('numeros_reservados').value = '';
+                document.getElementById('numeros_formateados').value = '';
+                
+                // Ocultar display
                 document.getElementById('numero_seleccionado_display').style.display = 'none';
                 
                 // Detener temporizador
@@ -3406,7 +3520,7 @@
                     timerReserva = null;
                 }
                 
-                // TODO: En producción, liberar el número en el backend
+                // TODO: En producción, liberar los números en el backend
             }
         }
         
@@ -3532,41 +3646,22 @@
 
     <!-- Script para Actualizar Resumen con Número de Boleto -->
     <script>
-        // Modificar la función de envío para incluir campos de documento y número
+        // Modificar la función de envío para incluir campos de documento y números
         document.addEventListener('DOMContentLoaded', function() {
-            const formCompra = document.getElementById('form_comprar_ticket');
-            if (formCompra) {
-                formCompra.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Validar que se haya seleccionado un número (si la rifa lo requiere)
-                    const numeroReservado = document.getElementById('numero_reservado').value;
-                    // Por ahora lo hacemos opcional, pero se puede hacer obligatorio
-                    
-                    // Agregar los nuevos campos al FormData
-                    const formData = new FormData(this);
-                    
-                    // Agregar campos adicionales
-                    if (numeroReservado) {
-                        formData.append('numero_boleto', numeroReservado);
-                        formData.append('numero_boleto_formateado', document.getElementById('numero_formateado').value);
-                        formData.append('numero_seleccionado_usuario', '1'); // Sí lo seleccionó
-                    } else {
-                        formData.append('numero_seleccionado_usuario', '0'); // Se asignará automático
+            // Observer para limpiar selecciones cuando se cambia la cantidad de tickets
+            document.getElementById('cantidad_tickets').addEventListener('change', function() {
+                // Si cambia la cantidad, limpiar números seleccionados
+                if (numerosSeleccionados.length > 0) {
+                    const nuevaCantidad = parseInt(this.value);
+                    if (nuevaCantidad !== numerosSeleccionados.length) {
+                        if (confirm('Al cambiar la cantidad de tickets se limpiarán los números seleccionados. ¿Continuar?')) {
+                            cancelarTodasLasSelecciones();
+                        } else {
+                            this.value = numerosSeleccionados.length;
+                        }
                     }
-                    
-                    // Log para debug
-                    console.log('Datos de compra completos:', {
-                        tipo_documento: formData.get('tipo_documento'),
-                        numero_documento: formData.get('numero_documento'),
-                        numero_boleto: formData.get('numero_boleto'),
-                        numero_seleccionado_usuario: formData.get('numero_seleccionado_usuario')
-                    });
-                    
-                    // Aquí continúa el proceso normal de envío
-                    // (Ya está implementado en el código existente)
-                });
-            }
+                }
+            });
         });
     </script>
 </body>
