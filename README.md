@@ -522,3 +522,13 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 <p align="center">
   Hecho con ❤️ en Perú 🇵🇪
 </p>
+
+
+
+-1 sorteo o rifa , puede tener 1 o muchos premios
+-1 sorteo o rifa, puede tener muchos números tipo cartillas que el usuario puede elegir y comprar
+-1 sorteo o rifa , se podrá exportar cartillas , ejemplo 10 sorteos , 20 sorteos etc, con el fin de publicitar y hacer que el usuario compre un numero de su preferencia
+-1. el administrador cuando un cliente se compro una rifa, en el modulo de admin seleccionara el numero en la cartilla y realizara el registro del participante, con eso ya se inscribe al participante y ese numero
+ya no esta disponible
+- ya que exista sorteos disponibles , se podrá visualizar en la landing donde los usuarios en general podrán registrarse y comprar los tickets de su preferencia o tickets que se generen atomaticamnete
+- creo el proceso para crear las cartillas o números seria al momento de crear el sorteo , elegir tipo ¿Cuántos números quieres vender o cuantos números deseas crear la rifa? en base  a eso se generaría la cuadricula general de números

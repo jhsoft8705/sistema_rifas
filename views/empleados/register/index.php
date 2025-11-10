@@ -41,11 +41,11 @@
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card">
-                                <div class="card-header">
+                              <!--   <div class="card-header">
                                     <h5 class="card-title mb-0">
                                         <i class="ri-user-add-line me-2"></i>Formulario de Registro de Empleado
                                     </h5>
-                                </div>
+                                </div> -->
                                 <div class="card-body">
                                     <form id="form_empleado" novalidate>
                                         <input type="hidden" id="empleado_id" name="empleado_id">
@@ -59,15 +59,67 @@
                                             </div>
                                         </div>
 
-                                        <!-- Fila 1: Nombres Completos -->
+                                        <!-- Fila 1: Documento de Identidad (PRIMERO) -->
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="mb-3">
+                                                    <label for="tipo_documento" class="form-label">Tipo de Documento
+                                                        <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="tipo_documento"
+                                                        name="tipo_documento" required>
+                                                        <option value="">Seleccione tipo de documento</option> 
+                                                    </select>
+                                                    <div class="invalid-feedback" id="tipo_documento_error"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="nro_documento" class="form-label">N° de Documento <span
+                                                            class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="nro_documento"
+                                                            name="nro_documento"
+                                                            placeholder="Ingrese el número de documento" required>
+                                                        <button class="btn btn-primary" type="button" id="btn_consultar_reniec"
+                                                            title="Consultar datos en RENIEC/SUNAT">
+                                                            <i class="ri-search-line"></i> Consultar
+                                                        </button>
+                                                    </div>
+                                                    <small class="text-muted d-block mt-1">
+                                                        <i class="ri-information-line"></i> Consulta automática de datos desde RENIEC/SUNAT
+                                                    </small>
+                                                    <div class="invalid-feedback" id="nro_documento_error"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="mb-3">
+                                                    <label for="ruc" class="form-label">RUC <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="ruc"
+                                                        name="ruc" placeholder="Ingrese el RUC" required
+                                                        maxlength="11">
+                                                    <div class="invalid-feedback" id="ruc_error"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="mb-3">
+                                                    <label for="fecha_nacimiento" class="form-label">Fecha de
+                                                        Nacimiento</label>
+                                                    <input type="date" class="form-control" id="fecha_nacimiento"
+                                                        name="fecha_nacimiento">
+                                                    <div class="invalid-feedback" id="fecha_nacimiento_error"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Fila 2: Nombres Completos (SE LLENAN AUTOMÁTICAMENTE DESPUÉS DE CONSULTA) -->
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="mb-3">
                                                     <label for="nombre" class="form-label">Nombres<span
                                                             class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" id="nombre" name="nombre"
-                                                        placeholder="Ingrese los nombres" required
-                                                        style="min-height: 45px; font-size: 1rem;">
+                                                        placeholder="Ingrese los nombres" required>
                                                     <div class="invalid-feedback" id="nombre_error"></div>
                                                 </div>
                                             </div>
@@ -77,8 +129,7 @@
                                                         <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" id="apellido_paterno"
                                                         name="apellido_paterno"
-                                                        placeholder="Ingrese el apellido paterno" required
-                                                        style="min-height: 45px; font-size: 1rem;">
+                                                        placeholder="Ingrese el apellido paterno" required>
                                                     <div class="invalid-feedback" id="apellido_paterno_error"></div>
                                                 </div>
                                             </div>
@@ -88,49 +139,8 @@
                                                         Materno</label>
                                                     <input type="text" class="form-control" id="apellido_materno"
                                                         name="apellido_materno"
-                                                        placeholder="Ingrese el apellido materno"
-                                                        style="min-height: 45px; font-size: 1rem;">
+                                                        placeholder="Ingrese el apellido materno">
                                                     <div class="invalid-feedback" id="apellido_materno_error"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Fila 2: Documento de Identidad -->
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label for="tipo_documento" class="form-label">Tipo de Documento
-                                                        <span class="text-danger">*</span></label>
-                                                    <select class="form-select" id="tipo_documento"
-                                                        name="tipo_documento" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione tipo de documento</option>
-                                                        <option value="1">DNI</option>
-                                                        <option value="2">Carnet de Extranjería</option>
-                                                        <option value="3">Pasaporte</option>
-                                                    </select>
-                                                    <div class="invalid-feedback" id="tipo_documento_error"></div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label for="nro_documento" class="form-label">N° de Documento <span
-                                                            class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" id="nro_documento"
-                                                        name="nro_documento"
-                                                        placeholder="Ingrese el número de documento" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                    <div class="invalid-feedback" id="nro_documento_error"></div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label for="fecha_nacimiento" class="form-label">Fecha de
-                                                        Nacimiento</label>
-                                                    <input type="date" class="form-control" id="fecha_nacimiento"
-                                                        name="fecha_nacimiento"
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                    <div class="invalid-feedback" id="fecha_nacimiento_error"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -142,7 +152,7 @@
                                                     <label for="sexo" class="form-label">Sexo<span
                                                             class="text-danger">*</span></label>
                                                     <select class="form-select" id="sexo" name="sexo" required
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                         <option value="">Seleccione sexo</option>
                                                         <option value="m">Hombre</option>
                                                         <option value="f">Mujer</option>
@@ -152,13 +162,10 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="mb-3">
-                                                    <label for="estado_civil" class="form-label">Estado Civil<span
-                                                            class="text-danger">*</span></label>
+                                                    <label for="estado_civil" class="form-label">Estado Civil</label>
                                                     <select class="form-select" id="estado_civil" name="estado_civil"
-                                                        required style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione un estado Civil</option>
-                                                        <option value="S">Solter@</option>
-                                                        <option value="C">Casad@</option>
+>
+                                                        <option value="">Seleccione un estado Civil</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="estado_civil_error"></div>
                                                 </div>
@@ -168,7 +175,7 @@
                                                     <label for="telefono" class="form-label">Teléfono</label>
                                                     <input type="text" class="form-control" id="telefono"
                                                         name="telefono" placeholder="Ingrese el teléfono"
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                     <div class="invalid-feedback" id="telefono_error"></div>
                                                 </div>
                                             </div>
@@ -178,73 +185,41 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="mb-3">
-                                                    <label for="profesion" class="form-label">Profesión<span
-                                                            class="text-danger">*</span></label>
-                                                    <select class="form-select" id="profesion" name="profesion" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione profesión</option>
-                                                        <option value="1">Ingeniero de Sistemas</option>
-                                                        <option value="2">Ingeniero Industrial</option>
-                                                        <option value="3">Contador Público</option>
-                                                        <option value="4">Administrador de Empresas</option>
-                                                        <option value="5">Licenciado en Marketing</option>
-                                                        <option value="6">Licenciado en Recursos Humanos</option>
-                                                        <option value="7">Economista</option>
-                                                        <option value="8">Abogado</option>
-                                                        <option value="9">Diseñador Gráfico</option>
-                                                        <option value="10">Técnico en Computación</option>
-                                                        <option value="11">Otro</option>
+                                                    <label for="profesion" class="form-label">Profesión</label>
+                                                    <select class="form-select" id="profesion" name="profesion"
+>
+                                                        <option value="">Seleccione profesión</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="profesion_error"></div>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="mb-3">
-                                                    <label for="grado_institucion" class="form-label">Grado Institución<span
-                                                            class="text-danger">*</span></label>
+                                                    <label for="grado_institucion" class="form-label">Grado Institución</label>
                                                     <select class="form-select" id="grado_institucion" name="grado_institucion"
-                                                        required style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione grado institución</option>
-                                                        <option value="1">Secundaria Completa</option>
-                                                        <option value="2">Técnico Básico</option>
-                                                        <option value="3">Técnico Superior</option>
-                                                        <option value="4">Universitario en Curso</option>
-                                                        <option value="5">Bachiller</option>
-                                                        <option value="6">Título Profesional</option>
-                                                        <option value="7">Maestría</option>
-                                                        <option value="8">Doctorado</option>
+>
+                                                        <option value="">Seleccione grado institución</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="grado_institucion_error"></div>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="mb-3">
-                                                    <label for="email" class="form-label">Email <span
-                                                            class="text-danger">*</span></label>
+                                                    <label for="email" class="form-label">Email</label>
                                                     <input type="email" class="form-control" id="email" name="email"
-                                                        placeholder="correo@ejemplo.com" required
-                                                        style="min-height: 45px; font-size: 1rem;">
+                                                        placeholder="juan.perez@gmail.com"
+>
                                                     <div class="invalid-feedback" id="email_error"></div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Fila 5: Estado y Foto del Empleado -->
+                                        <!-- Fila 5: Foto del Empleado -->
                                         <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label for="estado" class="form-label">Estado <span
-                                                            class="text-danger">*</span></label>
-                                                    <select class="form-select" id="estado" name="estado" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione un estado</option>
-                                                        <option value="1">Activo</option>
-                                                        <option value="0">Inactivo</option>
-                                                    </select>
-                                                    <div class="invalid-feedback" id="estado_error"></div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-8">
+                                            <!-- Estado siempre será Activo por defecto en registro -->
+                                            <input type="hidden" id="estado" name="estado" value="1">
+                                            
+                                            <div class="col-md-12">
                                                 <div class="mb-3">
                                                     <label for="foto_empleado" class="form-label">Foto del Trabajador</label>
                                                     <div class="d-flex align-items-start gap-3">
@@ -260,7 +235,7 @@
                                                         <div class="flex-grow-1">
                                                             <input type="file" class="form-control" id="foto_empleado"
                                                                 name="foto_empleado" accept="image/*"
-                                                                style="min-height: 45px; font-size: 1rem;">
+>
                                                             <small class="text-muted">
                                                                 <i class="ri-information-line me-1"></i>
                                                                 Formatos permitidos: JPG, PNG, JPEG. Tamaño máximo: 2MB
@@ -293,7 +268,7 @@
                                                             class="text-danger">*</span></label>
                                                     <input type="date" class="form-control" id="fecha_ingreso"
                                                         name="fecha_ingreso" required
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                     <div class="invalid-feedback" id="fecha_ingreso_error"></div>
                                                 </div>
                                             </div>
@@ -301,7 +276,7 @@
                                                 <div class="mb-3">
                                                     <label for="fecha_cese" class="form-label">Fecha de Cese</label>
                                                     <input type="date" class="form-control" id="fecha_cese"
-                                                        name="fecha_cese" style="min-height: 45px; font-size: 1rem;">
+                                                        name="fecha_cese" >
                                                     <div class="invalid-feedback" id="fecha_cese_error"></div>
                                                 </div>
                                             </div>
@@ -311,15 +286,8 @@
                                                         Organizacional <span class="text-danger">*</span></label>
                                                     <select class="form-select" id="unidad_organizacional"
                                                         name="unidad_organizacional" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione unidad organizacional</option>
-                                                        <option value="1">Gerencia General</option>
-                                                        <option value="2">Recursos Humanos</option>
-                                                        <option value="3">Contabilidad</option>
-                                                        <option value="4">Ventas</option>
-                                                        <option value="5">Marketing</option>
-                                                        <option value="6">Tecnología</option>
-                                                        <option value="7">Operaciones</option>
+>
+                                                        <option value="">Seleccione unidad organizacional</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="unidad_organizacional_error">
                                                     </div>
@@ -333,18 +301,8 @@
                                                     <label for="cargo" class="form-label">Cargo <span
                                                             class="text-danger">*</span></label>
                                                     <select class="form-select" id="cargo" name="cargo" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione un cargo</option>
-                                                        <option value="1">Gerente General</option>
-                                                        <option value="2">Desarrollador Senior</option>
-                                                        <option value="3">Analista de Recursos Humanos</option>
-                                                        <option value="4">Contador</option>
-                                                        <option value="5">Ejecutivo de Ventas</option>
-                                                        <option value="6">Especialista en Marketing</option>
-                                                        <option value="7">Supervisor de Operaciones</option>
-                                                        <option value="8">Asistente Administrativo</option>
-                                                        <option value="9">Diseñador Gráfico</option>
-                                                        <option value="10">Técnico de Sistemas</option>
+>
+                                                        <option value="">Seleccione un cargo</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="cargo_error"></div>
                                                 </div>
@@ -355,13 +313,8 @@
                                                         Laboral <span class="text-danger">*</span></label>
                                                     <select class="form-select" id="regimen_laboral"
                                                         name="regimen_laboral" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione régimen laboral</option>
-                                                        <option value="1">Contrato Indefinido</option>
-                                                        <option value="2">Contrato Temporal</option>
-                                                        <option value="3">Contrato por Obra</option>
-                                                        <option value="4">Contrato de Práctica</option>
-                                                        <option value="5">Contrato de Locación de Servicios</option>
+>
+                                                        <option value="">Seleccione régimen laboral</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="regimen_laboral_error"></div>
                                                 </div>
@@ -372,13 +325,8 @@
                                                         <span class="text-danger">*</span></label>
                                                     <select class="form-select" id="tipo_trabajador"
                                                         name="tipo_trabajador" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione tipo de trabajador</option>
-                                                        <option value="1">Empleado</option>
-                                                        <option value="2">Funcionario</option>
-                                                        <option value="3">Contratado</option>
-                                                        <option value="4">CAS</option>
-                                                        <option value="5">Obrero</option>
+>
+                                                        <option value="">Seleccione tipo de trabajador</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="tipo_trabajador_error"></div>
                                                 </div>
@@ -392,15 +340,51 @@
                                                         Remunerativo <span class="text-danger">*</span></label>
                                                     <select class="form-select" id="nivel_remunerativo"
                                                         name="nivel_remunerativo" required
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione nivel remunerativo</option>
-                                                        <option value="1">Nivel I</option>
-                                                        <option value="2">Nivel II</option>
-                                                        <option value="3">Nivel III</option>
-                                                        <option value="4">Nivel IV</option>
-                                                        <option value="5">Nivel V</option>
+>
+                                                        <option value="">Seleccione nivel remunerativo</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="nivel_remunerativo_error"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="turno" class="form-label">Turno Laboral <span
+                                                            class="text-danger">*</span></label>
+                                                    <select class="form-select" id="turno" name="turno" required
+>
+                                                        <option value="">Seleccione un turno</option>
+                                                    </select>
+                                                    <div class="invalid-feedback" id="turno_error"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="tipo_jornada" class="form-label">Tipo de Jornada</label>
+                                                    <select class="form-select" id="tipo_jornada" name="tipo_jornada"
+>
+                                                        <option value="Presencial">Presencial</option>
+                                                        <option value="Remoto">Remoto</option>
+                                                        <option value="Hibrido">Híbrido</option>
+                                                    </select>
+                                                    <div class="invalid-feedback" id="tipo_jornada_error"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Control de Asistencia</label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="es_fiscalizado"
+                                                               name="es_fiscalizado" checked
+                                                               data-bs-toggle="tooltip" data-bs-placement="right"
+                                                               title="Activa el control biométrico para este empleado">
+                                                        <label class="form-check-label" for="es_fiscalizado">
+                                                            Empleado fiscalizado (requiere marcación)
+                                                        </label>
+                                                    </div>
+                                                    <small class="text-muted">Si está desactivado, el empleado no requerirá marcación de asistencia</small>
                                                 </div>
                                             </div>
                                             <div class="col-md-8">
@@ -419,13 +403,8 @@
                                                         <div class="flex-grow-1">
                                                             <select class="form-select" id="sistema_pension"
                                                                 name="sistema_pension"
-                                                                style="min-height: 45px; font-size: 1rem;">
-                                                                <option value="">Seleccione sistema de pensión</option>
-                                                                <option value="1">ONP</option>
-                                                                <option value="2">AFP Integra</option>
-                                                                <option value="3">AFP Prima</option>
-                                                                <option value="4">AFP Profuturo</option>
-                                                                <option value="5">AFP Habitat</option>
+>
+                                                                <option value="">Seleccione sistema de pensión</option> 
                                                             </select>
                                                         </div>
                                                     </div>
@@ -448,14 +427,8 @@
                                                 <div class="mb-3">
                                                     <label for="banco" class="form-label">Banco</label>
                                                     <select class="form-select" id="banco" name="banco"
-                                                        style="min-height: 45px; font-size: 1rem;">
-                                                        <option value="">Seleccione un banco</option>
-                                                        <option value="1">Banco de Crédito del Perú</option>
-                                                        <option value="2">Banco Interbank</option>
-                                                        <option value="3">Banco BBVA</option>
-                                                        <option value="4">Banco Scotiabank</option>
-                                                        <option value="5">Banco Pichincha</option>
-                                                        <option value="6">Banco de la Nación</option>
+>
+                                                        <option value="">Seleccione un banco</option> 
                                                     </select>
                                                     <div class="invalid-feedback" id="banco_error"></div>
                                                 </div>
@@ -465,7 +438,7 @@
                                                     <label for="numero_cuenta" class="form-label">N° de Cuenta</label>
                                                     <input type="text" class="form-control" id="numero_cuenta"
                                                         name="numero_cuenta" placeholder="Ingrese el número de cuenta"
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                     <div class="invalid-feedback" id="numero_cuenta_error"></div>
                                                 </div>
                                             </div>
@@ -474,7 +447,7 @@
                                                     <label for="numero_cci" class="form-label">N° CCI</label>
                                                     <input type="text" class="form-control" id="numero_cci"
                                                         name="numero_cci" placeholder="Ingrese el número CCI"
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                     <div class="invalid-feedback" id="numero_cci_error"></div>
                                                 </div>
                                             </div>
@@ -541,18 +514,8 @@
                                                                                 class="form-label">Ubigeo</label>
                                                                             <select class="form-select"
                                                                                 id="ubigeo_actual" name="ubigeo_actual">
-                                                                                <option value="">Seleccione ubigeo
-                                                                                    (opcional)</option>
-                                                                                <option value="1">Lima - Lima -
-                                                                                    Miraflores</option>
-                                                                                <option value="2">Lima - Lima - San
-                                                                                    Isidro</option>
-                                                                                <option value="3">Lima - Lima - Surco
-                                                                                </option>
-                                                                                <option value="4">Lima - Lima - La
-                                                                                    Molina</option>
-                                                                                <option value="5">Lima - Lima - San
-                                                                                    Borja</option>
+                                                                                <!-- <option value="">Seleccione ubigeo (opcional)</option> -->
+                                                                          
                                                                             </select>
                                                                             <div class="invalid-feedback"
                                                                                 id="ubigeo_actual_error"></div>
@@ -570,6 +533,50 @@
                                                                                     Dirección Principal
                                                                                 </label>
                                                                             </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <!-- Geolocalización -->
+                                                                <div class="row">
+                                                                    <div class="col-12">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label">
+                                                                                <i class="ri-map-pin-2-line me-1"></i>Geolocalización
+                                                                            </label>
+                                                                            <button type="button" class="btn btn-info btn-sm ms-2" id="btn_buscar_ubicacion">
+                                                                                <i class="ri-search-line me-1"></i>Buscar Ubicación en Mapa
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <div class="mb-3">
+                                                                            <label for="coordenada_x" class="form-label">Latitud (X)</label>
+                                                                            <input type="text" class="form-control" id="coordenada_x"
+                                                                                name="coordenada_x" placeholder="-12.0464" readonly>
+                                                                            <small class="text-muted">Se completa al buscar en el mapa</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <div class="mb-3">
+                                                                            <label for="coordenada_y" class="form-label">Longitud (Y)</label>
+                                                                            <input type="text" class="form-control" id="coordenada_y"
+                                                                                name="coordenada_y" placeholder="-77.0428" readonly>
+                                                                            <small class="text-muted">Se completa al buscar en el mapa</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <div class="mb-3">
+                                                                            <label for="url_maps" class="form-label">URL Google Maps</label>
+                                                                            <div class="input-group">
+                                                                                <input type="url" class="form-control" id="url_maps"
+                                                                                    name="url_maps" placeholder="https://maps.google.com/..." readonly>
+                                                                                <button class="btn btn-outline-secondary" type="button" id="btn_abrir_mapa"
+                                                                                    style="display: none;" title="Abrir en Google Maps">
+                                                                                    <i class="ri-external-link-line"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                            <small class="text-muted">Se genera automáticamente</small>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -629,16 +636,8 @@
                                                                                 id="ubigeo_reniec" name="ubigeo_reniec">
                                                                                 <option value="">Seleccione ubigeo
                                                                                     (opcional)</option>
-                                                                                <option value="1">Lima - Lima -
-                                                                                    Miraflores</option>
-                                                                                <option value="2">Lima - Lima - San
-                                                                                    Isidro</option>
-                                                                                <option value="3">Lima - Lima - Surco
-                                                                                </option>
-                                                                                <option value="4">Lima - Lima - La
-                                                                                    Molina</option>
-                                                                                <option value="5">Lima - Lima - San
-                                                                                    Borja</option>
+                                                                                 <!-- <option value="1">Lima - Lima - Miraflores</option> -->
+                                                                          
                                                                             </select>
                                                                             <div class="invalid-feedback"
                                                                                 id="ubigeo_reniec_error"></div>
@@ -714,18 +713,8 @@
                                                                             <select class="form-select"
                                                                                 id="ubigeo_laboral"
                                                                                 name="ubigeo_laboral">
-                                                                                <option value="">Seleccione ubigeo
-                                                                                    (opcional)</option>
-                                                                                <option value="1">Lima - Lima -
-                                                                                    Miraflores</option>
-                                                                                <option value="2">Lima - Lima - San
-                                                                                    Isidro</option>
-                                                                                <option value="3">Lima - Lima - Surco
-                                                                                </option>
-                                                                                <option value="4">Lima - Lima - La
-                                                                                    Molina</option>
-                                                                                <option value="5">Lima - Lima - San
-                                                                                    Borja</option>
+                                                                                <option value="">Seleccione ubigeo (opcional)</option>
+                                                                                <!-- <option value="1">Lima - Lima - Miraflores</option>-->                                                                   
                                                                             </select>
                                                                             <div class="invalid-feedback"
                                                                                 id="ubigeo_laboral_error"></div>
@@ -768,7 +757,7 @@
                                                     <label for="cuspp" class="form-label">CUSPP</label>
                                                     <input type="text" class="form-control" id="cuspp" name="cuspp"
                                                         placeholder="Ingrese el CUSPP"
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                     <div class="invalid-feedback" id="cuspp_error"></div>
                                                 </div>
                                             </div>
@@ -777,7 +766,7 @@
                                                     <label for="airhsp" class="form-label">AIRHSP</label>
                                                     <input type="text" class="form-control" id="airhsp" name="airhsp"
                                                         placeholder="Ingrese el AIRHSP"
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                     <div class="invalid-feedback" id="airhsp_error"></div>
                                                 </div>
                                             </div>
@@ -786,7 +775,7 @@
                                                     <label for="codigo_reloj" class="form-label">Código Reloj</label>
                                                     <input type="text" class="form-control" id="codigo_reloj"
                                                         name="codigo_reloj" placeholder="Ingrese el código del reloj"
-                                                        style="min-height: 45px; font-size: 1rem;">
+>
                                                     <div class="invalid-feedback" id="codigo_reloj_error"></div>
                                                 </div>
                                             </div>
@@ -799,7 +788,7 @@
                                                     <textarea class="form-control" id="observaciones"
                                                         name="observaciones" rows="3"
                                                         placeholder="Ingrese observaciones adicionales"
-                                                        style="min-height: 80px; font-size: 1rem;"></textarea>
+></textarea>
                                                     <div class="invalid-feedback" id="observaciones_error"></div>
                                                 </div>
                                             </div>
@@ -839,7 +828,57 @@
         </div>
     </div>
 
+    <!-- Modal de Geolocalización -->
+    <div class="modal fade" id="modal_mapa" tabindex="-1" aria-labelledby="modal_mapa_label" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal_mapa_label">
+                        <i class="ri-map-pin-line me-2"></i>Buscar Ubicación en el Mapa
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Buscar dirección</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="search_address" 
+                                placeholder="Ej: Av. Arequipa 1234, Miraflores, Lima">
+                            <button class="btn btn-primary" type="button" id="btn_search_address">
+                                <i class="ri-search-line"></i> Buscar
+                            </button>
+                        </div>
+                        <small class="text-muted">
+                            <i class="ri-information-line"></i> También puedes hacer clic directamente en el mapa para seleccionar la ubicación
+                        </small>
+                    </div>
+                    <div id="map" style="height: 500px; border-radius: 8px;"></div>
+                    <div class="mt-3">
+                        <div class="alert alert-info" role="alert">
+                            <i class="ri-information-line me-2"></i>
+                            <strong>Ubicación seleccionada:</strong>
+                            <div id="selected_location" class="mt-2">
+                                <span class="text-muted">Haz clic en el mapa o busca una dirección</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn_confirmar_ubicacion" disabled>
+                        <i class="ri-check-line me-1"></i>Confirmar Ubicación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php require_once __DIR__ . '/../../components/js.php' ?>
+    
+    <!-- Leaflet CSS y JS para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script src="<?= Enrutamiento::dominio() ?>/views/empleados/register/register.js"></script>
 </body>
 

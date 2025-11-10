@@ -5,8 +5,11 @@
  */
 require_once(__DIR__ . "/../../config/conexion.php");
 require_once(__DIR__ . "/../../helpers/AuthMiddleware.php");
-require_once(__DIR__ . "/routes_cargos.php");
 require_once(__DIR__ . "/routes_auth.php");
+require_once(__DIR__ . "/routes_cargos.php");
+require_once(__DIR__ . "/routes_premios.php");
+require_once(__DIR__ . "/routes_categorias_premios.php");
+require_once(__DIR__ . "/routes_rifas.php");
 
 function Routes(): void
 {
@@ -44,6 +47,18 @@ function Routes(): void
             
         case strpos($url, 'api/cargos') === 0:
             RoutesCargos($url, $method);
+            break;
+
+        case strpos($url, 'api/premios') === 0:
+            RoutesPremios($url, $method);
+            break;
+
+        case strpos($url, 'api/categorias') === 0:
+            RoutesCategoriasPremios($url, $method);
+            break;
+
+        case strpos($url, 'api/rifas') === 0:
+            RoutesRifas($url, $method);
             break;
  
         default:

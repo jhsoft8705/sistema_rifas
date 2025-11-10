@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS ganadores;
 DROP TABLE IF EXISTS intentos_sorteo;
 DROP TABLE IF EXISTS participantes;
 DROP TABLE IF EXISTS comprobantes_pago;
+DROP TABLE IF EXISTS rifas_premios;
 DROP TABLE IF EXISTS numeros_rifa;
 DROP TABLE IF EXISTS volantarios;
 DROP TABLE IF EXISTS tickets;
@@ -320,10 +321,10 @@ CREATE TABLE ubicaciones_rifa (
     creado_por VARCHAR(50) NULL,
     modificado_por VARCHAR(50) NULL,
     
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+    FOREIGN KEY (sede_id) REFERENCES sedes(id)  ,
     INDEX idx_ubicaciones_sede (sede_id),
     INDEX idx_ubicaciones_ciudad (ciudad)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4COMMENT='Direcciones físicas donde se realizan las rifas';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Tabla de estados de ticket
 CREATE TABLE estados_ticket (
@@ -412,7 +413,7 @@ CREATE TABLE premios (
     -- Recursos visuales
     imagen_principal VARCHAR(255) NULL,
     imagen_secundaria VARCHAR(255) NULL,
-    galeria_imagenes TEXT NULL COMMENT 'JSON con URLs de imágenes adicionales',
+    galeria_imagenes TEXT NULL COMMENT 'JSON con rutas de imágenes adicionales',
     video_url VARCHAR(255) NULL,
     
     -- Características del premio
@@ -422,8 +423,8 @@ CREATE TABLE premios (
     especificaciones TEXT NULL COMMENT 'Detalles técnicos, características',
     
     -- Información adicional
-    terminos_condiciones TEXT NULL,
-    restricciones TEXT NULL,
+    terminos_condiciones TEXT NULL COMMENT 'Condiciones de entrega o uso del premio',
+    restricciones TEXT NULL COMMENT 'Restricciones o limitaciones del premio',
     
     -- Destacado y promoción
     es_destacado TINYINT(1) DEFAULT 0,
@@ -448,7 +449,7 @@ CREATE TABLE premios (
 CREATE TABLE rifas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sede_id INT NOT NULL,
-    premio_id INT NOT NULL,
+    premio_id INT NULL,
     ubicacion_id INT NULL,
     
     -- Información de la rifa
@@ -523,7 +524,7 @@ CREATE TABLE rifas (
     modificado_por VARCHAR(50) NULL,
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    FOREIGN KEY (premio_id) REFERENCES premios(id) ON DELETE RESTRICT,
+    FOREIGN KEY (premio_id) REFERENCES premios(id) ON DELETE SET NULL,
     FOREIGN KEY (ubicacion_id) REFERENCES ubicaciones_rifa(id) ON DELETE SET NULL,
     UNIQUE KEY unique_codigo_rifa_sede (sede_id, codigo),
     INDEX idx_rifas_sede (sede_id),
@@ -531,6 +532,32 @@ CREATE TABLE rifas (
     INDEX idx_rifas_estado (estado),
     INDEX idx_rifas_fechas (fecha_inicio_venta, fecha_fin_venta)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tabla relación rifas-premios (múltiples premios por sorteo)
+CREATE TABLE rifas_premios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sede_id INT NOT NULL,
+    rifa_id INT NOT NULL,
+    premio_id INT NOT NULL,
+    orden INT DEFAULT 1 COMMENT 'Orden de entrega del premio',
+    es_principal TINYINT(1) DEFAULT 0 COMMENT 'Indica si es el premio principal del sorteo',
+    titulo VARCHAR(200) NULL COMMENT 'Título personalizado para el premio dentro de la rifa',
+    descripcion TEXT NULL,
+    cantidad INT DEFAULT 1 COMMENT 'Cantidad de premios iguales',
+    valor_estimado DECIMAL(12, 2) NULL,
+    estado INT DEFAULT 1 COMMENT '1=Activo,0=Inactivo',
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    creado_por VARCHAR(50) NULL,
+    modificado_por VARCHAR(50) NULL,
+    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
+    FOREIGN KEY (premio_id) REFERENCES premios(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_rifa_premio (rifa_id, premio_id),
+    INDEX idx_rifas_premios_rifa (rifa_id),
+    INDEX idx_rifas_premios_premio (premio_id),
+    INDEX idx_rifas_premios_principal (rifa_id, es_principal)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Premios asociados a cada rifa';
 
 -- Tabla de tickets (compras de participación)
 CREATE TABLE tickets (
@@ -701,7 +728,7 @@ CREATE TABLE numeros_rifa (
     INDEX idx_numeros_estado (estado),
     INDEX idx_numeros_disponibles (rifa_id, estado),
     INDEX idx_numeros_volantario (volantario_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Gestión de cada número de boleto individual';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Tabla de volantarios (para venta física)
 CREATE TABLE volantarios (
@@ -978,7 +1005,7 @@ SELECT id, 'REPORTES_VER', 'Ver reportes', 'REPORTES', 'LEER', 'SYSTEM' FROM sed
 -- Nota: En producción usar un hash real y cambiar contraseña
 INSERT INTO usuarios (sede_id, username, password_hash, email, primer_nombre, apellido_paterno, debe_cambiar_password, estado, creado_por)
 VALUES
-    (1, 'zed_admin', '$2y$10$9rR0ZrEaFxR29HsrlaobmeB8g34E/mAajSvBjnwpYs3rO6lGzB5cG', 'zed.admin@rifas.com', 'Zed', 'Administrador', 1, 1, 'SYSTEM');
+    (1, 'admin', '$2y$10$9rR0ZrEaFxR29HsrlaobmeB8g34E/mAajSvBjnwpYs3rO6lGzB5cG', '@rifas.com', 'Zed', 'Administrador', 1, 1, 'SYSTEM');
 
 -- Asignar rol SUPERADMIN al usuario zed_admin
 INSERT INTO usuario_roles (sede_id, usuario_id, rol_id, asignado_por)
@@ -989,7 +1016,7 @@ SELECT
     'SYSTEM'
 FROM usuarios u
 CROSS JOIN roles r
-WHERE u.username = 'zed_admin'
+WHERE u.username = 'admin'
   AND u.sede_id = 1
   AND r.nombre = 'SUPERADMIN'
   AND r.sede_id = 1;

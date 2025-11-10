@@ -71,14 +71,8 @@
                                                     style="min-height: 40px; font-size: 0.9rem;"
                                                     data-bs-toggle="tooltip" data-bs-placement="bottom"
                                                     title="Filtrar por unidad organizacional">
-                                                    <option value="">Todas las unidades</option>
-                                                    <option value="1">Gerencia General</option>
-                                                    <option value="2">Recursos Humanos</option>
-                                                    <option value="3">Contabilidad</option>
-                                                    <option value="4">Ventas</option>
-                                                    <option value="5">Marketing</option>
-                                                    <option value="6">Tecnología</option>
-                                                    <option value="7">Operaciones</option>
+                                                    <option value="">Todas las gerencias</option>
+                                      
                                                 </select>
                                             </div>
 
@@ -121,8 +115,10 @@
                                                     <th scope="col">Nombres Completos</th>
                                                     <th scope="col">Email</th>
                                                     <th scope="col">Cargo</th>
+                                                    <th scope="col">Turno</th>
                                                     <th scope="col">Unidad Organizacional</th>
                                                     <th scope="col">Fecha Ingreso</th>
+                                                    <th scope="col">Biométrico</th>
                                                     <th scope="col">Estado</th>
                                                 </tr>
                                             </thead>
@@ -135,6 +131,9 @@
                             </div>
                         </div>
                     </div>
+
+                    <?php include_once __DIR__ . "/form.php"; ?>
+
                 </div>
             </div>
             <?php require_once __DIR__ . '/../components/footer.php' ?>
@@ -142,7 +141,7 @@
     </div>
 
     <?php require_once __DIR__ . '/../components/js.php' ?>
-    <script src="<?= Enrutamiento::dominio() ?>/views/empleados/list_empleados.js"></script>
+    <script src="<?= Enrutamiento::dominio() ?>/views/empleados/listar_empleados.js"></script>
 </body>
 
 </html>

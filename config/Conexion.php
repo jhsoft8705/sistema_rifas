@@ -15,17 +15,17 @@ class Conectar
         try {
             if ($this->ambiente == 'dev') {
                 // DESARROLLO
-                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=db_rifas", "root", "");
+                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=sorteos_bd", "root", "");
                 // Establecer zona horaria de Perú
                 $conectar->exec("SET time_zone = '-05:00';");
             } elseif ($this->ambiente == 'testing') {
                 // TESTING
-                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=db_rifas", "root", "");
+                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=sorteos_bd", "root", "");
                 // Establecer zona horaria de Perú
                 $conectar->exec("SET time_zone = '-05:00';");
             } else {
                 // PRODUCCION
-                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=db_rifas", "root", "");
+                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=sorteos_bd", "root", "");
                 // Establecer zona horaria de Perú
                 $conectar->exec("SET time_zone = '-05:00';");
             }
@@ -51,7 +51,7 @@ class Conectar
         } elseif ($instance->ambiente == 'testing') {
             return "/testing/";
         } else {
-            return "/frm.db_rifas.gob.pe/"; // prod
+            return "/frm.sorteos_bd.gob.pe/"; // prod
         }
     }
  

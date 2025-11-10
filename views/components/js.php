@@ -15,6 +15,7 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
 
 <!-- Auth.js - Helper Global de Autenticación -->
 <script src="<?= Enrutamiento::dominio() ?>/helpers/Auth.js"></script>
+<script src="<?= Enrutamiento::dominio() ?>/helpers/Utils.js"></script>
 
 <!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>

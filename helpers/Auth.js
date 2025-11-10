@@ -126,7 +126,10 @@ const Auth = {
             sede_nombre: usuario.sede_nombre,
             rol_id: usuario.rol_id,
             rol_nombre: usuario.rol_nombre,
-            empleado_id: usuario.empleado_id
+            empleado_id: usuario.empleado_id,
+            moneda: usuario.moneda ?? null,
+            simbolo_moneda: usuario.simbolo_moneda ?? 'S/.',
+            codigo_moneda: usuario.codigo_moneda ?? 'PEN'
         };
     }
 };
@@ -209,98 +212,50 @@ const API = {
             console.error('Error en POST:', error);
             return { ok: false, msj: 'Error de conexión' };
         }
+    },
+
+    /**
+     * POST multipart/form-data con autenticación
+     */
+    async postFormData(endpoint, formData) {
+        const token = Auth.getToken();
+
+        if (!token) {
+            console.error('No hay token');
+            Auth.logout();
+            return null;
+        }
+
+        try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.status === 401) {
+                console.error('Token inválido');
+                Auth.logout();
+                return null;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error en POST multipart:', error);
+            return { ok: false, msj: 'Error de conexión' };
+        }
     }
 };
 
-/**
- * Utils - Utilidades globales
- */
-const Utils = {
-    formatearFecha(fecha) {
-        if (!fecha) return '-';
-        return new Date(fecha).toLocaleDateString('es-PE');
-    },
 
-    formatearMoneda(valor) {
-        if (!valor) return 'S/. 0.00';
-        return `S/. ${parseFloat(valor).toLocaleString('es-PE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        })}`;
-    },
-
-    showAlert(message, type = 'info') {
-        const titles = {
-            'success': 'Éxito',
-            'error': 'Error',
-            'warning': 'Advertencia',
-            'info': 'Información'
-        };
-
-        Swal.fire({
-            title: titles[type],
-            text: message,
-            icon: type,
-            confirmButtonText: 'Aceptar'
-        });
-    },
-
-    showToast(message, type = 'error') {
-        const config = {
-            'success': { 
-                heading: 'Éxito', 
-                icon: 'success', 
-                loaderBg: '#46c35f' 
-            },
-            'error': { 
-                heading: 'Error', 
-                icon: 'error', 
-                loaderBg: '#bf441d' 
-            },
-            'warning': { 
-                heading: 'Advertencia', 
-                icon: 'warning', 
-                loaderBg: '#f8b739' 
-            },
-            'info': { 
-                heading: 'Información', 
-                icon: 'info', 
-                loaderBg: '#3b82f6' 
-            }
-        };
-
-        const toastConfig = config[type] || config['info'];
-
-        $.toast({
-            heading: toastConfig.heading,
-            text: message,
-            icon: toastConfig.icon,
-            position: 'top-right',
-            loader: true,
-            loaderBg: toastConfig.loaderBg,
-            hideAfter: 4000
-        });
-    },
-
-    showLoading(message = 'Cargando...') {
-        Swal.fire({
-            title: message,
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    },
-
-    closeLoading() {
-        Swal.close();
-    }
-};
 
 // Exponer globalmente
 window.Auth = Auth;
 window.API = API;
-window.Utils = Utils;
 
 /* console.log(' Auth.js cargado correctamente'); */
 
