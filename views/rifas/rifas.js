@@ -42,15 +42,19 @@ let tablaNumeros = null;
 let userInfo = null;
 let premiosCatalogo = [];
 let rifaSeleccionada = null;
+let rifasData = [];
 
-const $modalRifa = $('#modal_rifa');
-const $modalPremios = $('#modal_premios_rifa');
-const $modalNumeros = $('#modal_numeros_rifa');
+let modalRifa = null;
+let modalPremios = null;
+let modalNumeros = null;
 
 $(document).ready(async () => {
     if (!Auth.requireAuth()) return;
 
     userInfo = Auth.getUserInfo();
+    modalRifa = new bootstrap.Modal(document.getElementById('modal_rifa'));
+    modalPremios = new bootstrap.Modal(document.getElementById('modal_premios_rifa'));
+    modalNumeros = new bootstrap.Modal(document.getElementById('modal_numeros_rifa'));
 
     inicializarSelectSede();
     inicializarFlatpickr();
@@ -62,6 +66,10 @@ $(document).ready(async () => {
 });
 
 function inicializarSelectSede() {
+    if (!userInfo) {
+        return;
+    }
+
     const option = `<option value="${userInfo.sede_id}">${userInfo.sede_nombre || 'Sede principal'}</option>`;
     $('#filtro_sede_rifa').html(option).val(userInfo.sede_id);
     $('#sede_id_rifa').val(userInfo.sede_id);
@@ -84,7 +92,12 @@ function inicializarFlatpickr() {
 
 function inicializarTablas() {
     tablaRifas = $('#tabla_rifas').DataTable({
-        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+        processing: false,
+        serverSide: false,
+        data: [],
+        language: Utils.getDataTableLanguageES(),
+        lengthChange: false,
+        dom: 'frtip',
         columns: [
             {
                 data: null,
@@ -124,19 +137,21 @@ function inicializarTablas() {
             },
             {
                 data: 'estado',
-                render: (estado) => `<span class="badge badge-soft-info">${estado.replaceAll('_', ' ')}</span>`
+                render: (estado) => obtenerBadgeEstadoRifa(estado)
             },
             {
                 data: 'fecha_sorteo',
-                render: SafeUtils.formatDate
+                render: (valor) => formatearFechaListadoRifa(valor)
             }
         ]
     });
 
     tablaNumeros = $('#tabla_numeros_rifa').DataTable({
-        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+        language: Utils.getDataTableLanguageES(),
         paging: true,
         pageLength: 25,
+        lengthChange: false,
+        dom: 'frtip',
         columns: [
             { data: 'numero_formateado' },
             {
@@ -219,58 +234,229 @@ function inicializarEventosUI() {
         $('#numero_formateado_resumen').val('');
     });
 
+    $('#form_rifa').on('input change', 'input, select, textarea', function () {
+        if (!this.id) {
+            return;
+        }
+        if ($(this).hasClass('is-invalid')) {
+            const value = $(this).val();
+            const tieneValor = Array.isArray(value)
+                ? value.length > 0
+                : (value !== null && value !== undefined && String(value).trim() !== '');
+            if (tieneValor) {
+                $(this).removeClass('is-invalid');
+                const errorId = `${this.id}_error`;
+                if (document.getElementById(errorId)) {
+                    $(`#${errorId}`).text('');
+                }
+            }
+        }
+    });
+
     $('#tabla_numeros_rifa tbody').on('click', '.btn-seleccionar-numero', function () {
         seleccionarNumero(tablaNumeros.row($(this).closest('tr')).data());
     });
     $('#tabla_numeros_rifa tbody').on('click', '.btn-liberar-numero', function () {
         liberarNumero(tablaNumeros.row($(this).closest('tr')).data());
     });
+
+    const modalNumerosEl = document.getElementById('modal_numeros_rifa');
+    if (modalNumerosEl) {
+        modalNumerosEl.addEventListener('shown.bs.modal', () => {
+            if (tablaNumeros) {
+                tablaNumeros.columns.adjust().draw(false);
+            }
+        });
+    }
 }
 
-async function cargarPremiosCatalogo() {
+async function cargarPremiosCatalogo(options = {}) {
+    if (!userInfo) return [];
+
+    const { includeIds = [], showFeedback = false } = options;
+    const includeSet = new Set(includeIds.filter(Boolean).map(id => Number(id)));
+
+    const $selectPremioPrincipal = $('#premio_id');
+    const $selectPremioRifa = $('#premio_rifa_select');
+    const $alertaSinPremios = $('#alerta_sin_premios_activos');
+    const $helpPremioPrincipal = $('#premio_principal_help');
+    const $btnGuardarPremioRifa = $('#btn_guardar_premio_rifa');
+
     try {
         const respuesta = await API.get('premios/getAll', { sede_id: userInfo.sede_id });
-        if (respuesta?.ok) {
-            premiosCatalogo = respuesta.data || [];
-            const options = ['<option value="">Sin premio principal</option>']
-                .concat(premiosCatalogo.map(p => `<option value="${p.id}">${p.nombre}</option>`));
-            $('#premio_id, #premio_rifa_select').html(options.join(''));
+
+        if (!respuesta?.ok) {
+            throw new Error(respuesta?.msj || 'No se pudieron cargar los premios');
         }
+
+        const todos = respuesta.data || [];
+        const activos = [];
+        const vistos = new Set();
+
+        todos.forEach((premio) => {
+            const id = Number(premio.id);
+            const esActivo = Number(premio.estado) === 1;
+            if ((esActivo || includeSet.has(id)) && !vistos.has(id)) {
+                activos.push(premio);
+                vistos.add(id);
+            }
+        });
+
+        premiosCatalogo = activos;
+
+        const opcionesPremioPrincipal = ['<option value="">Sin premio principal</option>'];
+        const opcionesPremioRifa = ['<option value="">Seleccionar premio</option>'];
+
+        if (activos.length) {
+            activos.forEach((premio) => {
+                const etiqueta = premio.codigo ? `${premio.codigo} - ${premio.nombre}` : premio.nombre;
+                const option = `<option value="${premio.id}">${etiqueta}</option>`;
+                opcionesPremioPrincipal.push(option);
+                opcionesPremioRifa.push(option);
+            });
+
+            if ($alertaSinPremios.length) {
+                $alertaSinPremios.addClass('d-none');
+            }
+            if ($helpPremioPrincipal.length) {
+                $helpPremioPrincipal.text('Opcional: vincula un premio registrado como premio principal de la rifa.');
+            }
+            if ($btnGuardarPremioRifa.length) {
+                $btnGuardarPremioRifa.prop('disabled', false);
+            }
+            if ($selectPremioRifa.length) {
+                $selectPremioRifa.prop('disabled', false);
+            }
+        } else {
+            opcionesPremioPrincipal.push('<option value="" disabled>No hay premios activos disponibles</option>');
+            opcionesPremioRifa[0] = '<option value="" disabled>Sin premios activos</option>';
+
+            if ($alertaSinPremios.length) {
+                $alertaSinPremios.removeClass('d-none');
+            }
+            if ($helpPremioPrincipal.length) {
+                $helpPremioPrincipal.text('No hay premios activos disponibles en la sede.');
+            }
+            if ($btnGuardarPremioRifa.length) {
+                $btnGuardarPremioRifa.prop('disabled', true);
+            }
+            if ($selectPremioRifa.length) {
+                $selectPremioRifa.prop('disabled', true);
+            }
+            if (showFeedback) {
+                SafeUtils.showToast('No hay premios activos disponibles. Registra uno en el módulo de premios.', 'info');
+            }
+        }
+
+        if ($selectPremioPrincipal.length) {
+            $selectPremioPrincipal.html(opcionesPremioPrincipal.join(''));
+        }
+        if ($selectPremioRifa.length) {
+            $selectPremioRifa.html(opcionesPremioRifa.join(''));
+        }
+
+        return premiosCatalogo;
     } catch (error) {
         console.error('Error al cargar premios del catálogo:', error);
+        premiosCatalogo = [];
+
+        if ($alertaSinPremios.length) {
+            $alertaSinPremios.removeClass('d-none');
+        }
+        if ($helpPremioPrincipal.length) {
+            $helpPremioPrincipal.text('No se pudieron cargar los premios de la sede.');
+        }
+        if ($selectPremioPrincipal.length) {
+            $selectPremioPrincipal.html('<option value="">Sin premio principal</option>');
+        }
+        if ($selectPremioRifa.length) {
+            $selectPremioRifa.html('<option value="">Seleccionar premio</option>').prop('disabled', true);
+        }
+        if ($btnGuardarPremioRifa.length) {
+            $btnGuardarPremioRifa.prop('disabled', true);
+        }
+        if (showFeedback) {
+            SafeUtils.showToast('No se pudieron cargar los premios. Intenta nuevamente.', 'warning');
+        }
+        return [];
     }
 }
 
 async function cargarRifas() {
     try {
-        SafeUtils.showLoading('Cargando rifas...');
+        Utils.showLoading('Cargando rifas...');
+
         const params = {
             sede_id: $('#filtro_sede_rifa').val() || userInfo.sede_id,
             estado: $('#filtro_estado_rifa').val() || ''
         };
         const respuesta = await API.get('rifas/getAll', params);
-        SafeUtils.closeLoading();
+
+        Utils.closeLoading();
 
         if (respuesta?.ok) {
-            tablaRifas.clear().rows.add(respuesta.data || []).draw();
+            rifasData = respuesta.data || [];
+            tablaRifas.clear().rows.add(rifasData).draw();
         } else {
+            rifasData = [];
             tablaRifas.clear().draw();
             SafeUtils.showToast(respuesta?.msj || 'No se pudieron cargar las rifas', 'warning');
         }
     } catch (error) {
-        SafeUtils.closeLoading();
-        SafeUtils.showToast('Error al cargar las rifas', 'error');
-        console.error(error);
+        Utils.closeLoading();
+        console.error('Error al cargar rifas:', error);
+        rifasData = [];
+        tablaRifas.clear().draw();
+        SafeUtils.showToast('Error de conexión al cargar las rifas', 'error');
+    }
+}
+
+function limpiarFormularioRifa() {
+    const form = document.getElementById('form_rifa');
+    form.reset();
+    Utils.limpiarValidaciones('form_rifa');
+
+    $('#rifa_id').val('');
+    $('#sede_id_rifa').val(userInfo?.sede_id || '');
+    $('#contenedor_regenerar_numeros').addClass('d-none');
+    $('#regenerar_numeros').prop('checked', false);
+
+    ['fecha_inicio_venta', 'fecha_fin_venta', 'fecha_sorteo'].forEach((id) => setFechaCampo(id, ''));
+
+    $('#estado_rifa').val('BORRADOR');
+    $('#mostrar_contador').val('1');
+    $('#mostrar_participantes').val('1');
+    $('#mostrar_tickets_vendidos').val('1');
+    $('#permitir_seleccion_numero').prop('checked', true);
+    $('#asignacion_automatica').prop('checked', true);
+}
+
+function setFechaCampo(id, valor) {
+    const input = document.getElementById(id);
+    if (!input) {
+        return;
+    }
+
+    if (typeof flatpickr === 'function' && input._flatpickr) {
+        if (valor) {
+            input._flatpickr.setDate(valor, true, 'Y-m-d H:i');
+        } else {
+            input._flatpickr.clear();
+        }
+    } else {
+        $(`#${id}`).val(valor || '');
     }
 }
 
 async function abrirModalRifa(detalle = null) {
-    const form = document.getElementById('form_rifa');
-    form.reset();
-    form.classList.remove('was-validated');
-    $('#rifa_id').val('');
-    $('#contenedor_regenerar_numeros').toggleClass('d-none', true);
-    $('#regenerar_numeros').prop('checked', false);
+    limpiarFormularioRifa();
+
+    const includeIds = [];
+    if (detalle?.premio_principal_id) {
+        includeIds.push(detalle.premio_principal_id);
+    }
+
+    await cargarPremiosCatalogo({ includeIds });
 
     if (detalle) {
         $('#modal_rifa_title').text('Editar rifa');
@@ -300,9 +486,9 @@ async function abrirModalRifa(detalle = null) {
         $('#mostrar_tickets_vendidos').val(detalle.mostrar_tickets_vendidos || 1);
         $('#permitir_seleccion_numero').prop('checked', detalle.permitir_seleccion_numero == 1);
         $('#asignacion_automatica').prop('checked', detalle.asignacion_automatica == 1);
-        $('#fecha_inicio_venta').val(formatearFechaInput(detalle.fecha_inicio_venta));
-        $('#fecha_fin_venta').val(formatearFechaInput(detalle.fecha_fin_venta));
-        $('#fecha_sorteo').val(formatearFechaInput(detalle.fecha_sorteo));
+        setFechaCampo('fecha_inicio_venta', formatearFechaInput(detalle.fecha_inicio_venta));
+        setFechaCampo('fecha_fin_venta', formatearFechaInput(detalle.fecha_fin_venta));
+        setFechaCampo('fecha_sorteo', formatearFechaInput(detalle.fecha_sorteo));
 
         $('#contenedor_regenerar_numeros').toggleClass('d-none', false);
     } else {
@@ -313,7 +499,7 @@ async function abrirModalRifa(detalle = null) {
         $('#sede_id_rifa').val(userInfo.sede_id);
     }
 
-    $modalRifa.modal('show');
+    modalRifa.show();
 }
 
 async function editarRifa(id) {
@@ -381,10 +567,79 @@ function construirPayloadRifa() {
     return payload;
 }
 
+function marcarCampoInvalido(fieldId, mensaje) {
+    const $field = $(`#${fieldId}`);
+    $field.addClass('is-invalid');
+    $(`#${fieldId}_error`).text(mensaje);
+}
+
+function validarFormularioRifa() {
+    let esValido = true;
+    Utils.limpiarValidaciones('form_rifa');
+
+    const camposObligatorios = [
+        { id: 'codigo_rifa', mensaje: 'El código de la rifa es obligatorio' },
+        { id: 'nombre_rifa', mensaje: 'El nombre de la rifa es obligatorio' },
+        { id: 'precio_ticket', mensaje: 'El precio del ticket es obligatorio' },
+        { id: 'numero_inicial', mensaje: 'El número inicial es obligatorio' },
+        { id: 'numero_final', mensaje: 'El número final es obligatorio' },
+        { id: 'fecha_inicio_venta', mensaje: 'La fecha de inicio de venta es obligatoria' },
+        { id: 'fecha_fin_venta', mensaje: 'La fecha de fin de venta es obligatoria' },
+        { id: 'fecha_sorteo', mensaje: 'La fecha del sorteo es obligatoria' }
+    ];
+
+    camposObligatorios.forEach((campo) => {
+        if (!Utils.validarCampo(campo.id, campo.mensaje)) {
+            esValido = false;
+        }
+    });
+
+    const precio = parseFloat($('#precio_ticket').val());
+    if (Number.isNaN(precio) || precio <= 0) {
+        marcarCampoInvalido('precio_ticket', 'El precio del ticket debe ser mayor a 0');
+        esValido = false;
+    }
+
+    const numeroInicial = parseInt($('#numero_inicial').val(), 10);
+    const numeroFinal = parseInt($('#numero_final').val(), 10);
+
+    if (!Number.isNaN(numeroInicial) && numeroInicial < 0) {
+        marcarCampoInvalido('numero_inicial', 'El número inicial no puede ser negativo');
+        esValido = false;
+    }
+
+    if (!Number.isNaN(numeroInicial) && !Number.isNaN(numeroFinal) && numeroFinal < numeroInicial) {
+        marcarCampoInvalido('numero_final', 'El número final debe ser mayor o igual al inicial');
+        esValido = false;
+    }
+
+    const parseFecha = (valor) => {
+        if (!valor) return null;
+        const limpio = valor.trim();
+        const isoLike = limpio.includes('T') ? limpio : limpio.replace(' ', 'T');
+        const fecha = new Date(isoLike);
+        return Number.isNaN(fecha.getTime()) ? null : fecha;
+    };
+
+    const fechaInicio = parseFecha($('#fecha_inicio_venta').val());
+    const fechaFin = parseFecha($('#fecha_fin_venta').val());
+    const fechaSorteo = parseFecha($('#fecha_sorteo').val());
+
+    if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
+        marcarCampoInvalido('fecha_fin_venta', 'La fecha fin de venta debe ser posterior a la fecha de inicio');
+        esValido = false;
+    }
+
+    if (fechaFin && fechaSorteo && fechaSorteo < fechaFin) {
+        marcarCampoInvalido('fecha_sorteo', 'La fecha del sorteo debe ser posterior a la fecha fin de venta');
+        esValido = false;
+    }
+
+    return esValido;
+}
+
 async function guardarRifa() {
-    const form = document.getElementById('form_rifa');
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
+    if (!validarFormularioRifa()) {
         return;
     }
 
@@ -399,6 +654,19 @@ async function guardarRifa() {
         payload.modificado_por = userInfo.nombre_completo || 'SYSTEM';
     } else {
         payload.creado_por = userInfo.nombre_completo || 'SYSTEM';
+        if (payload.premio_id) {
+            payload.premios = [{
+                premio_id: payload.premio_id,
+                es_principal: 1,
+                orden: null,
+                titulo: null,
+                descripcion: null,
+                cantidad: 1,
+                valor_estimado: null
+            }];
+        } else {
+            payload.premios = [];
+        }
     }
 
     try {
@@ -409,7 +677,7 @@ async function guardarRifa() {
 
         if (respuesta?.ok) {
             SafeUtils.showToast(respuesta.msj, 'success');
-            $modalRifa.modal('hide');
+            modalRifa.hide();
             await cargarRifas();
         } else {
             SafeUtils.showToast(respuesta?.msj || 'No se pudo guardar la rifa', 'error');
@@ -469,9 +737,13 @@ async function mostrarModalPremios(rifaId) {
         rifaSeleccionada = respuesta.data;
         $('#premios_rifa_id_hidden').val(rifaSeleccionada.id);
         $('#premios_rifa_nombre').text(`${rifaSeleccionada.codigo} - ${rifaSeleccionada.nombre}`);
+        const premiosAsociados = Array.isArray(rifaSeleccionada.premios)
+            ? rifaSeleccionada.premios.map(item => item.premio_id)
+            : [];
+        await cargarPremiosCatalogo({ includeIds: premiosAsociados, showFeedback: true });
         limpiarFormularioPremio();
         await cargarPremiosRifa();
-        $modalPremios.modal('show');
+        modalPremios.show();
     } catch (error) {
         SafeUtils.closeLoading();
         SafeUtils.showToast('Error al obtener la rifa', 'error');
@@ -560,9 +832,16 @@ function limpiarFormularioPremio() {
     document.getElementById('form_premio_rifa').reset();
     $('#premio_rifa_estado').val(1);
     $('#premio_rifa_principal').prop('checked', false);
+    $('#premio_rifa_select').prop('disabled', premiosCatalogo.length === 0);
+    $('#btn_guardar_premio_rifa').prop('disabled', premiosCatalogo.length === 0);
 }
 
 async function guardarPremioRifa() {
+    if (!premiosCatalogo.length) {
+        SafeUtils.showToast('Registra un premio activo en el módulo de premios para poder asociarlo.', 'warning');
+        return;
+    }
+
     const form = document.getElementById('form_premio_rifa');
     if (!form.checkValidity()) {
         form.classList.add('was-validated');
@@ -657,8 +936,8 @@ async function mostrarModalNumeros(rifaId) {
         $('#numero_formateado_resumen').val('');
         $('#form_asignar_numero')[0].reset();
 
-        await cargarNumerosRifa(rifaSeleccionada.id);
-        $modalNumeros.modal('show');
+        await cargarNumerosRifa(rifaSeleccionada.id, { showFeedback: true });
+        modalNumeros.show();
     } catch (error) {
         SafeUtils.closeLoading();
         SafeUtils.showToast('Error al obtener la rifa', 'error');
@@ -666,25 +945,31 @@ async function mostrarModalNumeros(rifaId) {
     }
 }
 
-async function cargarNumerosRifa(rifaId) {
+async function cargarNumerosRifa(rifaId, options = {}) {
     if (!rifaId) return;
+
+    const { showFeedback = false } = options;
 
     try {
         SafeUtils.showLoading('Cargando números...');
         const estado = $('#filtro_estado_numero').val() || '';
         const respuesta = await API.get('rifas/numeros/get', { rifa_id: rifaId, estado });
-        SafeUtils.closeLoading();
 
         if (respuesta?.ok) {
-            tablaNumeros.clear().rows.add(respuesta.data || []).draw();
+            const registros = respuesta.data || [];
+            tablaNumeros.clear().rows.add(registros).draw();
+            if (showFeedback && registros.length === 0) {
+                SafeUtils.showToast('Esta rifa aún no tiene números generados. Verifica el rango registrado.', 'info');
+            }
         } else {
             tablaNumeros.clear().draw();
             SafeUtils.showToast(respuesta?.msj || 'No se pudieron obtener los números', 'warning');
         }
     } catch (error) {
-        SafeUtils.closeLoading();
         SafeUtils.showToast('Error al obtener los números', 'error');
         console.error(error);
+    } finally {
+        SafeUtils.closeLoading();
     }
 }
 
@@ -776,6 +1061,55 @@ function imprimirCartillas(numerosPorPagina) {
     win.document.close();
     win.focus();
     win.print();
+}
+
+function obtenerBadgeEstadoRifa(estado) {
+    const map = {
+        BORRADOR: { text: 'Borrador', class: 'badge-soft-secondary' },
+        PUBLICADA: { text: 'Publicada', class: 'badge-soft-info' },
+        EN_VENTA: { text: 'En venta', class: 'badge-soft-success' },
+        CERRADA: { text: 'Cerrada', class: 'badge-soft-warning' },
+        SORTEO_REALIZADO: { text: 'Sorteo realizado', class: 'badge-soft-primary' },
+        FINALIZADA: { text: 'Finalizada', class: 'badge-soft-secondary' },
+        CANCELADA: { text: 'Cancelada', class: 'badge-soft-danger' }
+    };
+
+    const info = map[estado] || {
+        text: estado ? estado.replaceAll('_', ' ') : '-',
+        class: 'badge-soft-secondary'
+    };
+
+    return `<span class="badge ${info.class}">${info.text}</span>`;
+}
+
+function formatearFechaListadoRifa(valor) {
+    if (!valor) {
+        return '-';
+    }
+
+    const normalizado = valor.replace(' ', 'T');
+    const fecha = new Date(normalizado);
+
+    if (!Number.isNaN(fecha.getTime())) {
+        return fecha.toLocaleString('es-PE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    const partes = valor.split(' ');
+    if (partes.length === 2) {
+        const [fechaStr, hora] = partes;
+        const [anio, mes, dia] = fechaStr.split('-');
+        if (anio && mes && dia) {
+            return `${dia.padStart(2, '0')}/${mes.padStart(2, '0')}/${anio} ${hora}`;
+        }
+    }
+
+    return valor;
 }
 
 function obtenerClaseEstadoNumero(estado) {

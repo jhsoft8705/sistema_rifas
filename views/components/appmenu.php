@@ -119,7 +119,30 @@ $base_url = Enrutamiento::dominio();
                         </ul>
                     </div>
                 </li>
-
+           <!-- MAESTROS Y CATÁLOGOS -->
+           <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarMaestros" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarMaestros">
+                        <i class="ri-book-open-line"></i> <span data-key="t-maestros">Gestión de premios</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarMaestros">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="admin-categorias" class="nav-link" data-key="t-tipos-doc">categorias</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-premios" class="nav-link" data-key="t-estado-civil">Premios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-rifas" class="nav-link" data-key="t-estado-civil">Rifas</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-numeros" class="nav-link" data-key="t-estado-civil">Numeros</a>
+                            </li>
+                       
+                        </ul>
+                    </div>
+                </li>
                 <!-- EMPLEADOS -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarEmpleados" data-bs-toggle="collapse" role="button"
@@ -200,53 +223,7 @@ $base_url = Enrutamiento::dominio();
                     </div>
                 </li>-->
 
-                <!-- MAESTROS Y CATÁLOGOS -->
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarMaestros" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidebarMaestros">
-                        <i class="ri-book-open-line"></i> <span data-key="t-maestros">Maestros y Catálogos</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarMaestros">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="tipos-documento" class="nav-link" data-key="t-tipos-doc">Tipos de Documento</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="estado-civil" class="nav-link" data-key="t-estado-civil">Estado Civil</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="grados-instruccion" class="nav-link" data-key="t-grados">Grados de
-                                    Instrucción</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="profesiones" class="nav-link" data-key="t-profesiones">Profesiones</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="sistemas-pension" class="nav-link" data-key="t-pensiones">Sistemas de
-                                    Pensión</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="regimenes-laborales" class="nav-link" data-key="t-regimenes">Regímenes
-                                    Laborales</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="tipos-trabajador" class="nav-link" data-key="t-tipos-trabajador">Tipos de
-                                    Trabajador</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="niveles-remunerativos" class="nav-link" data-key="t-niveles">Niveles
-                                    Remunerativos</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="bancos" class="nav-link" data-key="t-bancos">Bancos</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="tipos-cuenta" class="nav-link" data-key="t-tipos-cuenta">Tipos de Cuenta
-                                    Bancaria</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+     
 
                 <!-- AUSENTISMO -->
                 <li class="nav-item">

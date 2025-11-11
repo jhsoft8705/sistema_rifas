@@ -10,8 +10,8 @@
             </div>
             <form id="form_rifa" novalidate>
                 <div class="modal-body">
-                    <input type="hidden" id="rifa_id">
-                    <input type="hidden" id="sede_id_rifa">
+                    <input type="hidden" id="rifa_id" name="rifa_id">
+                    <input type="hidden" id="sede_id_rifa" name="sede_id">
                     <div class="alert alert-soft-primary d-flex align-items-start gap-3">
                         <i class="ri-lightbulb-flash-line fs-4"></i>
                         <div>
@@ -21,14 +21,17 @@
 
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Premio principal</label>
-                            <select class="form-select" id="premio_id">
+                            <label for="premio_id" class="form-label">Premio principal</label>
+                            <select class="form-select" id="premio_id" name="premio_id">
                                 <option value="">Sin premio principal</option>
                             </select>
+                            <div class="form-text text-muted" id="premio_principal_help">
+                                Opcional: vincula un premio registrado como premio principal de la rifa.
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Estado</label>
-                            <select class="form-select" id="estado_rifa">
+                            <label for="estado_rifa" class="form-label">Estado</label>
+                            <select class="form-select" id="estado_rifa" name="estado_rifa">
                                 <option value="BORRADOR">Borrador</option>
                                 <option value="PUBLICADA">Publicada</option>
                                 <option value="EN_VENTA">En venta</option>
@@ -40,60 +43,60 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Código <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="codigo_rifa" placeholder="RIFA-001" required>
-                            <div class="invalid-feedback">Ingrese un código.</div>
+                            <label for="codigo_rifa" class="form-label">Código <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="codigo_rifa" name="codigo_rifa" placeholder="RIFA-001" required>
+                            <div class="invalid-feedback" id="codigo_rifa_error"></div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nombre_rifa" placeholder="Nombre del sorteo" required>
-                            <div class="invalid-feedback">Ingrese un nombre.</div>
+                            <label for="nombre_rifa" class="form-label">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre_rifa" name="nombre_rifa" placeholder="Nombre del sorteo" required>
+                            <div class="invalid-feedback" id="nombre_rifa_error"></div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Precio ticket (S/.) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="precio_ticket" min="0" step="0.01" required>
-                            <div class="invalid-feedback">Ingrese el precio del ticket.</div>
+                            <label for="precio_ticket" class="form-label">Precio ticket (S/.) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="precio_ticket" name="precio_ticket" min="0" step="0.01" required>
+                            <div class="invalid-feedback" id="precio_ticket_error"></div>
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion_rifa" rows="2" placeholder="Descripción del sorteo"></textarea>
+                            <label for="descripcion_rifa" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion_rifa" name="descripcion_rifa" rows="2" placeholder="Descripción del sorteo"></textarea>
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Número inicial <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="numero_inicial" min="0" required>
-                            <div class="invalid-feedback">Ingrese el número inicial.</div>
+                            <label for="numero_inicial" class="form-label">Número inicial <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="numero_inicial" name="numero_inicial" min="0" required>
+                            <div class="invalid-feedback" id="numero_inicial_error"></div>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Número final <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="numero_final" min="1" required>
-                            <div class="invalid-feedback">Ingrese el número final.</div>
+                            <label for="numero_final" class="form-label">Número final <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="numero_final" name="numero_final" min="1" required>
+                            <div class="invalid-feedback" id="numero_final_error"></div>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Cantidad de dígitos</label>
-                            <input type="number" class="form-control" id="cantidad_digitos" min="1" value="4">
+                            <label for="cantidad_digitos" class="form-label">Cantidad de dígitos</label>
+                            <input type="number" class="form-control" id="cantidad_digitos" name="cantidad_digitos" min="1" value="4">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Máximo por participante</label>
-                            <input type="number" class="form-control" id="cantidad_maxima_por_persona" min="1" value="1">
+                            <label for="cantidad_maxima_por_persona" class="form-label">Máximo por participante</label>
+                            <input type="number" class="form-control" id="cantidad_maxima_por_persona" name="cantidad_maxima_por_persona" min="1" value="1">
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Tickets máximos</label>
-                            <input type="number" class="form-control" id="cantidad_maxima_tickets" min="0" placeholder="Ilimitado">
+                            <label for="cantidad_maxima_tickets" class="form-label">Tickets máximos</label>
+                            <input type="number" class="form-control" id="cantidad_maxima_tickets" name="cantidad_maxima_tickets" min="0" placeholder="Ilimitado">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Números por volantario</label>
-                            <input type="number" class="form-control" id="numeros_por_volantario" min="1" value="100">
+                            <label for="numeros_por_volantario" class="form-label">Números por volantario</label>
+                            <input type="number" class="form-control" id="numeros_por_volantario" name="numeros_por_volantario" min="1" value="100">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Números por página</label>
-                            <input type="number" class="form-control" id="numeros_por_pagina" min="1" value="10">
+                            <label for="numeros_por_pagina" class="form-label">Números por página</label>
+                            <input type="number" class="form-control" id="numeros_por_pagina" name="numeros_por_pagina" min="1" value="10">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Tipo de numeración</label>
-                            <select class="form-select" id="tipo_numeracion">
+                            <label for="tipo_numeracion" class="form-label">Tipo de numeración</label>
+                            <select class="form-select" id="tipo_numeracion" name="tipo_numeracion">
                                 <option value="CORRELATIVO">Correlativo</option>
                                 <option value="ALEATORIO">Aleatorio</option>
                                 <option value="PERSONALIZADO">Personalizado</option>
@@ -101,77 +104,77 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Fecha inicio venta <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control flatpickr-date" id="fecha_inicio_venta" required>
-                            <div class="invalid-feedback">Seleccione la fecha de inicio de venta.</div>
+                            <label for="fecha_inicio_venta" class="form-label">Fecha inicio venta <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control flatpickr-date" id="fecha_inicio_venta" name="fecha_inicio_venta" required>
+                            <div class="invalid-feedback" id="fecha_inicio_venta_error"></div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Fecha fin venta <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control flatpickr-date" id="fecha_fin_venta" required>
-                            <div class="invalid-feedback">Seleccione la fecha de fin de venta.</div>
+                            <label for="fecha_fin_venta" class="form-label">Fecha fin venta <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control flatpickr-date" id="fecha_fin_venta" name="fecha_fin_venta" required>
+                            <div class="invalid-feedback" id="fecha_fin_venta_error"></div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Fecha del sorteo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control flatpickr-date" id="fecha_sorteo" required>
-                            <div class="invalid-feedback">Seleccione la fecha del sorteo.</div>
+                            <label for="fecha_sorteo" class="form-label">Fecha del sorteo <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control flatpickr-date" id="fecha_sorteo" name="fecha_sorteo" required>
+                            <div class="invalid-feedback" id="fecha_sorteo_error"></div>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Prefijo del número</label>
-                            <input type="text" class="form-control" id="prefijo_numero" placeholder="RIFA-">
+                            <label for="prefijo_numero" class="form-label">Prefijo del número</label>
+                            <input type="text" class="form-control" id="prefijo_numero" name="prefijo_numero" placeholder="RIFA-">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Sufijo del número</label>
-                            <input type="text" class="form-control" id="sufijo_numero" placeholder="-2025">
+                            <label for="sufijo_numero" class="form-label">Sufijo del número</label>
+                            <input type="text" class="form-control" id="sufijo_numero" name="sufijo_numero" placeholder="-2025">
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Mostrar contador</label>
-                            <select class="form-select" id="mostrar_contador">
+                            <label for="mostrar_contador" class="form-label">Mostrar contador</label>
+                            <select class="form-select" id="mostrar_contador" name="mostrar_contador">
                                 <option value="1">Sí</option>
                                 <option value="0">No</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Mostrar participantes</label>
-                            <select class="form-select" id="mostrar_participantes">
+                            <label for="mostrar_participantes" class="form-label">Mostrar participantes</label>
+                            <select class="form-select" id="mostrar_participantes" name="mostrar_participantes">
                                 <option value="1">Sí</option>
                                 <option value="0">No</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Mostrar tickets vendidos</label>
-                            <select class="form-select" id="mostrar_tickets_vendidos">
+                            <label for="mostrar_tickets_vendidos" class="form-label">Mostrar tickets vendidos</label>
+                            <select class="form-select" id="mostrar_tickets_vendidos" name="mostrar_tickets_vendidos">
                                 <option value="1">Sí</option>
                                 <option value="0">No</option>
                             </select>
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Texto promocional</label>
-                            <textarea class="form-control" id="texto_promocional" rows="2"
+                            <label for="texto_promocional" class="form-label">Texto promocional</label>
+                            <textarea class="form-control" id="texto_promocional" name="texto_promocional" rows="2"
                                 placeholder="Mensaje corto para landing o redes sociales"></textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Reglas de participación</label>
-                            <textarea class="form-control" id="reglas_participacion" rows="2"
+                            <label for="reglas_participacion" class="form-label">Reglas de participación</label>
+                            <textarea class="form-control" id="reglas_participacion" name="reglas_participacion" rows="2"
                                 placeholder="Condiciones y reglas del sorteo"></textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Términos y condiciones</label>
-                            <textarea class="form-control" id="terminos_rifa" rows="2"
+                            <label for="terminos_rifa" class="form-label">Términos y condiciones</label>
+                            <textarea class="form-control" id="terminos_rifa" name="terminos_rifa" rows="2"
                                 placeholder="Términos y condiciones específicos"></textarea>
                         </div>
 
                         <div class="col-md-6 d-flex align-items-center gap-2">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="permitir_seleccion_numero" checked>
+                                <input class="form-check-input" type="checkbox" id="permitir_seleccion_numero" name="permitir_seleccion_numero" checked>
                                 <label class="form-check-label" for="permitir_seleccion_numero">Permitir selección manual</label>
                             </div>
                         </div>
                         <div class="col-md-6 d-flex align-items-center gap-2">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="asignacion_automatica" checked>
+                                <input class="form-check-input" type="checkbox" id="asignacion_automatica" name="asignacion_automatica" checked>
                                 <label class="form-check-label" for="asignacion_automatica">Asignación automática</label>
                             </div>
                         </div>
@@ -187,7 +190,7 @@
 
                         <div class="col-12 d-none" id="contenedor_regenerar_numeros">
                             <div class="form-check mt-2">
-                                <input class="form-check-input" type="checkbox" id="regenerar_numeros">
+                                <input class="form-check-input" type="checkbox" id="regenerar_numeros" name="regenerar_numeros">
                                 <label class="form-check-label" for="regenerar_numeros">
                                     Regenerar números automáticamente con la nueva configuración
                                 </label>
@@ -225,6 +228,12 @@
                     <div>
                         <strong>Rifa seleccionada:</strong>
                         <span id="premios_rifa_nombre" class="fw-semibold"></span>
+                    </div>
+                </div>
+                <div class="alert alert-soft-warning d-flex align-items-start gap-2 d-none" id="alerta_sin_premios_activos" role="alert">
+                    <i class="ri-error-warning-line fs-4"></i>
+                    <div>
+                        No hay premios activos disponibles en la sede. Registra un premio en el módulo de premios para poder asociarlo a esta rifa.
                     </div>
                 </div>
 
@@ -301,6 +310,13 @@
         </div>
     </div>
 </div>
+
+<style>
+    #modal_rifa .modal-body {
+        max-height: calc(100vh - 210px);
+        overflow-y: auto;
+    }
+</style>
 
 <!-- Modal de gestión de números/cartillas -->
 <div class="modal fade" id="modal_numeros_rifa" tabindex="-1" aria-labelledby="modal_numeros_rifa_label" aria-hidden="true">

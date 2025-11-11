@@ -95,7 +95,8 @@ class Premio extends Conectar
     ): array {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL register_premio(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
+            $placeholders = implode(', ', array_fill(0, 19, '?'));
+            $sql = "CALL register_premio($placeholders, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $sede_id, PDO::PARAM_INT);
             $this->bindNullable($query, 2, $categoria_id, PDO::PARAM_INT);
@@ -168,7 +169,8 @@ class Premio extends Conectar
     ): array {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL update_premio(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
+            $placeholders = implode(', ', array_fill(0, 21, '?'));
+            $sql = "CALL update_premio($placeholders, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $id, PDO::PARAM_INT);
             $query->bindValue(2, $sede_id, PDO::PARAM_INT);

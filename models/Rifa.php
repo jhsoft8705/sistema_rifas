@@ -219,7 +219,8 @@ class Rifa extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL register_rifa_premio(?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
+            $placeholders = implode(', ', array_fill(0, 10, '?'));
+            $sql = "CALL register_rifa_premio($placeholders, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $this->getValue($data, 'rifa_id'), PDO::PARAM_INT);
             $query->bindValue(2, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);
@@ -262,7 +263,8 @@ class Rifa extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL update_rifa_premio(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
+            $placeholders = implode(', ', array_fill(0, 11, '?'));
+            $sql = "CALL update_rifa_premio($placeholders, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $this->getValue($data, 'id'), PDO::PARAM_INT);
             $query->bindValue(2, $this->getValue($data, 'rifa_id'), PDO::PARAM_INT);

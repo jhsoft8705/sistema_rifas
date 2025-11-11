@@ -35,10 +35,12 @@ async function inicializarSelectsCategorias() {
 
 function inicializarTablaCategorias() {
     tablaCategorias = $('#tabla_categorias').DataTable({
+        processing: false,
+        serverSide: false,
         data: [],
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
-        },
+        language: Utils.getDataTableLanguageES(),
+        lengthChange: false,
+        dom: 'frtip',
         columns: [
             {
                 data: null,
@@ -163,6 +165,7 @@ async function cargarCategoriasPremios() {
 
     try {
         Utils.showLoading('Cargando categorías...');
+
         const sedeId = $('#filtro_sede').val() || userInfo.sede_id;
         const estado = $('#filtro_estado').val();
 
@@ -172,6 +175,7 @@ async function cargarCategoriasPremios() {
         }
 
         const respuesta = await API.get('categorias/getAll', params);
+
         Utils.closeLoading();
 
         if (respuesta && respuesta.ok) {
@@ -183,9 +187,11 @@ async function cargarCategoriasPremios() {
             Utils.showToast(respuesta?.msj || 'No se pudo obtener categorías', 'warning');
         }
     } catch (error) {
-        console.error('Error al cargar categorías:', error);
         Utils.closeLoading();
-        Utils.showToast('Ocurrió un problema al cargar las categorías', 'error');
+        console.error('Error al cargar categorías:', error);
+        categoriasData = [];
+        tablaCategorias.clear().draw();
+        Utils.showToast('Error de conexión al cargar las categorías', 'error');
     }
 }
 

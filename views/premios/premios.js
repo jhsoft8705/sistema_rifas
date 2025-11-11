@@ -46,10 +46,12 @@ async function inicializarSelects() {
 
 function inicializarTabla() {
     tablaPremios = $('#tabla_premios').DataTable({
+        processing: false,
+        serverSide: false,
         data: [],
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
-        },
+        language: Utils.getDataTableLanguageES(),
+        lengthChange: false,
+        dom: 'frtip',
         columns: [
             {
                 data: null,
@@ -174,6 +176,7 @@ async function cargarPremios() {
 
     try {
         Utils.showLoading('Cargando premios...');
+
         const estado = $('#filtro_estado').val();
 
         const params = { sede_id: userInfo.sede_id };
@@ -188,6 +191,7 @@ async function cargarPremios() {
         }
 
         const respuesta = await API.get('premios/getAll', params);
+
         Utils.closeLoading();
 
         if (respuesta && respuesta.ok) {
@@ -199,9 +203,11 @@ async function cargarPremios() {
             Utils.showToast(respuesta?.msj || 'No se pudo obtener premios', 'warning');
         }
     } catch (error) {
-        console.error('Error al cargar premios:', error);
         Utils.closeLoading();
-        Utils.showToast('Ocurrió un problema al cargar los premios', 'error');
+        console.error('Error al cargar premios:', error);
+        premiosData = [];
+        tablaPremios.clear().draw();
+        Utils.showToast('Error de conexión al cargar los premios', 'error');
     }
 }
 

@@ -27,6 +27,7 @@ $routes = [
     'admin-categorias' => $base_path . '/views/categorias/index.php',
     'cargos' => $base_path . '/views/cargos/index.php',
     'empleados' => $base_path . '/views/empleados/index.php',
+    'marcaciones' => $base_path . '/views/marcaciones/index.php',
     'empleadosregistro' => $base_path . '/views/empleados/register/index.php',
     'terminos' => $base_path . '/views/web/terminos/index.php',
    ];

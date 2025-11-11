@@ -38,37 +38,66 @@
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <div class="d-flex flex-wrap w-100 gap-3 align-items-center">
-                                        <h5 class="card-title mb-0">
-                                            <i class="ri-filter-2-line me-2"></i>Filtros y Acciones
-                                        </h5>
-                                        <div class="d-flex flex-wrap gap-2 ms-auto">
-                                            <select id="filtro_sede_rifa" class="form-select" style="max-width: 220px;">
-                                                <option value="">Todas las sedes</option>
-                                            </select>
-                                            <select id="filtro_estado_rifa" class="form-select" style="max-width: 220px;">
-                                                <option value="">Todos los estados</option>
-                                                <option value="BORRADOR">Borrador</option>
-                                                <option value="PUBLICADA">Publicada</option>
-                                                <option value="EN_VENTA">En venta</option>
-                                                <option value="CERRADA">Cerrada</option>
-                                                <option value="SORTEO_REALIZADO">Sorteo realizado</option>
-                                                <option value="FINALIZADA">Finalizada</option>
-                                                <option value="CANCELADA">Cancelada</option>
-                                            </select>
-                                            <button class="btn btn-outline-info" id="btn_filtrar_rifas">
-                                                <i class="ri-filter-2-line me-1"></i>Filtrar
+                                    <h5 class="card-title mb-0">
+                                        <i class="ri-ticket-2-line me-2"></i>Filtros y Acciones
+                                    </h5>
+
+                                    <div class="d-flex flex-wrap w-100 gap-3 mt-3">
+                                        <div class="d-flex flex-wrap flex-grow-1 gap-3 align-items-center">
+                                            <div class="w-auto" style="max-width: 240px; min-width: 200px;">
+                                                <select id="filtro_sede_rifa" class="form-select"
+                                                    style="min-height: 40px; font-size: 0.9rem;"
+                                                    data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                    title="Filtrar rifas por sede">
+                                                    <option value="">Todas las sedes</option>
+                                                </select>
+                                            </div>
+                                            <div class="w-auto" style="max-width: 220px; min-width: 180px;">
+                                                <select id="filtro_estado_rifa" class="form-select"
+                                                    style="min-height: 40px; font-size: 0.9rem;"
+                                                    data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                    title="Filtrar rifas por estado">
+                                                    <option value="">Todos los estados</option>
+                                                    <option value="BORRADOR">Borrador</option>
+                                                    <option value="PUBLICADA">Publicada</option>
+                                                    <option value="EN_VENTA">En venta</option>
+                                                    <option value="CERRADA">Cerrada</option>
+                                                    <option value="SORTEO_REALIZADO">Sorteo realizado</option>
+                                                    <option value="FINALIZADA">Finalizada</option>
+                                                    <option value="CANCELADA">Cancelada</option>
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-outline-info" id="btn_filtrar_rifas"
+                                                style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
+                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                title="Aplicar filtros">
+                                                <i class="ri-filter-line me-1"></i>Filtrar
                                             </button>
-                                            <button class="btn btn-outline-warning" id="btn_recargar_rifas">
-                                                <i class="ri-refresh-line me-1"></i>Recargar
+                                            <button class="btn btn-outline-warning" id="btn_recargar_rifas"
+                                                style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
+                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                title="Recargar listado y limpiar filtros">
+                                                <i class="ri-refresh-line me-1"></i>
                                             </button>
-                                            <button type="button" class="btn btn-success" id="btn_exportar_10" data-print="10">
+                                        </div>
+
+                                        <div class="ms-auto d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-success" id="btn_exportar_10" data-print="10"
+                                                style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
+                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                title="Generar cartillas en formato de 10 por página">
                                                 <i class="ri-printer-line me-1"></i>Cartillas x10
                                             </button>
-                                            <button type="button" class="btn btn-success" id="btn_exportar_20" data-print="20">
+                                            <button type="button" class="btn btn-success" id="btn_exportar_20" data-print="20"
+                                                style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
+                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                title="Generar cartillas en formato de 20 por página">
                                                 <i class="ri-printer-line me-1"></i>Cartillas x20
                                             </button>
-                                            <button type="button" class="btn btn-primary" id="btn_nueva_rifa">
+                                            <button type="button" class="btn btn-primary" id="btn_nueva_rifa"
+                                                style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
+                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                title="Registrar nueva rifa o sorteo">
                                                 <i class="ri-add-line me-1"></i>Nueva Rifa
                                             </button>
                                         </div>
@@ -86,8 +115,7 @@
                                                     <th>Premio principal</th>
                                                     <th>Precio ticket</th>
                                                     <th>N° totales</th>
-                                                    <th>Disponibles</th>
-                                                    <th>Estado</th>
+                                                     <th>Estado</th>
                                                     <th>Fecha sorteo</th>
                                                 </tr>
                                             </thead>
@@ -98,6 +126,8 @@
                             </div>
                         </div>
                     </div>
+                    <?php require_once __DIR__ . '/form.php'; ?>
+
 
                 </div>
             </div>
@@ -106,7 +136,6 @@
         </div>
     </div>
 
-    <?php require_once __DIR__ . '/form.php'; ?>
     <?php require_once __DIR__ . '/../components/js.php'; ?>
     <script src="<?= Enrutamiento::dominio() ?>/views/rifas/rifas.js"></script>
 </body>
