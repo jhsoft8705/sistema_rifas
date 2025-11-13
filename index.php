@@ -358,7 +358,7 @@
                                                                     Correo Electrónico <span class="text-danger">*</span>
                                                                 </label>
                                                                 <input type="email" class="form-control" id="email_participante" 
-                                                                       name="email_participante" placeholder="correo@ejemplo.com">
+                                                                       name="email_participante" placeholder="correo@ejemplo.com" required>
                                                                 <div class="text-danger small mt-1" id="email_participante_error" style="display: none;"></div>
                                                             </div>
                                                         </div>
@@ -405,22 +405,22 @@
                                                     <div class="row">
                                                         <div class="col-sm-6">
                                                             <div class="mb-3">
-                                                                <label for="ciudad" class="form-label">
-                                                                    Ciudad <span class="text-danger">*</span>
-                                                                </label>
-                                                                <input type="text" class="form-control" id="ciudad" 
-                                                                       name="ciudad" placeholder="Ej: Ciudad de México, Guadalajara...">
-                                                                <div class="text-danger small mt-1" id="ciudad_error" style="display: none;"></div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-sm-6">
-                                                            <div class="mb-3">
                                                                 <label for="estado" class="form-label">
                                                                     Estado/Provincia <span class="text-danger">*</span>
                                                                 </label>
                                                                 <input type="text" class="form-control" id="estado" 
-                                                                       name="estado" placeholder="Ej: CDMX, Jalisco...">
+                                                                       name="estado" placeholder="Ej: CDMX, Jalisco..." required>
                                                                 <div class="text-danger small mt-1" id="estado_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="ciudad" class="form-label">
+                                                                    Ciudad
+                                                                </label>
+                                                                <input type="text" class="form-control" id="ciudad" 
+                                                                       name="ciudad" placeholder="Ej: Ciudad de México, Guadalajara...">
+                                                                <div class="text-danger small mt-1" id="ciudad_error" style="display: none;"></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2038,59 +2038,95 @@
 
             // Evento al abrir el modal
             const modalElement = document.getElementById('modal_comprar_ticket');
-            modalElement.addEventListener('show.bs.modal', function (event) {
-                // Botón que disparó el modal
-                const button = event.relatedTarget;
+            
+            // Función para inicializar el modal con datos de rifa
+            function inicializarModalConRifa(rifaData) {
+                if (!rifaData) {
+                    console.error('No se proporcionaron datos de la rifa');
+                    return;
+                }
                 
-                // Extraer información de los data attributes
-                const rifaId = button.getAttribute('data-rifa-id');
-                const rifaNombre = button.getAttribute('data-rifa-nombre');
-                const rifaPrecio = button.getAttribute('data-rifa-precio');
-                const rifaDisponibles = button.getAttribute('data-rifa-disponibles');
-                const rifaTotal = button.getAttribute('data-rifa-total');
-                const rifaPremios = JSON.parse(button.getAttribute('data-rifa-premios'));
+                const rifaId = rifaData.id || rifaData.rifaId;
+                const rifaNombre = rifaData.nombre || rifaData.rifaNombre || '';
+                const rifaPrecio = rifaData.precio_ticket || rifaData.precio || rifaData.rifaPrecio || '0';
+                const rifaDisponibles = rifaData.numeros_disponibles || rifaData.disponibles || rifaData.rifaDisponibles || 0;
+                const rifaTotal = rifaData.total_numeros || rifaData.total || rifaData.rifaTotal || 0;
+                const rifaPremios = rifaData.premios || rifaData.rifaPremios || [];
+                
+                // Debug: Log de los valores obtenidos
+                console.log('Inicializando modal con datos:', {
+                    rifaId,
+                    rifaNombre,
+                    rifaPrecio,
+                    rifaDisponibles,
+                    rifaTotal,
+                    rifaPremios
+                });
 
                 // Guardar nombre de rifa globalmente
                 rifaNombreGlobal = rifaNombre;
 
+                // Convertir valores numéricos de forma segura
+                precioUnitario = parseFloat(rifaPrecio) || 0;
+                ticketsDisponibles = parseInt(rifaDisponibles) || 0;
+                const ticketsTotal = parseInt(rifaTotal) || 0;
+                
+                console.log('Valores procesados:', {
+                    precioUnitario,
+                    ticketsDisponibles,
+                    ticketsTotal
+                });
+
                 // Actualizar el modal
-                document.getElementById('modal_titulo_rifa').textContent = rifaNombre;
-                document.getElementById('rifa_id').value = rifaId;
-                document.getElementById('precio_ticket').textContent = rifaPrecio;
-                document.getElementById('tickets_disponibles').textContent = rifaDisponibles;
-                document.getElementById('tickets_total').textContent = rifaTotal;
+                document.getElementById('modal_titulo_rifa').textContent = rifaNombre || 'Rifa';
+                document.getElementById('rifa_id').value = rifaId || '';
+                
+                // Formatear precio con símbolo de moneda
+                const precioFormateado = precioUnitario > 0 ? precioUnitario.toFixed(2) : '0.00';
+                document.getElementById('precio_ticket').textContent = precioFormateado;
+                document.getElementById('tickets_disponibles').textContent = ticketsDisponibles;
+                document.getElementById('tickets_total').textContent = ticketsTotal;
                 
                 // Actualizar tabs duplicados
-                document.getElementById('tickets_disponibles_tab').textContent = rifaDisponibles;
-                document.getElementById('tickets_total_tab').textContent = rifaTotal;
+                document.getElementById('tickets_disponibles_tab').textContent = ticketsDisponibles;
+                document.getElementById('tickets_total_tab').textContent = ticketsTotal;
 
-                // Guardar valores para cálculos
-                precioUnitario = parseFloat(rifaPrecio);
-                ticketsDisponibles = parseInt(rifaDisponibles);
-
-                // Actualizar límite máximo de tickets
-                document.getElementById('cantidad_tickets').setAttribute('max', rifaDisponibles);
+                // Actualizar límite máximo de tickets (si hay disponibles, usar ese límite, sino permitir hasta 999)
+                const maxTickets = ticketsDisponibles > 0 ? ticketsDisponibles : 999;
+                document.getElementById('cantidad_tickets').setAttribute('max', maxTickets);
 
                 // Mostrar lista de premios
                 const listaPremios = document.getElementById('lista_premios');
                 listaPremios.innerHTML = '';
                 
-                rifaPremios.forEach((premio, index) => {
-                    const iconClass = index === 0 ? 'ri-trophy-fill text-warning' : 
-                                     index === 1 ? 'ri-medal-line text-secondary' : 
-                                     'ri-award-line text-dark';
-                    listaPremios.innerHTML += `
-                        <div class="d-flex align-items-center gap-2 small">
-                            <i class="${iconClass} fs-16"></i>
-                            <span class="text-muted">${premio.posicion}°</span>
-                            <strong>${premio.nombre}</strong>
-                        </div>
-                    `;
-                });
+                if (rifaPremios && rifaPremios.length > 0) {
+                    rifaPremios.forEach((premio, index) => {
+                        const iconClass = index === 0 ? 'ri-trophy-fill text-warning' : 
+                                         index === 1 ? 'ri-medal-line text-secondary' : 
+                                         'ri-award-line text-dark';
+                        const premioNombre = premio.premio_nombre || premio.nombre || 'Premio';
+                        const premioPosicion = premio.posicion || (index + 1);
+                        listaPremios.innerHTML += `
+                            <div class="d-flex align-items-center gap-2 small">
+                                <i class="${iconClass} fs-16"></i>
+                                <span class="text-muted">${premioPosicion}°</span>
+                                <strong>${premioNombre}</strong>
+                            </div>
+                        `;
+                    });
+                } else {
+                    listaPremios.innerHTML = '<p class="text-muted small mb-0">No hay premios registrados</p>';
+                }
 
                 // Resetear cantidad a 1
                 document.getElementById('cantidad_tickets').value = 1;
                 calcularTotal();
+                
+                // Validar tabs inicialmente
+                setTimeout(() => {
+                    validarTabPersonal();
+                    validarTabOrden();
+                }, 100);
                 
                 // Resetear navegación de tabs - Solo el primero habilitado
                 const personalTab = document.getElementById('pills-personal-tab');
@@ -2119,13 +2155,79 @@
                 firstTab.show();
             });
 
+            // Evento al abrir el modal (show.bs.modal)
+            modalElement.addEventListener('show.bs.modal', function (event) {
+                // Botón que disparó el modal (puede ser null si se abre programáticamente)
+                const button = event.relatedTarget;
+                let rifaData = null;
+                
+                // Si hay un botón, obtener datos de los data attributes
+                if (button) {
+                    const rifaId = button.getAttribute('data-rifa-id');
+                    const rifaNombre = button.getAttribute('data-rifa-nombre');
+                    const rifaPrecio = button.getAttribute('data-rifa-precio');
+                    const rifaDisponibles = button.getAttribute('data-rifa-disponibles');
+                    const rifaTotal = button.getAttribute('data-rifa-total');
+                    const rifaPremiosAttr = button.getAttribute('data-rifa-premios');
+                    
+                    rifaData = {
+                        id: rifaId,
+                        nombre: rifaNombre,
+                        precio_ticket: rifaPrecio,
+                        numeros_disponibles: rifaDisponibles,
+                        total_numeros: rifaTotal,
+                        premios: rifaPremiosAttr ? (() => {
+                            try {
+                                return JSON.parse(rifaPremiosAttr);
+                            } catch (e) {
+                                console.error('Error al parsear premios:', e);
+                                return [];
+                            }
+                        })() : []
+                    };
+                } else {
+                    // Si no hay botón, intentar obtener datos de window.rifaSeleccionada (seteado por landing.js)
+                    if (window.rifaSeleccionada) {
+                        rifaData = window.rifaSeleccionada;
+                    } else if (window.LandingRifas && window.LandingRifas.rifaSeleccionada) {
+                        rifaData = window.LandingRifas.rifaSeleccionada;
+                    }
+                }
+                
+                // Si hay datos, inicializar el modal
+                if (rifaData) {
+                    inicializarModalConRifa(rifaData);
+                } else {
+                    console.warn('No se encontraron datos de la rifa al abrir el modal');
+                }
+            });
+
+            // Listener para evento personalizado initModalRifa (disparado desde landing.js)
+            modalElement.addEventListener('initModalRifa', function (event) {
+                if (event.detail) {
+                    inicializarModalConRifa(event.detail);
+                }
+            });
+
             // Función para calcular el total
             function calcularTotal() {
                 const cantidad = parseInt(document.getElementById('cantidad_tickets').value) || 1;
-                const total = (cantidad * precioUnitario).toFixed(2);
+                
+                // Obtener precio del DOM o usar variable global
+                const precioTicketEl = document.getElementById('precio_ticket');
+                const precioActual = precioTicketEl ? parseFloat(precioTicketEl.textContent.replace(/[^0-9.]/g, '')) || precioUnitario : precioUnitario;
+                
+                const total = (cantidad * precioActual).toFixed(2);
                 
                 document.getElementById('total_pagar').textContent = total;
                 document.getElementById('cantidad_display').textContent = cantidad;
+                
+                console.log('Calculando total:', {
+                    cantidad,
+                    precioActual,
+                    precioUnitario,
+                    total
+                });
             }
             
             // Función para actualizar el resumen final
@@ -2143,7 +2245,20 @@
                 const numerosReservadosJSON = document.getElementById('numeros_reservados').value;
                 const numerosFormateadosJSON = document.getElementById('numeros_formateados').value;
                 
-                document.getElementById('resumen_rifa_nombre').textContent = rifaNombreGlobal;
+                // Obtener precio actualizado del DOM o usar la variable global
+                const precioTicketEl = document.getElementById('precio_ticket');
+                const precioActual = precioTicketEl ? parseFloat(precioTicketEl.textContent.replace(/[^0-9.]/g, '')) || precioUnitario : precioUnitario;
+                const cantidadTickets = parseInt(document.getElementById('cantidad_tickets').value) || 1;
+                const totalCalculado = (cantidadTickets * precioActual).toFixed(2);
+                
+                console.log('Actualizando resumen:', {
+                    precioActual,
+                    precioUnitario,
+                    cantidadTickets,
+                    totalCalculado
+                });
+                
+                document.getElementById('resumen_rifa_nombre').textContent = rifaNombreGlobal || 'Rifa';
                 document.getElementById('resumen_nombre').textContent = document.getElementById('nombre_completo').value || '-';
                 document.getElementById('resumen_email').textContent = document.getElementById('email_participante').value || '-';
                 document.getElementById('resumen_telefono').textContent = document.getElementById('telefono').value || '-';
@@ -2160,7 +2275,7 @@
                         
                         numerosArray.forEach(num => {
                             const badge = document.createElement('span');
-                            badge.className = 'badge bg-success fs-14 px-3 py-2';
+                            badge.className = 'badge bg-success fs-14 px-3 py-2 me-1 mb-1';
                             badge.textContent = num;
                             containerNumeros.appendChild(badge);
                         });
@@ -2174,9 +2289,16 @@
                     document.getElementById('resumen_numero_row').style.display = 'none';
                 }
                 
-                document.getElementById('resumen_cantidad').textContent = document.getElementById('cantidad_tickets').value;
-                document.getElementById('resumen_precio').textContent = '$' + precioUnitario.toFixed(2);
-                document.getElementById('resumen_total').textContent = '$' + document.getElementById('total_pagar').textContent;
+                // Actualizar cantidades y precios
+                document.getElementById('resumen_cantidad').textContent = cantidadTickets;
+                document.getElementById('resumen_precio').textContent = '$' + precioActual.toFixed(2);
+                document.getElementById('resumen_total').textContent = '$' + totalCalculado;
+                
+                // Actualizar también el total_pagar si existe
+                const totalPagarEl = document.getElementById('total_pagar');
+                if (totalPagarEl) {
+                    totalPagarEl.textContent = totalCalculado;
+                }
             }
             
             // Actualizar resumen cuando se llega al tab final
@@ -2191,6 +2313,8 @@
                 const nombreInput = document.getElementById('nombre_completo');
                 const emailInput = document.getElementById('email_participante');
                 const telefonoInput = document.getElementById('telefono');
+                const tipoDocumentoInput = document.getElementById('tipo_documento');
+                const numeroDocumentoInput = document.getElementById('numero_documento');
                 const ciudadInput = document.getElementById('ciudad');
                 const estadoInput = document.getElementById('estado');
                 const direccionInput = document.getElementById('direccion_envio');
@@ -2198,6 +2322,8 @@
                 const nombreCompleto = nombreInput.value.trim();
                 const email = emailInput.value.trim();
                 const telefono = telefonoInput.value.trim();
+                const tipoDocumento = tipoDocumentoInput.value.trim();
+                const numeroDocumento = numeroDocumentoInput.value.trim();
                 const ciudad = ciudadInput.value.trim();
                 const estado = estadoInput.value.trim();
                 const direccion = direccionInput.value.trim();
@@ -2206,7 +2332,9 @@
                 const nombreValido = nombreCompleto.length >= 3;
                 const emailValido = emailRegex.test(email);
                 const telefonoValido = telefono.length >= 8;
-                const ciudadValida = ciudad.length >= 3;
+                const tipoDocumentoValido = tipoDocumento !== '';
+                const numeroDocumentoValido = numeroDocumento.length >= 6;
+                // Ciudad es opcional, no se valida como requerida
                 const estadoValido = estado.length >= 3;
                 const direccionValida = direccion.length >= 10;
                 
@@ -2247,14 +2375,36 @@
                     telefonoInput.classList.remove('border-success', 'border-danger');
                 }
                 
-                // Feedback visual para ciudad
-                if (ciudad.length > 0) {
-                    if (ciudadValida) {
-                        ciudadInput.classList.remove('border-danger');
-                        ciudadInput.classList.add('border-success');
+                // Feedback visual para tipo de documento
+                if (tipoDocumento.length > 0) {
+                    if (tipoDocumentoValido) {
+                        tipoDocumentoInput.classList.remove('border-danger');
+                        tipoDocumentoInput.classList.add('border-success');
                     } else {
-                        ciudadInput.classList.remove('border-success');
+                        tipoDocumentoInput.classList.remove('border-success');
+                        tipoDocumentoInput.classList.add('border-danger');
                     }
+                } else {
+                    tipoDocumentoInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                // Feedback visual para número de documento
+                if (numeroDocumento.length > 0) {
+                    if (numeroDocumentoValido) {
+                        numeroDocumentoInput.classList.remove('border-danger');
+                        numeroDocumentoInput.classList.add('border-success');
+                    } else {
+                        numeroDocumentoInput.classList.remove('border-success');
+                        numeroDocumentoInput.classList.add('border-danger');
+                    }
+                } else {
+                    numeroDocumentoInput.classList.remove('border-success', 'border-danger');
+                }
+                
+                // Feedback visual para ciudad (opcional, solo feedback positivo si tiene valor)
+                if (ciudad.length > 0) {
+                    ciudadInput.classList.remove('border-danger');
+                    ciudadInput.classList.add('border-success');
                 } else {
                     ciudadInput.classList.remove('border-success', 'border-danger');
                 }
@@ -2283,7 +2433,7 @@
                     direccionInput.classList.remove('border-success', 'border-danger');
                 }
                 
-                const esValido = nombreValido && emailValido && telefonoValido && ciudadValida && estadoValido && direccionValida;
+                const esValido = nombreValido && emailValido && telefonoValido && tipoDocumentoValido && numeroDocumentoValido && estadoValido && direccionValida;
                 
                 // Habilitar o deshabilitar botón
                 const btnContinuar = document.getElementById('btn_continuar_personal');
@@ -2307,13 +2457,73 @@
                 return esValido;
             }
             
-            // Función para validar Tab 2 - Tu Orden (cantidad de tickets)
+            // Función para validar Tab 2 - Tu Orden (cantidad de tickets y números seleccionados)
             function validarTabOrden() {
-                const cantidad = parseInt(document.getElementById('cantidad_tickets').value);
-                const esValido = cantidad >= 1 && cantidad <= ticketsDisponibles;
+                const cantidad = parseInt(document.getElementById('cantidad_tickets').value) || 1;
                 
-                // Este tab siempre tiene un valor válido por defecto, pero validamos por si acaso
-                document.getElementById('btn_continuar_orden').disabled = !esValido;
+                // Si ticketsDisponibles es 0, permitir continuar (puede ser que no haya números generados aún)
+                // pero validar que la cantidad sea al menos 1
+                const cantidadValida = cantidad >= 1 && (ticketsDisponibles === 0 || cantidad <= ticketsDisponibles);
+                
+                console.log('Validación Tab Orden:', {
+                    cantidad,
+                    ticketsDisponibles,
+                    cantidadValida
+                });
+                
+                // Verificar si hay números seleccionados (si se han seleccionado números)
+                const numerosReservados = document.getElementById('numeros_reservados').value;
+                let numerosValidos = true;
+                
+                // Si hay números reservados en el campo oculto, verificar que coincidan con la cantidad
+                if (numerosReservados && numerosReservados !== '[]' && numerosReservados !== '') {
+                    try {
+                        const numerosArray = JSON.parse(numerosReservados);
+                        numerosValidos = numerosArray.length === cantidad;
+                    } catch (e) {
+                        numerosValidos = false;
+                    }
+                } else {
+                    // Si no hay números seleccionados, está bien (puede ser asignación automática)
+                    // Pero si el usuario seleccionó manualmente números, debe completar la cantidad
+                    const displayVisible = document.getElementById('numero_seleccionado_display').style.display !== 'none';
+                    if (displayVisible) {
+                        // Si el display está visible pero no hay números completos, no es válido
+                        numerosValidos = false;
+                    } else {
+                        // Si no hay display visible, puede continuar (asignación automática)
+                        numerosValidos = true;
+                    }
+                }
+                
+                const esValido = cantidadValida && numerosValidos;
+                
+                // Habilitar o deshabilitar botón
+                const btnContinuar = document.getElementById('btn_continuar_orden');
+                btnContinuar.disabled = !esValido;
+                
+                // Cambiar texto del botón si está deshabilitado
+                if (!esValido) {
+                    if (!cantidadValida) {
+                        btnContinuar.innerHTML = `
+                            <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>
+                            <span class="d-none d-sm-inline">Cantidad inválida</span>
+                            <span class="d-inline d-sm-none">Inválido</span>
+                        `;
+                    } else if (!numerosValidos) {
+                        btnContinuar.innerHTML = `
+                            <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>
+                            <span class="d-none d-sm-inline">Selecciona ${cantidad} número(s)</span>
+                            <span class="d-inline d-sm-none">Selecciona números</span>
+                        `;
+                    }
+                } else {
+                    btnContinuar.innerHTML = `
+                        <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>
+                        <span class="d-none d-sm-inline">Continuar a Pago</span>
+                        <span class="d-inline d-sm-none">Continuar</span>
+                    `;
+                }
                 
                 return esValido;
             }
@@ -2356,6 +2566,14 @@
                 validarTabPersonal();
             });
             
+            document.getElementById('tipo_documento').addEventListener('change', function() {
+                validarTabPersonal();
+            });
+            
+            document.getElementById('numero_documento').addEventListener('input', function() {
+                validarTabPersonal();
+            });
+            
             document.getElementById('ciudad').addEventListener('input', function() {
                 validarTabPersonal();
             });
@@ -2382,12 +2600,17 @@
             document.getElementById('btn_mas').addEventListener('click', function() {
                 const input = document.getElementById('cantidad_tickets');
                 let valor = parseInt(input.value) || 1;
-                const max = parseInt(input.getAttribute('max'));
+                const max = parseInt(input.getAttribute('max')) || 999;
                 
                 if (valor < max) {
                     input.value = valor + 1;
                     calcularTotal();
                     validarTabOrden();
+                    // Actualizar resumen si estamos en el tab final
+                    const finishTab = document.getElementById('pills-finish-tab');
+                    if (finishTab && finishTab.classList.contains('active')) {
+                        actualizarResumenFinal();
+                    }
                 }
             });
 
@@ -2400,22 +2623,34 @@
                     input.value = valor - 1;
                     calcularTotal();
                     validarTabOrden();
+                    // Actualizar resumen si estamos en el tab final
+                    const finishTab = document.getElementById('pills-finish-tab');
+                    if (finishTab && finishTab.classList.contains('active')) {
+                        actualizarResumenFinal();
+                    }
                 }
             });
 
             // Evento al cambiar la cantidad manualmente
             document.getElementById('cantidad_tickets').addEventListener('input', function() {
                 let valor = parseInt(this.value) || 1;
-                const max = parseInt(this.getAttribute('max'));
+                const max = parseInt(this.getAttribute('max')) || 999;
                 
                 if (valor < 1) {
                     this.value = 1;
-                } else if (valor > max) {
+                } else if (max > 0 && valor > max) {
                     this.value = max;
                     alert(`Solo hay ${max} tickets disponibles`);
                 }
                 
                 calcularTotal();
+                validarTabOrden();
+                
+                // Actualizar resumen si estamos en el tab final
+                const finishTab = document.getElementById('pills-finish-tab');
+                if (finishTab && finishTab.classList.contains('active')) {
+                    actualizarResumenFinal();
+                }
             });
 
             // Función para limpiar errores
@@ -2462,7 +2697,7 @@
                     esValido = false;
                 }
 
-                // Validar email
+                // Validar email (obligatorio)
                 const email = document.getElementById('email_participante').value.trim();
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (email === '') {
@@ -2497,19 +2732,14 @@
                     esValido = false;
                 }
 
-                // Validar ciudad
-                const ciudad = document.getElementById('ciudad').value.trim();
-                if (ciudad === '') {
-                    mostrarError('ciudad', 'Por favor, ingrese su ciudad');
-                    esValido = false;
-                }
-
-                // Validar estado
+                // Validar estado (requerido)
                 const estado = document.getElementById('estado').value.trim();
                 if (estado === '') {
                     mostrarError('estado', 'Por favor, ingrese su estado o provincia');
                     esValido = false;
                 }
+
+                // Ciudad es opcional, no requiere validación
 
                 // Validar dirección de envío
                 const direccion = document.getElementById('direccion_envio').value.trim();
@@ -2526,7 +2756,8 @@
                 if (isNaN(cantidadTickets) || cantidadTickets < 1) {
                     mostrarError('cantidad_tickets', 'La cantidad debe ser al menos 1');
                     esValido = false;
-                } else if (cantidadTickets > ticketsDisponibles) {
+                } else if (ticketsDisponibles > 0 && cantidadTickets > ticketsDisponibles) {
+                    // Solo validar límite si hay tickets disponibles (si es 0, permitir cualquier cantidad)
                     mostrarError('cantidad_tickets', `Solo hay ${ticketsDisponibles} tickets disponibles`);
                     esValido = false;
                 }
@@ -2577,66 +2808,143 @@
             });
 
             // Manejo del envío del formulario
-            document.getElementById('form_comprar_ticket').addEventListener('submit', function(e) {
+            document.getElementById('form_comprar_ticket').addEventListener('submit', async function(e) {
                 e.preventDefault();
+                
+                console.log('Formulario enviado');
                 
                 // Validar formulario
                 if (!validarFormulario()) {
+                    console.log('Validación falló');
                     return;
                 }
 
-                // Aquí se enviaría la información al backend
-                const formData = new FormData();
-                formData.append('rifa_id', document.getElementById('rifa_id').value);
-                formData.append('nombre_completo', document.getElementById('nombre_completo').value);
-                formData.append('email', document.getElementById('email_participante').value);
-                formData.append('telefono', document.getElementById('telefono').value);
-                formData.append('ciudad', document.getElementById('ciudad').value);
-                formData.append('estado', document.getElementById('estado').value);
-                formData.append('direccion_envio', document.getElementById('direccion_envio').value);
-                formData.append('cantidad_tickets', document.getElementById('cantidad_tickets').value);
-                formData.append('total', document.getElementById('total_pagar').textContent);
+                // Obtener datos del formulario
+                const rifaId = document.getElementById('rifa_id').value;
+                const nombreCompleto = document.getElementById('nombre_completo').value.trim();
+                const partesNombre = nombreCompleto.split(' ');
+                const nombres = partesNombre[0] || '';
+                const apellidos = partesNombre.slice(1).join(' ') || '';
                 
-                // Agregar archivo si existe
-                const comprobanteInput = document.getElementById('comprobante_pago');
-                if (comprobanteInput.files.length > 0) {
-                    const archivo = comprobanteInput.files[0];
-                    
-                    // Validar tamaño (5MB)
-                    if (archivo.size > 5 * 1024 * 1024) {
-                        mostrarError('comprobante_pago', 'El archivo no debe superar los 5MB');
-                        return;
+                // Obtener precio del total
+                const totalPagarText = document.getElementById('total_pagar').textContent;
+                const precioPagado = parseFloat(totalPagarText.replace(/[^0-9.]/g, '')) || 0;
+                
+                // Números seleccionados
+                const numerosReservadosJSON = document.getElementById('numeros_reservados').value;
+                let numerosSeleccionados = null;
+                if (numerosReservadosJSON && numerosReservadosJSON !== '' && numerosReservadosJSON !== '[]') {
+                    try {
+                        numerosSeleccionados = JSON.parse(numerosReservadosJSON);
+                    } catch (e) {
+                        console.error('Error parsing números:', e);
                     }
-                    
-                    formData.append('comprobante_pago', archivo);
                 }
-
-                console.log('Datos de compra:', {
-                    rifa_id: document.getElementById('rifa_id').value,
-                    nombre_completo: document.getElementById('nombre_completo').value,
+                
+                // Preparar datos para enviar
+                const datosCompra = {
+                    sede_id: 1, // TODO: Obtener de configuración
+                    rifa_id: parseInt(rifaId),
+                    nombres: nombres,
+                    apellidos: apellidos,
+                    tipo_documento: document.getElementById('tipo_documento').value,
+                    numero_documento: document.getElementById('numero_documento').value,
                     email: document.getElementById('email_participante').value,
                     telefono: document.getElementById('telefono').value,
-                    ciudad: document.getElementById('ciudad').value,
-                    estado: document.getElementById('estado').value,
-                    direccion_envio: document.getElementById('direccion_envio').value,
-                    cantidad_tickets: document.getElementById('cantidad_tickets').value,
-                    total: document.getElementById('total_pagar').textContent,
-                    tiene_comprobante: comprobanteInput.files.length > 0
-                });
+                    direccion: document.getElementById('direccion_envio').value,
+                    ciudad: document.getElementById('ciudad').value.trim() || null,
+                    pais: 'Perú', // TODO: Obtener de configuración
+                    precio_pagado: precioPagado,
+                    cantidad_tickets: parseInt(document.getElementById('cantidad_tickets').value) || 1,
+                    numeros_seleccionados: numerosSeleccionados
+                };
+                
+                console.log('Enviando datos de compra:', datosCompra);
 
-                // Simulación de envío exitoso
-                const mensajeComprobante = comprobanteInput.files.length > 0 ? 
-                    '\n\n✅ Tu comprobante será validado en las próximas 24 horas.' : 
-                    '\n\nRecuerda enviar tu comprobante de pago para completar la validación.';
-                
-                alert('¡Compra registrada exitosamente!\n\nRecibirás un correo con las instrucciones de pago.\n\nCódigo de referencia: RIFA-' + Date.now() + mensajeComprobante);
-                
-                // Cerrar modal
-                bootstrap.Modal.getInstance(modalElement).hide();
-                
-                // Resetear formulario
-                this.reset();
-                limpiarErrores();
+                try {
+                    // Mostrar loading
+                    const btnCompra = document.getElementById('btn_realizar_compra');
+                    const textoOriginal = btnCompra.innerHTML;
+                    btnCompra.disabled = true;
+                    btnCompra.innerHTML = '<i class="ri-loader-4-line animate-spin me-1"></i> Procesando...';
+                    
+                    // Enviar al backend
+                    const API_BASE_URL = window.API_BASE_URL || (window.location.origin + '/sistema_rifas/api');
+                    const response = await fetch(`${API_BASE_URL}/tickets/create`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(datosCompra)
+                    });
+                    
+                    const resultado = await response.json();
+                    
+                    console.log('Respuesta del servidor:', resultado);
+                    
+                    if (resultado.ok) {
+                        // Éxito
+                        const codigoTicket = resultado.codigo_ticket || resultado.data?.codigo_ticket || 'N/A';
+                        
+                        // Usar SweetAlert si está disponible, sino usar alert
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Compra registrada exitosamente!',
+                                html: `
+                                    <p>Tu compra ha sido registrada correctamente.</p>
+                                    <p class="fw-semibold">Código de ticket: <span class="text-primary">${codigoTicket}</span></p>
+                                    <p class="text-muted small">Recibirás un correo con las instrucciones de pago.</p>
+                                `,
+                                confirmButtonText: 'Aceptar'
+                            });
+                        } else {
+                            alert('¡Compra registrada exitosamente!\n\nCódigo de ticket: ' + codigoTicket + '\n\nRecibirás un correo con las instrucciones de pago.');
+                        }
+                        
+                        // Cerrar modal
+                        bootstrap.Modal.getInstance(modalElement).hide();
+                        
+                        // Resetear formulario
+                        document.getElementById('form_comprar_ticket').reset();
+                        limpiarErrores();
+                    } else {
+                        // Error
+                        const mensajeError = resultado.msj || resultado.detalle || 'No se pudo procesar tu compra. Por favor, intenta nuevamente.';
+                        
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error al procesar la compra',
+                                text: mensajeError,
+                                confirmButtonText: 'Aceptar'
+                            });
+                        } else {
+                            alert('Error: ' + mensajeError);
+                        }
+                        
+                        btnCompra.disabled = false;
+                        btnCompra.innerHTML = textoOriginal;
+                    }
+                } catch (error) {
+                    console.error('Error al enviar compra:', error);
+                    const mensajeError = 'No se pudo conectar con el servidor. Por favor, verifica tu conexión e intenta nuevamente.';
+                    
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de conexión',
+                            text: mensajeError,
+                            confirmButtonText: 'Aceptar'
+                        });
+                    } else {
+                        alert('Error de conexión: ' + mensajeError);
+                    }
+                    
+                    const btnCompra = document.getElementById('btn_realizar_compra');
+                    btnCompra.disabled = false;
+                    btnCompra.innerHTML = '<i class="ri-shopping-bag-line label-icon align-middle fs-16 ms-2"></i><span id="btn_compra_text" class="d-none d-sm-inline">Confirmar Compra</span><span id="btn_compra_text_mobile" class="d-inline d-sm-none">Confirmar</span>';
+                }
             });
 
             // Resetear validación al cerrar el modal
@@ -2873,67 +3181,7 @@
         });
     </script>
 
-    <!-- Estilos inline para Grid de Números -->
-    <style>
-        #grid_numeros_disponibles .numero-btn {
-            padding: 12px 8px;
-            font-size: 14px;
-            font-weight: bold;
-            border: 2px solid;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            display: block;
-            width: 100%;
-        }
-        
-        #grid_numeros_disponibles .numero-disponible {
-            border-color: #28a745;
-            background: white;
-            color: #28a745;
-        }
-        
-        #grid_numeros_disponibles .numero-disponible:hover {
-            background: #28a745;
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-        }
-        
-        #grid_numeros_disponibles .numero-vendido {
-            border-color: #6c757d;
-            background: #e9ecef;
-            color: #6c757d;
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        #grid_numeros_disponibles .numero-reservado {
-            border-color: #ffc107;
-            background: #fff3cd;
-            color: #856404;
-            cursor: not-allowed;
-        }
-        
-        #grid_numeros_disponibles .numero-bloqueado {
-            border-color: #343a40;
-            background: #f8f9fa;
-            color: #343a40;
-            cursor: not-allowed;
-        }
-        
-        #grid_numeros_disponibles .numero-especial {
-            border-color: #17a2b8;
-            background: linear-gradient(135deg, #17a2b8, #138496);
-            color: white;
-            box-shadow: 0 0 10px rgba(23, 162, 184, 0.5);
-        }
-        
-        #grid_numeros_disponibles .numero-especial:hover {
-            transform: scale(1.1);
-        }
-    </style>
+  
 
     <!-- Script para Sistema de Selección de Números de Boleto -->
     <script>
@@ -3090,6 +3338,11 @@
                     // Actualizar display
                     actualizarDisplayNumeros();
                     
+                    // Validar tab orden para habilitar botón continuar
+                    if (typeof validarTabOrden === 'function') {
+                        validarTabOrden();
+                    }
+                    
                     // Si ya completó la cantidad, cerrar modal
                     if (numerosSeleccionados.length >= cantidadTicketsRequerida) {
                         setTimeout(() => {
@@ -3119,6 +3372,13 @@
             
             if (numerosSeleccionados.length === 0) {
                 display.style.display = 'none';
+                // Limpiar campos ocultos
+                document.getElementById('numeros_reservados').value = '';
+                document.getElementById('numeros_formateados').value = '';
+                // Validar tab orden cuando se limpian números
+                if (typeof validarTabOrden === 'function') {
+                    validarTabOrden();
+                }
                 return;
             }
             
@@ -3148,6 +3408,11 @@
             
             document.getElementById('numeros_reservados').value = JSON.stringify(enterosArray);
             document.getElementById('numeros_formateados').value = JSON.stringify(formateadosArray);
+            
+            // Validar tab orden después de actualizar números
+            if (typeof validarTabOrden === 'function') {
+                validarTabOrden();
+            }
         }
         
         // Eliminar un número específico de la selección
@@ -3155,6 +3420,11 @@
             if (confirm('¿Deseas eliminar este número de tu selección?')) {
                 numerosSeleccionados.splice(index, 1);
                 actualizarDisplayNumeros();
+                
+                // Validar tab orden para habilitar/deshabilitar botón continuar
+                if (typeof validarTabOrden === 'function') {
+                    validarTabOrden();
+                }
                 
                 // Si no quedan números, detener temporizador
                 if (numerosSeleccionados.length === 0) {
@@ -3208,6 +3478,11 @@
                 cantidadTicketsRequerida = cantidadTickets;
                 actualizarDisplayNumeros();
                 
+                // Validar tab orden para habilitar botón continuar
+                if (typeof validarTabOrden === 'function') {
+                    validarTabOrden();
+                }
+                
                 // Iniciar temporizador
                 iniciarTemporizadorReserva();
                 
@@ -3229,6 +3504,11 @@
                 
                 // Ocultar display
                 document.getElementById('numero_seleccionado_display').style.display = 'none';
+                
+                // Validar tab orden para deshabilitar botón continuar
+                if (typeof validarTabOrden === 'function') {
+                    validarTabOrden();
+                }
                 
                 // Detener temporizador
                 if (timerReserva) {

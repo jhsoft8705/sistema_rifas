@@ -21,7 +21,8 @@ function RoutesRifas(string $url, string $method): void
         'api/rifas/premios/update'    => ['PUT', 'POST'],
         'api/rifas/premios/delete'    => ['DELETE', 'POST'],
         'api/rifas/numeros/get'       => ['GET'],
-        'api/rifas/numeros/update'    => ['PUT', 'POST']
+        'api/rifas/numeros/update'    => ['PUT', 'POST'],
+        'api/rifas/numeros/generar'   => ['POST']
     ];
 
     if (!array_key_exists($url, $routes)) {
@@ -81,6 +82,9 @@ function RoutesRifas(string $url, string $method): void
             break;
         case 'api/rifas/numeros/update':
             $controller->handleRequest('updateNumero');
+            break;
+        case 'api/rifas/numeros/generar':
+            $controller->handleRequest('generarNumeros');
             break;
         case 'api/rifas/publicas':
             $controller->handleRequest('getPublicas');

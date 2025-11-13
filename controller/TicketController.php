@@ -71,6 +71,13 @@ class TicketController
                 'precio_pagado',
                 'cantidad_tickets'
             ]);
+            
+            // Validar formato de email
+            if (!empty($input['email']) && !filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'El correo electrónico no es válido']);
+                return;
+            }
 
             if (!$validation['ok']) {
                 http_response_code(400);

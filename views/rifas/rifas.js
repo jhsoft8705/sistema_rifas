@@ -198,6 +198,18 @@ function inicializarEventosUI() {
     });
     $('#btn_nueva_rifa').on('click', () => abrirModalRifa());
     $('#btn_exportar_10').on('click', () => imprimirCartillas(10));
+    $('#btn_generar_numeros').on('click', generarNumerosRifa);
+    $('#btn_filtrar_numeros').on('click', () => {
+        const rifaId = $('#numeros_rifa_id_hidden').val();
+        if (rifaId) cargarNumerosRifa(rifaId);
+    });
+    $('#btn_recargar_numeros').on('click', () => {
+        const rifaId = $('#numeros_rifa_id_hidden').val();
+        if (rifaId) {
+            $('#filtro_estado_numero').val('');
+            cargarNumerosRifa(rifaId);
+        }
+    });
     $('#btn_exportar_20').on('click', () => imprimirCartillas(20));
 
     $('#tabla_rifas tbody').on('click', '.btn-editar', async function () {
@@ -1278,4 +1290,75 @@ function parseIntOrNull(value) {
     if (value === undefined || value === null || value === '') return null;
     const parsed = parseInt(value, 10);
     return Number.isNaN(parsed) ? null : parsed;
+}
+
+async function generarNumerosRifa() {
+    const rifaId = $('#numeros_rifa_id_hidden').val();
+    if (!rifaId) {
+        SafeUtils.showToast('No hay rifa seleccionada', 'warning');
+        return;
+    }
+
+    if (!rifaSeleccionada) {
+        SafeUtils.showToast('No se pudo obtener la información de la rifa', 'error');
+        return;
+    }
+
+    // Verificar que la rifa use numeración de boletos
+    if (!rifaSeleccionada.usa_numeracion_boletos || rifaSeleccionada.usa_numeracion_boletos != 1) {
+        SafeUtils.showToast('Esta rifa no está configurada para usar numeración de boletos', 'warning');
+        return;
+    }
+
+    // Verificar que tenga rango configurado
+    if (!rifaSeleccionada.numero_inicial || !rifaSeleccionada.numero_final) {
+        SafeUtils.showToast('La rifa no tiene configurado el rango de números (inicial/final)', 'warning');
+        return;
+    }
+
+    const confirmar = await Swal.fire({
+        title: 'Generar números de boletos',
+        html: `
+            <p>Se generarán números desde <strong>${rifaSeleccionada.numero_inicial}</strong> hasta <strong>${rifaSeleccionada.numero_final}</strong></p>
+            <p class="text-muted small">Total: ${rifaSeleccionada.numero_final - rifaSeleccionada.numero_inicial + 1} números</p>
+            <p class="text-warning small">⚠️ Si ya existen números, se crearán solo los faltantes</p>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, generar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#198754'
+    });
+
+    if (!confirmar.isConfirmed) return;
+
+    try {
+        SafeUtils.showLoading('Generando números...');
+        
+        const payload = {
+            rifa_id: parseInt(rifaId, 10),
+            sede_id: userInfo.sede_id,
+            creado_por: userInfo.nombre_completo || 'SYSTEM'
+        };
+        
+        console.log('Payload enviado:', payload);
+        
+        const respuesta = await API.post('rifas/numeros/generar', payload);
+        SafeUtils.closeLoading();
+
+        console.log('Respuesta recibida:', respuesta);
+
+        if (respuesta?.ok) {
+            SafeUtils.showToast(respuesta.msj || 'Números generados correctamente', 'success');
+            await cargarNumerosRifa(rifaId, { showFeedback: false });
+        } else {
+            const mensajeError = respuesta?.msj || respuesta?.detalle || 'No se pudieron generar los números';
+            SafeUtils.showToast(mensajeError, 'error');
+            console.error('Error completo:', respuesta);
+        }
+    } catch (error) {
+        SafeUtils.closeLoading();
+        SafeUtils.showToast('Error al generar los números: ' + (error.message || error), 'error');
+        console.error('Error en catch:', error);
+    }
 }

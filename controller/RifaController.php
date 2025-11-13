@@ -56,6 +56,9 @@ class RifaController
             case 'getPublicas':
                 $this->listar_rifas_publicas();
                 break;
+            case 'generarNumeros':
+                $this->generar_numeros_rifa();
+                break;
             default:
                 http_response_code(400);
                 echo json_encode(['ok' => false, 'msj' => 'Acción no válida']);
@@ -495,6 +498,64 @@ class RifaController
             error_log("Error en listar_rifas_publicas: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al obtener las rifas públicas']);
+        }
+    }
+
+    private function generar_numeros_rifa(): void
+    {
+        try {
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode([
+                    'ok' => false, 
+                    'msj' => 'JSON inválido: ' . json_last_error_msg(),
+                    'input_raw' => file_get_contents("php://input")
+                ], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            // Log para depuración
+            error_log("Generar números - Input recibido: " . json_encode($input));
+
+            $validation = Validator::validarCamposRequeridos($input, [
+                'rifa_id',
+                'sede_id',
+                'creado_por'
+            ]);
+
+            if (!$validation['ok']) {
+                http_response_code(400);
+                echo json_encode([
+                    'ok' => false,
+                    'msj' => $validation['msj'] ?? 'Campos requeridos faltantes',
+                    'campos_faltantes' => $validation['campos_faltantes'] ?? [],
+                    'input_recibido' => $input
+                ], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            $resultado = $this->rifa->generar_numeros_rifa(
+                (int) $input['rifa_id'],
+                (int) $input['sede_id'],
+                trim($input['creado_por'])
+            );
+
+            // Log del resultado
+            error_log("Generar números - Resultado: " . json_encode($resultado));
+
+            http_response_code($resultado['ok'] ? 200 : 400);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en generar_numeros_rifa: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            http_response_code(500);
+            echo json_encode([
+                'ok' => false, 
+                'msj' => 'Error al generar los números de la rifa: ' . $e->getMessage(),
+                'detalle' => $e->getTraceAsString()
+            ], JSON_UNESCAPED_UNICODE);
         }
     }
 }

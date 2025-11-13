@@ -172,7 +172,7 @@ proc: BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SET p_mensaje = 'Error al generar los números de la rifa';
+        SET p_mensaje = CONCAT('Error al generar los números de la rifa: ', SQL_MESSAGE);
     END;
 
     START TRANSACTION;
@@ -186,19 +186,13 @@ proc: BEGIN
             rifa_id,
             numero_entero,
             numero_formateado,
-            estado,
-            fecha_creacion,
-            fecha_modificacion,
-            creado_por
+            estado
         ) VALUES (
             p_sede_id,
             p_rifa_id,
             v_numero,
             v_formateado,
-            'DISPONIBLE',
-            NOW(),
-            NOW(),
-            p_creado_por
+            'DISPONIBLE'
         );
 
         SET v_numero = v_numero + 1;

@@ -573,6 +573,201 @@ class Rifa extends Conectar
             ];
         }
     }
+
+    /**
+     * Generar números de boletos para una rifa
+     */
+    public function generar_numeros_rifa(int $rifa_id, int $sede_id, string $creado_por): array
+    {
+        try {
+            // Primero obtener la información de la rifa
+            $rifa = $this->obtener_rifa_por_id($rifa_id, $sede_id);
+            
+            if (!$rifa['ok'] || !isset($rifa['data'])) {
+                return [
+                    'ok' => false,
+                    'msj' => 'No se pudo obtener la información de la rifa'
+                ];
+            }
+
+            $rifaData = $rifa['data'];
+
+            // Verificar que la rifa use numeración de boletos
+            if (empty($rifaData['usa_numeracion_boletos']) || $rifaData['usa_numeracion_boletos'] != 1) {
+                return [
+                    'ok' => false,
+                    'msj' => 'Esta rifa no está configurada para usar numeración de boletos'
+                ];
+            }
+
+            // Verificar que tenga rango configurado
+            if (empty($rifaData['numero_inicial']) || empty($rifaData['numero_final'])) {
+                return [
+                    'ok' => false,
+                    'msj' => 'La rifa no tiene configurado el rango de números (inicial/final)'
+                ];
+            }
+
+            $conectar = parent::Conexion();
+            
+            // Log de información de la rifa
+            error_log("Generando números para rifa_id: $rifa_id, sede_id: $sede_id");
+            error_log("Rango: {$rifaData['numero_inicial']} - {$rifaData['numero_final']}");
+            error_log("Prefijo: " . ($rifaData['prefijo_numero'] ?? 'NULL') . ", Sufijo: " . ($rifaData['sufijo_numero'] ?? 'NULL'));
+            
+            // Verificar si el procedimiento existe
+            try {
+                $checkProc = $conectar->query("SHOW PROCEDURE STATUS WHERE Db = DATABASE() AND Name = 'generate_rifa_numeros'");
+                $procedimientoExiste = $checkProc->rowCount() > 0;
+                error_log("Procedimiento existe: " . ($procedimientoExiste ? 'SÍ' : 'NO'));
+            } catch (PDOException $e) {
+                error_log("Error al verificar procedimiento: " . $e->getMessage());
+                $procedimientoExiste = false;
+            }
+            
+            if ($procedimientoExiste) {
+                // Usar procedimiento almacenado si existe
+                try {
+                    $sql = "CALL generate_rifa_numeros(?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
+                    $query = $conectar->prepare($sql);
+                    $query->bindValue(1, $rifa_id, PDO::PARAM_INT);
+                    $query->bindValue(2, $sede_id, PDO::PARAM_INT);
+                    $query->bindValue(3, (int) $rifaData['numero_inicial'], PDO::PARAM_INT);
+                    $query->bindValue(4, (int) $rifaData['numero_final'], PDO::PARAM_INT);
+                    $query->bindValue(5, isset($rifaData['cantidad_digitos']) ? (int) $rifaData['cantidad_digitos'] : 4, PDO::PARAM_INT);
+                    $query->bindValue(6, $rifaData['prefijo_numero'] ?? null, PDO::PARAM_STR);
+                    $query->bindValue(7, $rifaData['sufijo_numero'] ?? null, PDO::PARAM_STR);
+                    $query->bindValue(8, $creado_por, PDO::PARAM_STR);
+                    
+                    error_log("Ejecutando procedimiento almacenado con parámetros: rifa_id=$rifa_id, sede_id=$sede_id, inicial={$rifaData['numero_inicial']}, final={$rifaData['numero_final']}");
+                    
+                    $query->execute();
+                    $query->closeCursor();
+
+                    $mensajeStmt = $conectar->query("SELECT @mensaje AS mensaje");
+                    $result = $mensajeStmt->fetch(PDO::FETCH_ASSOC);
+                    $mensajeStmt->closeCursor();
+
+                    $mensaje = $result['mensaje'] ?? 'Error desconocido';
+                    error_log("Mensaje del procedimiento: " . $mensaje);
+                    
+                    $ok = stripos($mensaje, 'correctamente') !== false;
+
+                    if (!$ok) {
+                        // Si hay error, obtener más información
+                        $errorInfo = $conectar->errorInfo();
+                        error_log("Error Info: " . print_r($errorInfo, true));
+                    }
+
+                    return [
+                        'ok' => $ok,
+                        'msj' => $mensaje,
+                        'detalle' => $ok ? null : ($conectar->errorInfo()[2] ?? null)
+                    ];
+                } catch (PDOException $e) {
+                    error_log("PDOException al ejecutar procedimiento: " . $e->getMessage());
+                    error_log("Error Info: " . print_r($conectar->errorInfo(), true));
+                    throw $e;
+                }
+            } else {
+                // Generar números directamente sin procedimiento almacenado
+                $numero_inicial = (int) $rifaData['numero_inicial'];
+                $numero_final = (int) $rifaData['numero_final'];
+                $cantidad_digitos = isset($rifaData['cantidad_digitos']) ? (int) $rifaData['cantidad_digitos'] : 4;
+                $prefijo = $rifaData['prefijo_numero'] ?? '';
+                $sufijo = $rifaData['sufijo_numero'] ?? '';
+                
+                $conectar->beginTransaction();
+                
+                try {
+                    // Verificar que la tabla existe
+                    $checkTable = $conectar->query("SHOW TABLES LIKE 'numeros_rifa'");
+                    if ($checkTable->rowCount() == 0) {
+                        throw new Exception("La tabla 'numeros_rifa' no existe en la base de datos. Ejecuta el script docs/sql/bd_rifas_mysql.sql");
+                    }
+                    
+                    // Preparar valores para inserción múltiple (más eficiente)
+                    $valores = [];
+                    $contador = 0;
+                    
+                    for ($numero = $numero_inicial; $numero <= $numero_final; $numero++) {
+                        $numero_formateado = $prefijo . str_pad($numero, $cantidad_digitos, '0', STR_PAD_LEFT) . $sufijo;
+                        // La tabla tiene fecha_modificacion con ON UPDATE CURRENT_TIMESTAMP, no necesita especificarse
+                        $valores[] = "($sede_id, $rifa_id, $numero, " . $conectar->quote($numero_formateado) . ", 'DISPONIBLE')";
+                        $contador++;
+                        
+                        // Insertar en lotes de 500 para mejor rendimiento
+                        if (count($valores) >= 500) {
+                            $sqlBatch = "INSERT IGNORE INTO numeros_rifa (
+                                sede_id, rifa_id, numero_entero, numero_formateado, estado
+                            ) VALUES " . implode(', ', $valores);
+                            
+                            error_log("Ejecutando SQL batch (primeros 200 chars): " . substr($sqlBatch, 0, 200) . "...");
+                            $resultado = $conectar->exec($sqlBatch);
+                            error_log("Filas afectadas en batch: $resultado");
+                            $valores = [];
+                        }
+                    }
+                    
+                    // Insertar los valores restantes
+                    if (!empty($valores)) {
+                        $sqlBatch = "INSERT IGNORE INTO numeros_rifa (
+                            sede_id, rifa_id, numero_entero, numero_formateado, estado
+                        ) VALUES " . implode(', ', $valores);
+                        
+                        error_log("Ejecutando SQL final (primeros 200 chars): " . substr($sqlBatch, 0, 200) . "...");
+                        $resultado = $conectar->exec($sqlBatch);
+                        error_log("Filas afectadas en final: $resultado");
+                    }
+                    
+                    $conectar->commit();
+                    
+                    return [
+                        'ok' => true,
+                        'msj' => "Números generados correctamente. Se procesaron $contador números."
+                    ];
+                } catch (PDOException $e) {
+                    $conectar->rollBack();
+                    error_log("PDOException en generar_numeros_rifa: " . $e->getMessage());
+                    error_log("SQL Error Info: " . print_r($conectar->errorInfo(), true));
+                    throw $e;
+                } catch (Exception $e) {
+                    $conectar->rollBack();
+                    error_log("Exception en generar_numeros_rifa: " . $e->getMessage());
+                    throw $e;
+                }
+            }
+        } catch (PDOException $e) {
+            error_log("Error en generar_numeros_rifa: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $errorMsg = $e->getMessage();
+            
+            // Mensaje más amigable si el procedimiento no existe
+            if (stripos($errorMsg, 'does not exist') !== false || stripos($errorMsg, 'no existe') !== false) {
+                return [
+                    'ok' => false,
+                    'msj' => 'El procedimiento almacenado generate_rifa_numeros no existe. Ejecuta el archivo docs/sql/rifas.sql en tu base de datos.',
+                    'detalle' => $errorMsg
+                ];
+            }
+            
+            return [
+                'ok' => false,
+                'msj' => 'Error al generar los números de la rifa: ' . $errorMsg,
+                'detalle' => $errorMsg,
+                'code' => $e->getCode()
+            ];
+        } catch (Exception $e) {
+            error_log("Error general en generar_numeros_rifa: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return [
+                'ok' => false,
+                'msj' => 'Error inesperado al generar los números: ' . $e->getMessage(),
+                'detalle' => $e->getMessage(),
+                'tipo' => get_class($e)
+            ];
+        }
+    }
 }
 
 

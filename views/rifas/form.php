@@ -211,104 +211,88 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="premios_rifa_id_hidden">
-                <div class="alert alert-soft-info d-flex align-items-center gap-2" role="alert">
+                <div class="alert alert-soft-primary d-flex align-items-center gap-2" role="alert">
                     <i class="ri-information-line fs-4"></i>
                     <div>
                         <strong>Rifa seleccionada:</strong>
                         <span id="premios_rifa_nombre" class="fw-semibold"></span>
                     </div>
                 </div>
+                <div class="alert alert-soft-warning d-flex align-items-start gap-2 d-none" id="alerta_sin_premios_activos" role="alert">
+                    <i class="ri-error-warning-line fs-4"></i>
+                    <div>
+                        No hay premios activos disponibles en la sede. Registra un premio en el módulo de premios para poder asociarlo a esta rifa.
+                    </div>
+                </div>
 
-                <div class="row g-3">
-                    <div class="col-lg-8">
-                        <div class="card border shadow-sm">
-                            <div class="card-header">
-                                <h6 class="mb-0"><i class="ri-list-check me-2"></i>Premios asignados</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="tabla_premios_rifa" class="table table-striped table-sm align-middle">
-                                        <thead>
-                                            <tr>
-                                                <th>Premio</th>
-                                                <th class="text-center">Orden</th>
-                                                <th class="text-center">Principal</th>
-                                                <th class="text-center">Cantidad</th>
-                                                <th class="text-center">Estado</th>
-                                                <th class="text-center">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
+                <form id="form_premio_rifa" class="border rounded p-3 mb-3" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Premio <span class="text-danger">*</span></label>
+                            <select id="premio_rifa_select" class="form-select" required>
+                                <option value="">Seleccionar premio</option>
+                            </select>
+                            <div class="invalid-feedback">Seleccione un premio</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Orden</label>
+                            <input type="number" class="form-control" id="premio_rifa_orden" min="1" placeholder="1">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input" type="checkbox" id="premio_rifa_principal">
+                                <label class="form-check-label" for="premio_rifa_principal">Premio principal</label>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="col-lg-4">
-                        <div class="card border shadow-sm">
-                            <div class="card-header">
-                                <h6 class="mb-0"><i class="ri-add-circle-line me-2"></i>Agregar / actualizar premio</h6>
-                            </div>
-                            <div class="card-body">
-                                <form id="form_premio_rifa" novalidate>
-                                    <div class="mb-3">
-                                        <label class="form-label">Premio <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="premio_rifa_select" required>
-                                            <option value="">Seleccionar premio</option>
-                                        </select>
-                                        <div class="invalid-feedback">Seleccione un premio</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Orden</label>
-                                        <input type="number" class="form-control" id="premio_rifa_orden" min="1" value="1">
-                                    </div>
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="premio_rifa_principal">
-                                            <label class="form-check-label" for="premio_rifa_principal">
-                                                Premio principal
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Cantidad</label>
-                                        <input type="number" class="form-control" id="premio_rifa_cantidad" min="1" value="1">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Valor estimado (S/.)</label>
-                                        <input type="number" class="form-control" id="premio_rifa_valor" step="0.01" min="0">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Estado</label>
-                                        <select class="form-select" id="premio_rifa_estado">
-                                            <option value="1">Activo</option>
-                                            <option value="0">Inactivo</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Título personalizado</label>
-                                        <input type="text" class="form-control" id="premio_rifa_titulo" placeholder="Ej: Segundo premio">
-                                        <small class="text-muted d-block mt-1">
-                                            <i class="ri-information-line"></i> Opcional: título personalizado para este premio en la rifa
-                                        </small>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Descripción</label>
-                                        <textarea class="form-control" id="premio_rifa_descripcion" rows="2" placeholder="Descripción breve del premio dentro del sorteo"></textarea>
-                                    </div>
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="button" class="btn btn-light" id="btn_cancelar_premio_rifa">
-                                            <i class="ri-close-line me-1"></i>Cancelar
-                                        </button>
-                                        <button type="submit" class="btn btn-primary" id="btn_guardar_premio_rifa">
-                                            <i class="ri-save-line me-1"></i>Guardar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cantidad</label>
+                            <input type="number" class="form-control" id="premio_rifa_cantidad" min="1" value="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Valor estimado (S/.)</label>
+                            <input type="number" class="form-control" id="premio_rifa_valor" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Estado</label>
+                            <select id="premio_rifa_estado" class="form-select">
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Título personalizado</label>
+                            <input type="text" id="premio_rifa_titulo" class="form-control" placeholder="Ej: Segundo premio">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="premio_rifa_descripcion" class="form-control" rows="2"
+                                placeholder="Descripción breve del premio dentro del sorteo"></textarea>
                         </div>
                     </div>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-light" id="btn_cancelar_premio_rifa">
+                            <i class="ri-close-line me-1"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btn_guardar_premio_rifa">
+                            <i class="ri-save-line me-1"></i>Guardar premio
+                        </button>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table id="tabla_premios_rifa" class="table table-striped table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Premio</th>
+                                <th class="text-center">Orden</th>
+                                <th class="text-center">Principal</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -348,6 +332,9 @@
                                         <option value="BLOQUEADO">Bloqueados</option>
                                     </select>
                                 </div>
+                                <button class="btn btn-success btn-sm" id="btn_generar_numeros" title="Generar números de boletos">
+                                    <i class="ri-add-circle-line me-1"></i>Generar números
+                                </button>
                                 <button class="btn btn-outline-info btn-sm" id="btn_filtrar_numeros">
                                     <i class="ri-filter-2-line me-1"></i>Filtrar
                                 </button>

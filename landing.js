@@ -120,7 +120,8 @@ const LandingRifas = {
                                 data-rifa-nombre="${this.escapeHtml(rifa.nombre)}"
                                 data-rifa-precio="${rifa.precio_ticket}"
                                 data-rifa-disponibles="${rifa.numeros_disponibles || 0}"
-                                data-rifa-total="${rifa.total_numeros || 0}">
+                                data-rifa-total="${rifa.total_numeros || 0}"
+                                data-rifa-premios='${JSON.stringify(rifa.premios || [])}'>
                             <i class="ri-shopping-cart-line me-1"></i> Comprar Tickets
                         </button>
                         <button class="btn btn-outline-primary w-100 btn-ver-premios" 
@@ -252,22 +253,18 @@ const LandingRifas = {
         // Verificar si existe el modal de compra
         const modal = document.getElementById('modal_comprar_ticket');
         if (modal) {
+            // Guardar rifa seleccionada globalmente para que el evento del modal la pueda usar
+            this.rifaSeleccionada = rifa;
+            window.rifaSeleccionada = rifa; // También en window para acceso global
+            
             // Llenar datos del modal con la rifa seleccionada
             const modalInstance = new bootstrap.Modal(modal);
+            
+            // Disparar evento personalizado antes de mostrar para inicializar datos
+            const initEvent = new CustomEvent('initModalRifa', { detail: rifa });
+            modal.dispatchEvent(initEvent);
+            
             modalInstance.show();
-            
-            // Actualizar campos del modal con los datos de la rifa
-            const rifaNombreEl = document.getElementById('rifa_nombre_modal');
-            const rifaPrecioEl = document.getElementById('rifa_precio_modal');
-            
-            if (rifaNombreEl) rifaNombreEl.textContent = rifa.nombre;
-            if (rifaPrecioEl) {
-                const precioFormateado = window.Utils ? window.Utils.formatearMoneda(rifa.precio_ticket) : this.formatearMoneda(rifa.precio_ticket);
-                rifaPrecioEl.textContent = precioFormateado;
-            }
-            
-            // Guardar rifa seleccionada para uso posterior
-            this.rifaSeleccionada = rifa;
         } else {
             console.warn('Modal de compra no encontrado');
             if (window.Utils && window.Utils.showToast) {
@@ -488,4 +485,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Exportar para uso global
 window.LandingRifas = LandingRifas;
+
+// Estilos CSS adicionales para el modal de compra
+const style = document.createElement('style');
+style.textContent = `
+    /* Estilos para el modal de compra */
+    #modal_comprar_ticket .modal-body {
+        padding: 1.5rem;
+    }
+    
+    #modal_comprar_ticket .nav-pills .nav-link {
+        border-radius: 0.5rem;
+        margin-right: 0.5rem;
+        padding: 0.75rem 1.25rem;
+    }
+    
+    #modal_comprar_ticket .nav-pills .nav-link.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    #modal_comprar_ticket .nav-pills .nav-link.done {
+        background-color: #198754;
+        color: white;
+    }
+    
+    #modal_comprar_ticket .form-control.border-danger {
+        border-color: #dc3545 !important;
+    }
+    
+    #modal_comprar_ticket .text-danger {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    /* Animación de carga */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Estilos para números de boleto */
+    .numero-btn {
+        transition: all 0.2s ease;
+    }
+    
+    .numero-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .numero-btn.numero-seleccionado {
+        background-color: #198754 !important;
+        border-color: #198754 !important;
+        color: white !important;
+    }
+    
+    /* Estilos para el resumen final */
+    #resumen_numeros_boletos .badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+`;
+document.head.appendChild(style);
 
