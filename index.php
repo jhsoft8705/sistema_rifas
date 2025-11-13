@@ -240,300 +240,16 @@
                 </div>
                 <!-- end row -->
 
-                <div class="row g-4">
-                    <!-- Rifa 1 - Example -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card ribbon-box border shadow-none">
-                            <div class="card-body">
-                                <div class="ribbon ribbon-success ribbon-shape">Activa</div>
-                                <div class="avatar-lg mx-auto mb-3">
-                                    <div class="avatar-title bg-primary text-white fs-1 rounded shadow-sm">
-                                        <i class="ri-smartphone-line"></i>
-                                    </div>
-                                </div>
-                                <h5 class="text-center mb-1">Rifa iPhone 15 Pro Max</h5>
-                                <p class="text-muted text-center mb-2">Participa y gana el último iPhone</p>
-                                
-                                <!-- Premios de la Rifa -->
-                                <div class="mb-3">
-                                    <div class="text-center mb-2">
-                                        <span class="badge bg-info-subtle text-info">
-                                            <i class="ri-gift-line me-1"></i> 1 Premio
-                                        </span>
-                                    </div>
-                                    <div class="text-start px-3">
-                                        <small class="text-dark d-block">
-                                            <span class="badge bg-warning text-white me-1">1°</span>iPhone 15 Pro Max 256GB
-                                        </small>
-                                    </div>
-                                </div>
-                                
-                                <div class="row text-center mb-3">
-                                    <div class="col-6">
-                                        <p class="text-muted mb-1">Precio ticket</p>
-                                        <h5 class="mb-0 text-success">$10.00</h5>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted mb-1">Tickets disponibles</p>
-                                        <h5 class="mb-0 text-primary">234/500</h5>
-                                    </div>
-                                </div>
-                                <p class="text-muted text-center mb-2"><i class="ri-calendar-line"></i> Sorteo: 31 Dic 2025</p>
-                                
-                                <!-- Contador Regresivo de la Rifa -->
-                                <div class="card bg-warning-subtle border-0 mb-3">
-                                    <div class="card-body p-2">
-                                        <div class="d-flex justify-content-center gap-2 countdown-rifa" data-fecha="2025-12-31T20:00:00">
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-days">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">días</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-hours">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">hrs</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-minutes">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">min</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-seconds">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">seg</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="progress mb-3" style="height: 6px;">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: 47%" aria-valuenow="47" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-success w-100 btn-comprar-ticket" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modal_comprar_ticket"
-                                            data-rifa-id="1"
-                                            data-rifa-nombre="Rifa iPhone 15 Pro Max"
-                                            data-rifa-precio="10.00"
-                                            data-rifa-disponibles="234"
-                                            data-rifa-total="500"
-                                            data-rifa-premios='[{"nombre":"iPhone 15 Pro Max 256GB","posicion":1,"imagen":"assets/images/premios/iphone-15-pro-max.jpg","descripcion":"iPhone 15 Pro Max 256GB en color Natural Titanium, incluye cargador y funda protectora"}]'>
-                                        <i class="ri-shopping-cart-line me-1"></i> Comprar Tickets
-                                    </button>
-                                    <button class="btn btn-outline-primary w-100 btn-ver-premios" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modal_ver_premios"
-                                            data-rifa-id="1"
-                                            data-rifa-nombre="Rifa iPhone 15 Pro Max"
-                                            data-rifa-premios='[{"nombre":"iPhone 15 Pro Max 256GB","posicion":1,"imagen":"assets/images/premios/iphone-15-pro-max.jpg","descripcion":"iPhone 15 Pro Max 256GB en color Natural Titanium, incluye cargador y funda protectora"}]'>
-                                        <i class="ri-image-line me-1"></i> Ver Premios
-                                    </button>
-                                </div>
+                <div class="row g-4" id="contenedor_rifas_publicas">
+                    <!-- Las rifas se cargarán dinámicamente desde la API -->
+                    <div class="col-12">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando rifas...</span>
                             </div>
+                            <p class="text-muted mt-2">Cargando rifas disponibles...</p>
                         </div>
                     </div>
-                    <!-- end col -->
-
-                    <!-- Rifa 2 - Example -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card ribbon-box border shadow-none">
-                            <div class="card-body">
-                                <div class="ribbon ribbon-success ribbon-shape">Activa</div>
-                                <div class="avatar-lg mx-auto mb-3">
-                                    <div class="avatar-title bg-primary text-white fs-1 rounded shadow-sm">
-                                        <i class="ri-car-line"></i>
-                                    </div>
-                                </div>
-                                <h5 class="text-center mb-1">Rifa Automóvil 2025</h5>
-                                <p class="text-muted text-center mb-2">Camioneta último modelo</p>
-                                
-                                <!-- Premios de la Rifa -->
-                                <div class="mb-3">
-                                    <div class="text-center mb-2">
-                                        <span class="badge bg-info-subtle text-info">
-                                            <i class="ri-gift-line me-1"></i> 2 Premios
-                                        </span>
-                                    </div>
-                                    <div class="text-start px-3">
-                                        <small class="text-dark d-block mb-1">
-                                            <span class="badge bg-warning text-white me-1">1°</span>Camioneta Toyota Hilux 2025
-                                        </small>
-                                        <small class="text-dark d-block">
-                                            <span class="badge bg-secondary text-white me-1">2°</span>$5,000 en efectivo
-                                        </small>
-                                    </div>
-                                </div>
-                                
-                                <div class="row text-center mb-3">
-                                    <div class="col-6">
-                                        <p class="text-muted mb-1">Precio ticket</p>
-                                        <h5 class="mb-0 text-success">$25.00</h5>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted mb-1">Tickets disponibles</p>
-                                        <h5 class="mb-0 text-primary">850/1000</h5>
-                                    </div>
-                                </div>
-                                <p class="text-muted text-center mb-2"><i class="ri-calendar-line"></i> Sorteo: 15 Ene 2026</p>
-                                
-                                <!-- Contador Regresivo de la Rifa -->
-                                <div class="card bg-warning-subtle border-0 mb-3">
-                                    <div class="card-body p-2">
-                                        <div class="d-flex justify-content-center gap-2 countdown-rifa" data-fecha="2026-01-15T20:00:00">
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-days">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">días</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-hours">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">hrs</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-minutes">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">min</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-seconds">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">seg</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="progress mb-3" style="height: 6px;">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-success w-100 btn-comprar-ticket" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modal_comprar_ticket"
-                                            data-rifa-id="2"
-                                            data-rifa-nombre="Rifa Automóvil 2025"
-                                            data-rifa-precio="25.00"
-                                            data-rifa-disponibles="850"
-                                            data-rifa-total="1000"
-                                            data-rifa-premios='[{"nombre":"Camioneta Toyota Hilux 2025","posicion":1,"imagen":"assets/images/premios/toyota-hilux.jpg","descripcion":"Camioneta Toyota Hilux 2025 4x4 Doble Cabina, modelo más reciente, color a elegir"},{"nombre":"$5000 en efectivo","posicion":2,"imagen":"assets/images/premios/efectivo.jpg","descripcion":"$5,000 USD en efectivo como segundo premio"}]'>
-                                        <i class="ri-shopping-cart-line me-1"></i> Comprar Tickets
-                                    </button>
-                                    <button class="btn btn-outline-primary w-100 btn-ver-premios" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modal_ver_premios"
-                                            data-rifa-id="2"
-                                            data-rifa-nombre="Rifa Automóvil 2025"
-                                            data-rifa-premios='[{"nombre":"Camioneta Toyota Hilux 2025","posicion":1,"imagen":"assets/images/premios/toyota-hilux.jpg","descripcion":"Camioneta Toyota Hilux 2025 4x4 Doble Cabina, modelo más reciente, color a elegir"},{"nombre":"$5000 en efectivo","posicion":2,"imagen":"assets/images/premios/efectivo.jpg","descripcion":"$5,000 USD en efectivo como segundo premio"}]'>
-                                        <i class="ri-image-line me-1"></i> Ver Premios
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- end col -->
-
-                    <!-- Rifa 3 - Example -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card ribbon-box border shadow-none">
-                            <div class="card-body">
-                                <div class="ribbon ribbon-success ribbon-shape">Activa</div>
-                                <div class="avatar-lg mx-auto mb-3">
-                                    <div class="avatar-title bg-primary text-white fs-1 rounded shadow-sm">
-                                        <i class="ri-flight-takeoff-line"></i>
-                                    </div>
-                                </div>
-                                <h5 class="text-center mb-1">Rifa Viaje a Europa</h5>
-                                <p class="text-muted text-center mb-2">Paquete todo incluido para 2 personas</p>
-                                
-                                <!-- Premios de la Rifa -->
-                                <div class="mb-3">
-                                    <div class="text-center mb-2">
-                                        <span class="badge bg-info-subtle text-info">
-                                            <i class="ri-gift-line me-1"></i> 3 Premios
-                                        </span>
-                                    </div>
-                                    <div class="text-start px-3">
-                                        <small class="text-dark d-block mb-1">
-                                            <span class="badge bg-warning text-white me-1">1°</span>Viaje a Europa para 2 personas
-                                        </small>
-                                        <small class="text-dark d-block mb-1">
-                                            <span class="badge bg-secondary text-white me-1">2°</span>$2,000 en efectivo
-                                        </small>
-                                        <small class="text-dark d-block">
-                                            <span class="badge bg-dark text-white me-1">3°</span>Set de maletas premium
-                                        </small>
-                                    </div>
-                                </div>
-                                
-                                <div class="row text-center mb-3">
-                                    <div class="col-6">
-                                        <p class="text-muted mb-1">Precio ticket</p>
-                                        <h5 class="mb-0 text-success">$15.00</h5>
-                                    </div>
-                                    <div class="col-6">
-                                        <p class="text-muted mb-1">Tickets disponibles</p>
-                                        <h5 class="mb-0 text-primary">120/300</h5>
-                                    </div>
-                                </div>
-                                <p class="text-muted text-center mb-2"><i class="ri-calendar-line"></i> Sorteo: 28 Feb 2026</p>
-                                
-                                <!-- Contador Regresivo de la Rifa -->
-                                <div class="card bg-warning-subtle border-0 mb-3">
-                                    <div class="card-body p-2">
-                                        <div class="d-flex justify-content-center gap-2 countdown-rifa" data-fecha="2026-02-28T20:00:00">
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-days">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">días</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-hours">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">hrs</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-minutes">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">min</small>
-                                            </div>
-                                            <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
-                                            <div class="text-center">
-                                                <div class="fw-bold text-warning countdown-seconds">00</div>
-                                                <small class="text-muted" style="font-size: 0.7rem;">seg</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="progress mb-3" style="height: 6px;">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-success w-100 btn-comprar-ticket" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modal_comprar_ticket"
-                                            data-rifa-id="3"
-                                            data-rifa-nombre="Rifa Viaje a Europa"
-                                            data-rifa-precio="15.00"
-                                            data-rifa-disponibles="120"
-                                            data-rifa-total="300"
-                                            data-rifa-premios='[{"nombre":"Viaje a Europa para 2 personas","posicion":1,"imagen":"assets/images/premios/viaje-europa.jpg","descripcion":"Viaje todo incluido a Europa para 2 personas, 7 días y 6 noches, incluye vuelos, hotel y desayunos"},{"nombre":"$2000 en efectivo","posicion":2,"imagen":"assets/images/premios/efectivo.jpg","descripcion":"$2,000 USD en efectivo como segundo premio"},{"nombre":"Set de maletas premium","posicion":3,"imagen":"assets/images/premios/maletas.jpg","descripcion":"Set completo de maletas premium de 3 piezas, marca reconocida"}]'>
-                                        <i class="ri-shopping-cart-line me-1"></i> Comprar Tickets
-                                    </button>
-                                    <button class="btn btn-outline-primary w-100 btn-ver-premios" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modal_ver_premios"
-                                            data-rifa-id="3"
-                                            data-rifa-nombre="Rifa Viaje a Europa"
-                                            data-rifa-premios='[{"nombre":"Viaje a Europa para 2 personas","posicion":1,"imagen":"assets/images/premios/viaje-europa.jpg","descripcion":"Viaje todo incluido a Europa para 2 personas, 7 días y 6 noches, incluye vuelos, hotel y desayunos"},{"nombre":"$2000 en efectivo","posicion":2,"imagen":"assets/images/premios/efectivo.jpg","descripcion":"$2,000 USD en efectivo como segundo premio"},{"nombre":"Set de maletas premium","posicion":3,"imagen":"assets/images/premios/maletas.jpg","descripcion":"Set completo de maletas premium de 3 piezas, marca reconocida"}]'>
-                                        <i class="ri-image-line me-1"></i> Ver Premios
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- end col -->
                 </div>
                 <!-- end row -->
                 
@@ -3664,6 +3380,19 @@
             });
         });
     </script>
+
+    <!-- Configuración de rutas y API para Landing -->
+    <script>
+        // Configurar rutas base
+        window.BASE_URL = window.location.origin + '/sistema_rifas';
+        window.API_BASE_URL = window.BASE_URL + '/api';
+    </script>
+
+    <!-- Utils.js - Utilidades globales -->
+    <script src="helpers/Utils.js"></script>
+
+    <!-- Landing.js - Gestión dinámica de rifas -->
+    <script src="landing.js"></script>
 </body>
 
 </html>

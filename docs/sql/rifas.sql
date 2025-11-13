@@ -76,6 +76,56 @@ BEGIN
 END //
 
 -- ==========================================================
+-- 1.1. LISTAR RIFAS PÚBLICAS (PARA LANDING PAGE)
+-- ==========================================================
+DROP PROCEDURE IF EXISTS list_rifas_publicas //
+CREATE PROCEDURE list_rifas_publicas (
+    IN p_sede_id INT
+)
+BEGIN
+    SELECT
+        r.id,
+        r.sede_id,
+        s.nombre AS sede_nombre,
+        r.premio_id AS premio_principal_id,
+        p.nombre AS premio_principal_nombre,
+        r.codigo,
+        r.nombre,
+        r.descripcion,
+        r.precio_ticket,
+        r.cantidad_maxima_tickets,
+        r.tickets_vendidos,
+        r.cantidad_maxima_por_persona,
+        r.numero_inicial,
+        r.numero_final,
+        r.cantidad_digitos,
+        r.prefijo_numero,
+        r.sufijo_numero,
+        r.fecha_inicio_venta,
+        r.fecha_fin_venta,
+        r.fecha_sorteo,
+        r.mostrar_contador,
+        r.mostrar_participantes,
+        r.mostrar_tickets_vendidos,
+        r.url_banner,
+        r.texto_promocional,
+        r.reglas_participacion,
+        r.terminos_condiciones,
+        (SELECT COUNT(*) FROM rifas_premios rp WHERE rp.rifa_id = r.id AND rp.estado = 1) AS total_premios,
+        (SELECT COUNT(*) FROM numeros_rifa nr WHERE nr.rifa_id = r.id) AS total_numeros,
+        (SELECT COUNT(*) FROM numeros_rifa nr WHERE nr.rifa_id = r.id AND nr.estado = 'DISPONIBLE') AS numeros_disponibles,
+        (SELECT COUNT(*) FROM numeros_rifa nr WHERE nr.rifa_id = r.id AND nr.estado = 'VENDIDO') AS numeros_vendidos
+    FROM rifas r
+    INNER JOIN sedes s ON r.sede_id = s.id
+    LEFT JOIN premios p ON r.premio_id = p.id
+    WHERE r.estado IN ('PUBLICADA', 'EN_VENTA')
+      AND r.estado_activo = 1
+      AND (p_sede_id IS NULL OR r.sede_id = p_sede_id)
+      AND r.fecha_sorteo >= NOW()
+    ORDER BY r.fecha_sorteo ASC, r.fecha_creacion DESC;
+END //
+
+-- ==========================================================
 -- 2. OBTENER RIFA POR ID (DETALLE COMPLETO)
 -- ==========================================================
 DROP PROCEDURE IF EXISTS list_rifa_by_id //
@@ -612,6 +662,7 @@ BEGIN
     FROM rifas_premios rp
     INNER JOIN premios pr ON rp.premio_id = pr.id
     WHERE rp.rifa_id = p_rifa_id
+      AND rp.estado = 1
     ORDER BY rp.es_principal DESC, rp.orden ASC, rp.id ASC;
 END //
 

@@ -539,6 +539,51 @@ const Utils = {
         const now = new Date().getTime();
         const cached = parseInt(timestamp);
         return Math.floor((now - cached) / 60000);
+    },
+
+    /**
+     * Encriptar un ID numérico para usar en URLs
+     * @param {number|string} id - ID a encriptar
+     * @returns {string} - ID encriptado en base64
+     */
+    encryptId(id) {
+        if (!id) return '';
+        try {
+            // Convertir a string y agregar un salt simple
+            const salt = 'RIFA_SYS_2025';
+            const data = `${id}_${salt}_${Date.now()}`;
+            // Usar btoa para base64 (compatible con navegadores)
+            return btoa(unescape(encodeURIComponent(data))).replace(/[+/=]/g, (m) => {
+                return { '+': '-', '/': '_', '=': '' }[m];
+            });
+        } catch (error) {
+            console.error('Error al encriptar ID:', error);
+            return '';
+        }
+    },
+
+    /**
+     * Desencriptar un ID desde URL
+     * @param {string} encryptedId - ID encriptado
+     * @returns {number|null} - ID desencriptado o null si hay error
+     */
+    decryptId(encryptedId) {
+        if (!encryptedId) return null;
+        try {
+            // Restaurar caracteres especiales
+            const base64 = encryptedId.replace(/[-_]/g, (m) => {
+                return { '-': '+', '_': '/' }[m];
+            });
+            // Decodificar base64
+            const decoded = decodeURIComponent(escape(atob(base64)));
+            // Extraer el ID (antes del primer _)
+            const parts = decoded.split('_');
+            const id = parseInt(parts[0], 10);
+            return isNaN(id) ? null : id;
+        } catch (error) {
+            console.error('Error al desencriptar ID:', error);
+            return null;
+        }
     }
 };
 

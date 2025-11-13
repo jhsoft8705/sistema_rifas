@@ -137,7 +137,10 @@ $base_url = Enrutamiento::dominio();
                                 <a href="admin-rifas" class="nav-link" data-key="t-estado-civil">Rifas</a>
                             </li>
                             <li class="nav-item">
-                                <a href="admin-numeros" class="nav-link" data-key="t-estado-civil">Numeros</a>
+                                <a href="admin-tickets" class="nav-link" data-key="t-tickets">Tickets</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-comprobantes" class="nav-link" data-key="t-comprobantes">Comprobantes</a>
                             </li>
                        
                         </ul>

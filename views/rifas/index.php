@@ -42,9 +42,11 @@
                                         <i class="ri-ticket-2-line me-2"></i>Filtros y Acciones
                                     </h5>
 
+                                    <!-- Contenedor responsive para filtros y botones -->
                                     <div class="d-flex flex-wrap w-100 gap-3 mt-3">
-                                        <div class="d-flex flex-wrap flex-grow-1 gap-3 align-items-center">
-                                            <div class="w-auto" style="max-width: 240px; min-width: 200px;">
+                                        <!-- Grupo del selector de fechas - ancho completo en móvil -->
+                                        <div class="d-flex flex-wrap flex-grow-1 gap-3">
+                                            <div class="input-group" style="max-width: 240px; min-width: 200px;">
                                                 <select id="filtro_sede_rifa" class="form-select"
                                                     style="min-height: 40px; font-size: 0.9rem;"
                                                     data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -52,7 +54,8 @@
                                                     <option value="">Todas las sedes</option>
                                                 </select>
                                             </div>
-                                            <div class="w-auto" style="max-width: 220px; min-width: 180px;">
+                                            <!-- Combo para filtrar por estado -->
+                                            <div class="input-group" style="max-width: 220px; min-width: 180px;">
                                                 <select id="filtro_estado_rifa" class="form-select"
                                                     style="min-height: 40px; font-size: 0.9rem;"
                                                     data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -67,68 +70,57 @@
                                                     <option value="CANCELADA">Cancelada</option>
                                                 </select>
                                             </div>
-                                            <button class="btn btn-outline-info" id="btn_filtrar_rifas"
+
+                                            <button type="button" id="btn_filtrar_rifas" class="btn btn-outline-info"
                                                 style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
                                                 data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                title="Aplicar filtros">
+                                                title="Filtrar rifas por sede y estado">
                                                 <i class="ri-filter-line me-1"></i>Filtrar
                                             </button>
-                                            <button class="btn btn-outline-warning" id="btn_recargar_rifas"
+
+                                            <button type="button" id="btn_recargar_rifas" class="btn btn-outline-warning"
                                                 style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
                                                 data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                title="Recargar listado y limpiar filtros">
+                                                title="Recargar tabla y limpiar filtros">
                                                 <i class="ri-refresh-line me-1"></i>
                                             </button>
                                         </div>
 
-                                        <div class="ms-auto d-flex flex-wrap gap-2">
-                                            <button type="button" class="btn btn-success" id="btn_exportar_10" data-print="10"
-                                                style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
-                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                title="Generar cartillas en formato de 10 por página">
-                                                <i class="ri-printer-line me-1"></i>Cartillas x10
-                                            </button>
-                                            <button type="button" class="btn btn-success" id="btn_exportar_20" data-print="20"
-                                                style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
-                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                title="Generar cartillas en formato de 20 por página">
-                                                <i class="ri-printer-line me-1"></i>Cartillas x20
-                                            </button>
+                                        <div class="ms-auto ms-md-0 d-flex gap-2"> 
                                             <button type="button" class="btn btn-primary" id="btn_nueva_rifa"
                                                 style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
                                                 data-bs-toggle="tooltip" data-bs-placement="bottom"
                                                 title="Registrar nueva rifa o sorteo">
-                                                <i class="ri-add-line me-1"></i>Nueva Rifa
+                                                <i class="ri-add-line align-bottom me-1"></i>Nueva Rifa
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
-                                        <table id="tabla_rifas" class="table table-striped table-hover align-middle table-nowrap mb-0"
-                                            style="width:100%;">
+                                        <table id="tabla_rifas"
+                                            class="table table-hover align-middle table-nowrap mb-0" style="width:100% !important;">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th class="text-center">Acciones</th>
-                                                    <th>Código</th>
-                                                    <th>Nombre</th>
-                                                    <th>Premio principal</th>
-                                                    <th>Precio ticket</th>
-                                                    <th>N° totales</th>
-                                                     <th>Estado</th>
-                                                    <th>Fecha sorteo</th>
+                                                    <th scope="col" class="text-center">Acciones</th>
+                                                    <th scope="col">Código</th>
+                                                    <th scope="col">Nombre</th>
+                                                    <th scope="col">Premio principal</th>
+                                                    <th scope="col">Precio ticket</th>
+                                                    <th scope="col">N° totales</th>
+                                                    <th scope="col">Estado</th>
+                                                    <th scope="col">Fecha sorteo</th>
                                                 </tr>
                                             </thead>
-                                            <tbody></tbody>
+                                            <tbody>
+                                                <!-- Los datos se cargarán dinámicamente via AJAX -->
+                                            </tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <?php require_once __DIR__ . '/form.php'; ?>
-
-
                 </div>
             </div>
 
@@ -136,6 +128,7 @@
         </div>
     </div>
 
+    <?php require_once __DIR__ . '/form.php'; ?>
     <?php require_once __DIR__ . '/../components/js.php'; ?>
     <script src="<?= Enrutamiento::dominio() ?>/views/rifas/rifas.js"></script>
 </body>

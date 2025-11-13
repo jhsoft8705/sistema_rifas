@@ -22,3 +22,25 @@ File: Custom Css File
 .dropdown-menu .dropdown-item i {
     font-size: 1rem;
 }
+
+/* ========================================
+   Estilos para modales con scroll vertical
+   ======================================== */
+
+/* Modal con scroll vertical cuando es muy grande */
+.modal-dialog-scrollable .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+/* Ajuste para modales extra grandes */
+.modal-dialog-scrollable.modal-xl .modal-body {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+/* Ajuste para modales grandes */
+.modal-dialog-scrollable.modal-lg .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}

@@ -529,6 +529,50 @@ class Rifa extends Conectar
     {
         return array_key_exists($key, $data) ? $data[$key] : $default;
     }
+
+    /**
+     * Listar rifas públicas (estado PUBLICADA) para landing page
+     */
+    public function listar_rifas_publicas(?int $sede_id = null): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL list_rifas_publicas(?)";
+            $query = $conectar->prepare($sql);
+            if ($sede_id === null) {
+                $query->bindValue(1, null, PDO::PARAM_NULL);
+            } else {
+                $query->bindValue(1, $sede_id, PDO::PARAM_INT);
+            }
+            $query->execute();
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+
+            // Para cada rifa, obtener sus premios asociados
+            foreach ($data as &$rifa) {
+                $premios = $this->listar_rifa_premios((int) $rifa['id']);
+                if ($premios['ok']) {
+                    $rifa['premios'] = $premios['data'];
+                } else {
+                    $rifa['premios'] = [];
+                }
+            }
+
+            return [
+                'ok' => true,
+                'msj' => !empty($data) ? 'Rifas públicas obtenidas correctamente' : 'No hay rifas públicas disponibles',
+                'data' => $data
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en listar_rifas_publicas: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener las rifas públicas',
+                'data' => [],
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
 }
 
 

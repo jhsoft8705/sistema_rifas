@@ -53,6 +53,9 @@ class RifaController
             case 'updateNumero':
                 $this->actualizar_numero_rifa();
                 break;
+            case 'getPublicas':
+                $this->listar_rifas_publicas();
+                break;
             default:
                 http_response_code(400);
                 echo json_encode(['ok' => false, 'msj' => 'Acción no válida']);
@@ -478,6 +481,20 @@ class RifaController
             error_log("Error en actualizar_numero_rifa: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al actualizar el número de la rifa']);
+        }
+    }
+
+    private function listar_rifas_publicas(): void
+    {
+        try {
+            $sede_id = isset($_GET['sede_id']) ? (int) $_GET['sede_id'] : null;
+            $resultado = $this->rifa->listar_rifas_publicas($sede_id);
+            http_response_code($resultado['ok'] ? 200 : 404);
+            echo json_encode($resultado);
+        } catch (Exception $e) {
+            error_log("Error en listar_rifas_publicas: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener las rifas públicas']);
         }
     }
 }

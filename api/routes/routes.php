@@ -10,6 +10,7 @@ require_once(__DIR__ . "/routes_cargos.php");
 require_once(__DIR__ . "/routes_premios.php");
 require_once(__DIR__ . "/routes_categorias_premios.php");
 require_once(__DIR__ . "/routes_rifas.php");
+require_once(__DIR__ . "/routes_tickets.php");
 
 function Routes(): void
 {
@@ -29,7 +30,13 @@ function Routes(): void
     // ====================================
     $rutasPublicas = [
         'api/auth/login',
-        'api/auth/verificar'
+        'api/auth/verificar',
+        'api/rifas/publicas',
+        'api/rifas/getById',
+        'api/rifas/numeros/get',
+        'api/tickets/create',
+        'api/tickets/getByCodigo',
+        'api/tickets/uploadComprobante'
     ];
 
     // Si NO es una ruta pública, verificar autenticación
@@ -59,6 +66,10 @@ function Routes(): void
 
         case strpos($url, 'api/rifas') === 0:
             RoutesRifas($url, $method);
+            break;
+
+        case strpos($url, 'api/tickets') === 0:
+            RoutesTickets($url, $method);
             break;
  
         default:

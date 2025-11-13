@@ -25,30 +25,46 @@ $routes = [
     'admin-premios' => $base_path . '/views/premios/index.php',
     'admin-rifas' => $base_path . '/views/rifas/index.php',
     'admin-categorias' => $base_path . '/views/categorias/index.php',
+    'admin-tickets' => $base_path . '/views/tickets/index.php',
+    'admin-comprobantes' => $base_path . '/views/comprobantes/index.php',
+
     'cargos' => $base_path . '/views/cargos/index.php',
     'empleados' => $base_path . '/views/empleados/index.php',
     'marcaciones' => $base_path . '/views/marcaciones/index.php',
     'empleadosregistro' => $base_path . '/views/empleados/register/index.php',
     'terminos' => $base_path . '/views/web/terminos/index.php',
+    'rifa-numeros' => $base_path . '/views/rifas/numeros/index.php',
    ];
 
 // Hacer disponible la ruta base para las vistas
 $GLOBALS['BASE_URL'] = $base_path_url;
 
-// Verificar si la ruta existe
-if (array_key_exists($url, $routes)) {
-    $file = $routes[$url];
+// Manejar rutas con parámetros dinámicos
+$urlParts = explode('/', $url);
+$routeMatched = false;
 
-    // Verificar si el archivo existe
+// Verificar ruta de números de rifa con ID encryptado
+if (count($urlParts) === 2 && $urlParts[0] === 'rifa-numeros') {
+    $encryptedId = $urlParts[1];
+    $file = $base_path . '/views/rifas/numeros/index.php';
+    if (file_exists($file)) {
+        $_GET['id'] = $encryptedId;
+        include $file;
+        $routeMatched = true;
+    }
+}
+
+// Verificar si la ruta existe en el array estático
+if (!$routeMatched && array_key_exists($url, $routes)) {
+    $file = $routes[$url];
     if (file_exists($file)) {
         include $file;
-    } else {
-        // Archivo no encontrado
-        http_response_code(404);
-        echo "Archivo no encontrado: " . htmlspecialchars($file);
+        $routeMatched = true;
     }
-} else {
-    // Ruta no encontrada
+}
+
+// Si no se encontró ninguna ruta
+if (!$routeMatched) {
     http_response_code(404);
     $error_file = $base_path . '/views/404.php';
     if (file_exists($error_file)) {
