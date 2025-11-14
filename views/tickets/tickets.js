@@ -39,11 +39,13 @@ const SafeUtils = {
 let tablaTickets = null;
 let userInfo = null;
 let rifasData = [];
+let modalValidarTicket = null;
 
 $(document).ready(async () => {
     if (!Auth.requireAuth()) return;
 
     userInfo = Auth.getUserInfo();
+    modalValidarTicket = new bootstrap.Modal(document.getElementById('modal_validar_ticket'));
     inicializarSelects();
     inicializarTabla();
     inicializarEventos();
@@ -84,14 +86,27 @@ function inicializarTabla() {
                 data: null,
                 className: 'text-center',
                 orderable: false,
-                width: '100px',
-                render: (_, __, row) => `
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-info btn-ver-detalle" data-id="${row.id}" title="Ver detalle">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                    </div>
-                `
+                width: '150px',
+                render: (_, __, row) => {
+                    let botones = `
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-info btn-ver-detalle" data-id="${row.id}" title="Ver detalle">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                    `;
+                    
+                    // Mostrar botón de validar solo si el estado lo permite
+                    if (row.estado === 'PENDIENTE_PAGO' || row.estado === 'PAGO_SUBIDO' || row.estado === 'VALIDANDO') {
+                        botones += `
+                            <button class="btn btn-primary btn-validar-ticket" data-id="${row.id}" title="Validar ticket">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </button>
+                        `;
+                    }
+                    
+                    botones += `</div>`;
+                    return botones;
+                }
             },
             { data: 'codigo_ticket' },
             {
@@ -134,6 +149,26 @@ function inicializarEventos() {
     $('#tabla_tickets tbody').on('click', '.btn-ver-detalle', function () {
         const id = $(this).data('id');
         verDetalleTicket(id);
+    });
+
+    $('#tabla_tickets tbody').on('click', '.btn-validar-ticket', function () {
+        const id = $(this).data('id');
+        abrirModalValidarTicket(id);
+    });
+
+    $('#accion_ticket').on('change', function () {
+        if ($(this).val() === 'RECHAZADO') {
+            $('#contenedor_motivo_rechazo_ticket').removeClass('d-none');
+            $('#motivo_rechazo_ticket').prop('required', true);
+        } else {
+            $('#contenedor_motivo_rechazo_ticket').addClass('d-none');
+            $('#motivo_rechazo_ticket').prop('required', false).val('');
+        }
+    });
+
+    $('#form_validar_ticket').on('submit', async function(e) {
+        e.preventDefault();
+        await guardarValidacionTicket();
     });
 }
 
@@ -226,6 +261,171 @@ async function verDetalleTicket(id) {
     } catch (error) {
         SafeUtils.closeLoading();
         SafeUtils.showToast('Error al obtener detalle', 'error');
+        console.error(error);
+    }
+}
+
+async function abrirModalValidarTicket(id) {
+    try {
+        SafeUtils.showLoading('Cargando información del ticket...');
+        const respuesta = await API.get('tickets/getAll', { sede_id: userInfo.sede_id });
+        SafeUtils.closeLoading();
+
+        if (respuesta?.ok) {
+            const ticket = respuesta.data.find(t => t.id == id);
+            if (ticket) {
+                $('#ticket_id_validar').val(ticket.id);
+                $('#sede_id_ticket_validar').val(userInfo.sede_id);
+                
+                // Información del ticket
+                let infoTicket = `
+                    <div class="row g-2">
+                        <div class="col-md-6"><strong>Código:</strong> <span class="badge bg-primary">${ticket.codigo_ticket}</span></div>
+                        <div class="col-md-6"><strong>Estado:</strong> ${obtenerBadgeEstadoTicket(ticket.estado)}</div>
+                        <div class="col-md-12"><strong>Participante:</strong> ${ticket.nombres} ${ticket.apellidos}</div>
+                        <div class="col-md-6"><strong>Documento:</strong> ${ticket.tipo_documento || 'DNI'} ${ticket.numero_documento}</div>
+                        <div class="col-md-6"><strong>Email:</strong> ${ticket.email}</div>
+                        <div class="col-md-12"><strong>Rifa:</strong> ${ticket.rifa_codigo} - ${ticket.rifa_nombre}</div>
+                `;
+                
+                // Mostrar número reservado si existe
+                if (ticket.numero_boleto || ticket.numero_boleto_entero) {
+                    infoTicket += `
+                        <div class="col-md-12 mt-2">
+                            <div class="alert alert-success mb-0 py-2">
+                                <strong><i class="ri-number-1 me-1"></i>Número Asignado:</strong> 
+                                <span class="badge bg-success fs-6">${ticket.numero_boleto || ticket.numero_boleto_entero}</span>
+                            </div>
+                        </div>
+                    `;
+                    $('#alert_numero_ticket').show();
+                    $('#info_numero_ticket').html(`
+                        <span class="badge bg-warning text-dark fs-6">${ticket.numero_boleto || ticket.numero_boleto_entero}</span>
+                        <span class="ms-2">Estado: <span class="badge bg-info">RESERVADO</span></span>
+                    `);
+                } else {
+                    $('#alert_numero_ticket').hide();
+                }
+                
+                infoTicket += `</div>`;
+                $('#info_ticket_validar').html(infoTicket);
+                
+                $('#precio_ticket_validar').val(SafeUtils.formatCurrency(ticket.precio_pagado));
+                $('#fecha_compra_ticket_validar').val(SafeUtils.formatDate(ticket.fecha_compra));
+                
+                // Cargar comprobante si existe
+                try {
+                    const respuestaComprobantes = await API.get('tickets/getComprobantes', { 
+                        sede_id: userInfo.sede_id
+                    });
+                    
+                    if (respuestaComprobantes?.ok && respuestaComprobantes.data?.length > 0) {
+                        // Filtrar comprobante por ticket_id
+                        const comprobante = respuestaComprobantes.data.find(c => c.ticket_id == ticket.id);
+                        
+                        if (comprobante && comprobante.archivo_comprobante) {
+                            const baseUrl = window.BASE_URL || '';
+                            const imageUrl = baseUrl + comprobante.archivo_comprobante;
+                            $('#preview_comprobante_ticket').html(`
+                                <img src="${imageUrl}" class="img-fluid" style="max-height: 400px;" alt="Comprobante">
+                                <br><a href="${imageUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="ri-external-link-line"></i> Ver en nueva ventana
+                                </a>
+                            `);
+                        } else {
+                            $('#preview_comprobante_ticket').html('<p class="text-muted">No hay comprobante disponible</p>');
+                        }
+                    } else {
+                        $('#preview_comprobante_ticket').html('<p class="text-muted">No hay comprobante disponible</p>');
+                    }
+                } catch (error) {
+                    console.error('Error al cargar comprobante:', error);
+                    $('#preview_comprobante_ticket').html('<p class="text-muted">Error al cargar comprobante</p>');
+                }
+                
+                $('#accion_ticket').val('');
+                $('#contenedor_motivo_rechazo_ticket').addClass('d-none');
+                $('#motivo_rechazo_ticket').val('');
+                modalValidarTicket.show();
+            }
+        }
+    } catch (error) {
+        SafeUtils.closeLoading();
+        SafeUtils.showToast('Error al cargar información del ticket', 'error');
+        console.error(error);
+    }
+}
+
+async function guardarValidacionTicket() {
+    const accion = $('#accion_ticket').val();
+    if (!accion) {
+        SafeUtils.showToast('Seleccione una acción', 'warning');
+        $('#accion_ticket').addClass('is-invalid');
+        return;
+    }
+
+    if (accion === 'RECHAZADO' && !$('#motivo_rechazo_ticket').val().trim()) {
+        SafeUtils.showToast('El motivo de rechazo es obligatorio', 'warning');
+        $('#motivo_rechazo_ticket').addClass('is-invalid');
+        return;
+    }
+
+    const confirmar = await Swal.fire({
+        title: accion === 'APROBADO' ? 'Aprobar ticket' : 'Rechazar ticket',
+        text: accion === 'APROBADO' 
+            ? '¿Está seguro de aprobar este ticket? El ticket pasará a estado APROBADO y podrá participar en el sorteo.'
+            : '¿Está seguro de rechazar este ticket? El número será liberado.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmar.isConfirmed) return;
+
+    try {
+        SafeUtils.showLoading('Procesando validación...');
+        
+        // Buscar el comprobante asociado al ticket
+        const ticketId = parseInt($('#ticket_id_validar').val());
+        const respuestaComprobantes = await API.get('tickets/getComprobantes', { 
+            sede_id: userInfo.sede_id 
+        });
+        
+        if (respuestaComprobantes?.ok) {
+            const comprobante = respuestaComprobantes.data.find(c => c.ticket_id == ticketId);
+            
+            if (comprobante) {
+                // Validar el comprobante asociado
+                const payload = {
+                    comprobante_id: comprobante.id,
+                    sede_id: userInfo.sede_id,
+                    estado: accion,
+                    validado_por: userInfo.nombre_completo || 'SYSTEM',
+                    motivo_rechazo: accion === 'RECHAZADO' ? $('#motivo_rechazo_ticket').val().trim() : null
+                };
+
+                const respuesta = await API.post('tickets/validarComprobante', payload);
+                SafeUtils.closeLoading();
+
+                if (respuesta?.ok) {
+                    SafeUtils.showToast(respuesta.msj, 'success');
+                    modalValidarTicket.hide();
+                    await cargarTickets();
+                } else {
+                    SafeUtils.showToast(respuesta?.msj || 'Error al validar ticket', 'error');
+                }
+            } else {
+                SafeUtils.closeLoading();
+                SafeUtils.showToast('No se encontró comprobante asociado a este ticket', 'warning');
+            }
+        } else {
+            SafeUtils.closeLoading();
+            SafeUtils.showToast('Error al buscar comprobante', 'error');
+        }
+    } catch (error) {
+        SafeUtils.closeLoading();
+        SafeUtils.showToast('Error al validar ticket', 'error');
         console.error(error);
     }
 }

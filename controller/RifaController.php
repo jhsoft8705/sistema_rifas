@@ -59,6 +59,15 @@ class RifaController
             case 'generarNumeros':
                 $this->generar_numeros_rifa();
                 break;
+            case 'getNumerosDisponibles':
+                $this->obtener_numeros_disponibles();
+                break;
+            case 'reservarNumeros':
+                $this->reservar_numeros();
+                break;
+            case 'asignarNumeroAleatorio':
+                $this->asignar_numero_aleatorio();
+                break;
             default:
                 http_response_code(400);
                 echo json_encode(['ok' => false, 'msj' => 'Acción no válida']);
@@ -556,6 +565,122 @@ class RifaController
                 'msj' => 'Error al generar los números de la rifa: ' . $e->getMessage(),
                 'detalle' => $e->getTraceAsString()
             ], JSON_UNESCAPED_UNICODE);
+        }
+    }
+
+    /**
+     * Obtener números disponibles de una rifa
+     */
+    private function obtener_numeros_disponibles(): void
+    {
+        try {
+            if (!isset($_GET['rifa_id'])) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'El parámetro rifa_id es obligatorio']);
+                return;
+            }
+
+            $rifa_id = (int) $_GET['rifa_id'];
+            $limite = isset($_GET['limite']) ? (int) $_GET['limite'] : null;
+            $busqueda = isset($_GET['busqueda']) ? trim($_GET['busqueda']) : null;
+
+            $resultado = $this->rifa->obtener_numeros_disponibles($rifa_id, $limite, $busqueda);
+            http_response_code($resultado['ok'] ? 200 : 404);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en obtener_numeros_disponibles: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener los números disponibles']);
+        }
+    }
+
+    /**
+     * Reservar números específicos
+     */
+    private function reservar_numeros(): void
+    {
+        try {
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'JSON inválido']);
+                return;
+            }
+
+            $validation = Validator::validarCamposRequeridos($input, [
+                'rifa_id',
+                'numeros'
+            ]);
+
+            if (!$validation['ok']) {
+                http_response_code(400);
+                echo json_encode($validation);
+                return;
+            }
+
+            if (!is_array($input['numeros']) || empty($input['numeros'])) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'Debe proporcionar al menos un número']);
+                return;
+            }
+
+            $sesion_id = $input['sesion_id'] ?? session_id() . '_' . time();
+            $resultado = $this->rifa->reservar_numeros(
+                (int) $input['rifa_id'],
+                $input['numeros'],
+                $sesion_id
+            );
+
+            http_response_code($resultado['ok'] ? 200 : 400);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en reservar_numeros: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al reservar los números']);
+        }
+    }
+
+    /**
+     * Asignar número aleatorio
+     */
+    private function asignar_numero_aleatorio(): void
+    {
+        try {
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'JSON inválido']);
+                return;
+            }
+
+            $validation = Validator::validarCamposRequeridos($input, [
+                'rifa_id',
+                'cantidad'
+            ]);
+
+            if (!$validation['ok']) {
+                http_response_code(400);
+                echo json_encode($validation);
+                return;
+            }
+
+            $sesion_id = $input['sesion_id'] ?? session_id() . '_' . time();
+            $cantidad = isset($input['cantidad']) ? (int) $input['cantidad'] : 1;
+
+            $resultado = $this->rifa->asignar_numeros_aleatorios(
+                (int) $input['rifa_id'],
+                $cantidad,
+                $sesion_id
+            );
+
+            http_response_code($resultado['ok'] ? 200 : 400);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en asignar_numero_aleatorio: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al asignar número aleatorio']);
         }
     }
 }

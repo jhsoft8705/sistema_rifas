@@ -89,6 +89,7 @@
                                                     <th>Código Ticket</th>
                                                     <th>Participante</th>
                                                     <th>Rifa</th>
+                                                    <th>N° Boleto</th>
                                                     <th>Monto</th>
                                                     <th>N° Operación</th>
                                                     <th>Fecha Pago</th>
@@ -127,8 +128,19 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <div class="alert alert-info">
-                                <strong>Información del Ticket:</strong>
-                                <div id="info_ticket_comprobante"></div>
+                                <strong><i class="ri-ticket-line me-1"></i>Información del Ticket:</strong>
+                                <div id="info_ticket_comprobante" class="mt-2"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="alert alert-warning" id="alert_numero_reservado" style="display: none;">
+                                <strong><i class="ri-alert-line me-1"></i>Número Reservado:</strong>
+                                <div id="info_numero_reservado" class="mt-1"></div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="ri-information-line me-1"></i>
+                                    Si rechazas este comprobante, el número será liberado y estará disponible para otros participantes.
+                                </small>
                             </div>
                         </div>
                         

@@ -96,6 +96,15 @@ function inicializarTabla() {
                 render: (row) => `${row.rifa_codigo || ''} - ${row.rifa_nombre || ''}`
             },
             {
+                data: null,
+                render: (row) => {
+                    if (row.numero_boleto || row.numero_boleto_entero) {
+                        return `<span class="badge bg-warning text-dark">${row.numero_boleto || row.numero_boleto_entero}</span>`;
+                    }
+                    return '<span class="text-muted">-</span>';
+                }
+            },
+            {
                 data: 'monto',
                 render: SafeUtils.formatCurrency
             },
@@ -182,11 +191,42 @@ async function abrirModalValidar(id) {
             const comprobante = respuesta.data.find(c => c.id == id);
             if (comprobante) {
                 $('#comprobante_id_validar').val(comprobante.id);
-                $('#info_ticket_comprobante').html(`
-                    <strong>Código:</strong> ${comprobante.codigo_ticket}<br>
-                    <strong>Participante:</strong> ${comprobante.nombres} ${comprobante.apellidos}<br>
-                    <strong>Rifa:</strong> ${comprobante.rifa_codigo} - ${comprobante.rifa_nombre}
-                `);
+                
+                // Información del ticket
+                let infoTicket = `
+                    <div class="row g-2">
+                        <div class="col-md-6"><strong>Código:</strong> <span class="badge bg-primary">${comprobante.codigo_ticket}</span></div>
+                        <div class="col-md-6"><strong>Estado Ticket:</strong> ${obtenerBadgeEstadoTicket(comprobante.estado_ticket || 'PENDIENTE_PAGO')}</div>
+                        <div class="col-md-12"><strong>Participante:</strong> ${comprobante.nombres} ${comprobante.apellidos}</div>
+                        <div class="col-md-6"><strong>Documento:</strong> ${comprobante.tipo_documento || 'DNI'} ${comprobante.numero_documento}</div>
+                        <div class="col-md-6"><strong>Email:</strong> ${comprobante.email}</div>
+                        <div class="col-md-12"><strong>Rifa:</strong> ${comprobante.rifa_codigo} - ${comprobante.rifa_nombre}</div>
+                        <div class="col-md-6"><strong>Precio:</strong> ${SafeUtils.formatCurrency(comprobante.precio_pagado)}</div>
+                        <div class="col-md-6"><strong>Días esperando:</strong> ${comprobante.dias_esperando || 0} días</div>
+                `;
+                
+                // Mostrar número reservado si existe
+                if (comprobante.numero_boleto || comprobante.numero_boleto_entero) {
+                    infoTicket += `
+                        <div class="col-md-12 mt-2">
+                            <div class="alert alert-success mb-0 py-2">
+                                <strong><i class="ri-number-1 me-1"></i>Número Asignado:</strong> 
+                                <span class="badge bg-success fs-6">${comprobante.numero_boleto || comprobante.numero_boleto_entero}</span>
+                            </div>
+                        </div>
+                    `;
+                    $('#alert_numero_reservado').show();
+                    $('#info_numero_reservado').html(`
+                        <span class="badge bg-warning text-dark fs-6">${comprobante.numero_boleto || comprobante.numero_boleto_entero}</span>
+                        <span class="ms-2">Estado: <span class="badge bg-info">RESERVADO</span></span>
+                    `);
+                } else {
+                    $('#alert_numero_reservado').hide();
+                }
+                
+                infoTicket += `</div>`;
+                $('#info_ticket_comprobante').html(infoTicket);
+                
                 $('#monto_comprobante').val(SafeUtils.formatCurrency(comprobante.monto));
                 $('#numero_operacion_comprobante').val(comprobante.numero_operacion || '-');
                 
@@ -277,6 +317,21 @@ function obtenerBadgeEstadoComprobante(estado) {
         'APROBADO': { text: 'Aprobado', class: 'badge-soft-success' },
         'RECHAZADO': { text: 'Rechazado', class: 'badge-soft-danger' },
         'INVALIDO': { text: 'Inválido', class: 'badge-soft-danger' }
+    };
+    const info = map[estado] || { text: estado, class: 'badge-soft-secondary' };
+    return `<span class="badge ${info.class}">${info.text}</span>`;
+}
+
+function obtenerBadgeEstadoTicket(estado) {
+    const map = {
+        'PENDIENTE_PAGO': { text: 'Pendiente Pago', class: 'badge-soft-warning' },
+        'PAGO_SUBIDO': { text: 'Pago Subido', class: 'badge-soft-info' },
+        'VALIDANDO': { text: 'Validando', class: 'badge-soft-primary' },
+        'APROBADO': { text: 'Aprobado', class: 'badge-soft-success' },
+        'RECHAZADO': { text: 'Rechazado', class: 'badge-soft-danger' },
+        'PARTICIPANDO': { text: 'Participando', class: 'badge-soft-purple' },
+        'GANADOR': { text: 'Ganador', class: 'badge-soft-success' },
+        'EXPIRADO': { text: 'Expirado', class: 'badge-soft-secondary' }
     };
     const info = map[estado] || { text: estado, class: 'badge-soft-secondary' };
     return `<span class="badge ${info.class}">${info.text}</span>`;

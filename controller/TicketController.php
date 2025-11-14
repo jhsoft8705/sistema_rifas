@@ -203,7 +203,7 @@ class TicketController
                 'numero_operacion' => $_POST['numero_operacion'] ?? null,
                 'monto' => (float) $_POST['monto'],
                 'fecha_pago' => $_POST['fecha_pago'] ?? null,
-                'archivo_comprobante' => '/uploads/comprobantes/' . $fileName,
+                'archivo_comprobante' => 'uploads/comprobantes/' . $fileName,
                 'tipo_archivo' => $extension,
                 'tamano_archivo' => $file['size'],
                 'banco_origen' => $_POST['banco_origen'] ?? null,

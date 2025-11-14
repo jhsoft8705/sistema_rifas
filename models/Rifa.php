@@ -414,6 +414,237 @@ class Rifa extends Conectar
     }
 
     /**
+     * Obtener números disponibles de una rifa
+     */
+    public function obtener_numeros_disponibles(int $rifa_id, ?int $limite = null, ?string $busqueda = null): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            
+            $sql = "SELECT 
+                        id,
+                        numero_entero,
+                        numero_formateado,
+                        estado
+                    FROM numeros_rifa
+                    WHERE rifa_id = ? 
+                      AND estado = 'DISPONIBLE'";
+            
+            $params = [$rifa_id];
+            
+            // Agregar búsqueda si existe
+            if ($busqueda !== null && $busqueda !== '') {
+                $sql .= " AND (numero_formateado LIKE ? OR numero_entero = ?)";
+                $params[] = "%{$busqueda}%";
+                $params[] = (int) $busqueda;
+            }
+            
+            $sql .= " ORDER BY numero_entero ASC";
+            
+            // Agregar límite si existe
+            if ($limite !== null && $limite > 0) {
+                $sql .= " LIMIT ?";
+                $params[] = $limite;
+            }
+            
+            $query = $conectar->prepare($sql);
+            foreach ($params as $index => $param) {
+                $query->bindValue($index + 1, $param, is_int($param) ? PDO::PARAM_INT : PDO::PARAM_STR);
+            }
+            
+            $query->execute();
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+
+            return [
+                'ok' => true,
+                'msj' => !empty($data) ? 'Números disponibles obtenidos correctamente' : 'No hay números disponibles',
+                'data' => $data
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en obtener_numeros_disponibles: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener los números disponibles',
+                'data' => [],
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Reservar números específicos
+     */
+    public function reservar_numeros(int $rifa_id, array $numeros, string $sesion_id): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $conectar->beginTransaction();
+
+            $numerosReservados = [];
+            $numerosNoDisponibles = [];
+            $reservadoHasta = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+            foreach ($numeros as $numero) {
+                $numeroEntero = is_numeric($numero) ? (int) $numero : null;
+                
+                if ($numeroEntero === null) {
+                    $numerosNoDisponibles[] = $numero;
+                    continue;
+                }
+
+                // Verificar si el número está disponible
+                $checkSql = "SELECT id, numero_formateado, estado 
+                            FROM numeros_rifa 
+                            WHERE rifa_id = ? 
+                              AND numero_entero = ? 
+                              AND estado = 'DISPONIBLE' 
+                            LIMIT 1";
+                $checkQuery = $conectar->prepare($checkSql);
+                $checkQuery->bindValue(1, $rifa_id, PDO::PARAM_INT);
+                $checkQuery->bindValue(2, $numeroEntero, PDO::PARAM_INT);
+                $checkQuery->execute();
+                $numeroData = $checkQuery->fetch(PDO::FETCH_ASSOC);
+                $checkQuery->closeCursor();
+
+                if ($numeroData) {
+                    // Reservar el número
+                    $updateSql = "UPDATE numeros_rifa 
+                                  SET estado = 'RESERVADO',
+                                      reservado_hasta = ?,
+                                      reservado_por_sesion = ?,
+                                      fecha_reserva = NOW(),
+                                      fecha_modificacion = NOW()
+                                  WHERE id = ?";
+                    $updateQuery = $conectar->prepare($updateSql);
+                    $updateQuery->bindValue(1, $reservadoHasta, PDO::PARAM_STR);
+                    $updateQuery->bindValue(2, $sesion_id, PDO::PARAM_STR);
+                    $updateQuery->bindValue(3, $numeroData['id'], PDO::PARAM_INT);
+                    $updateQuery->execute();
+                    $updateQuery->closeCursor();
+
+                    $numerosReservados[] = [
+                        'numero_entero' => $numeroEntero,
+                        'numero_formateado' => $numeroData['numero_formateado'],
+                        'reservado_hasta' => $reservadoHasta
+                    ];
+                } else {
+                    $numerosNoDisponibles[] = $numeroEntero;
+                }
+            }
+
+            if (empty($numerosReservados)) {
+                $conectar->rollBack();
+                return [
+                    'ok' => false,
+                    'msj' => 'Ninguno de los números solicitados está disponible',
+                    'numeros_no_disponibles' => $numerosNoDisponibles
+                ];
+            }
+
+            $conectar->commit();
+
+            return [
+                'ok' => true,
+                'msj' => count($numerosReservados) . ' número(s) reservado(s) correctamente',
+                'numeros_reservados' => $numerosReservados,
+                'numeros_no_disponibles' => $numerosNoDisponibles,
+                'reservado_hasta' => $reservadoHasta
+            ];
+        } catch (PDOException $e) {
+            if ($conectar->inTransaction()) {
+                $conectar->rollBack();
+            }
+            error_log("Error en reservar_numeros: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al reservar los números',
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Asignar números aleatorios
+     */
+    public function asignar_numeros_aleatorios(int $rifa_id, int $cantidad, string $sesion_id): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $conectar->beginTransaction();
+
+            // Obtener números disponibles aleatorios
+            $sql = "SELECT id, numero_entero, numero_formateado 
+                    FROM numeros_rifa 
+                    WHERE rifa_id = ? 
+                      AND estado = 'DISPONIBLE' 
+                    ORDER BY RAND() 
+                    LIMIT ?";
+            $query = $conectar->prepare($sql);
+            $query->bindValue(1, $rifa_id, PDO::PARAM_INT);
+            $query->bindValue(2, $cantidad, PDO::PARAM_INT);
+            $query->execute();
+            $numerosDisponibles = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+
+            if (count($numerosDisponibles) < $cantidad) {
+                $conectar->rollBack();
+                return [
+                    'ok' => false,
+                    'msj' => 'No hay suficientes números disponibles. Disponibles: ' . count($numerosDisponibles),
+                    'disponibles' => count($numerosDisponibles),
+                    'solicitados' => $cantidad
+                ];
+            }
+
+            $numerosAsignados = [];
+            $reservadoHasta = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+            foreach ($numerosDisponibles as $numero) {
+                // Reservar el número
+                $updateSql = "UPDATE numeros_rifa 
+                              SET estado = 'RESERVADO',
+                                  reservado_hasta = ?,
+                                  reservado_por_sesion = ?,
+                                  fecha_reserva = NOW(),
+                                  fecha_modificacion = NOW()
+                              WHERE id = ?";
+                $updateQuery = $conectar->prepare($updateSql);
+                $updateQuery->bindValue(1, $reservadoHasta, PDO::PARAM_STR);
+                $updateQuery->bindValue(2, $sesion_id, PDO::PARAM_STR);
+                $updateQuery->bindValue(3, $numero['id'], PDO::PARAM_INT);
+                $updateQuery->execute();
+                $updateQuery->closeCursor();
+
+                $numerosAsignados[] = [
+                    'numero_entero' => $numero['numero_entero'],
+                    'numero_formateado' => $numero['numero_formateado'],
+                    'reservado_hasta' => $reservadoHasta
+                ];
+            }
+
+            $conectar->commit();
+
+            return [
+                'ok' => true,
+                'msj' => count($numerosAsignados) . ' número(s) asignado(s) correctamente',
+                'numeros' => $numerosAsignados,
+                'reservado_hasta' => $reservadoHasta
+            ];
+        } catch (PDOException $e) {
+            if ($conectar->inTransaction()) {
+                $conectar->rollBack();
+            }
+            error_log("Error en asignar_numeros_aleatorios: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al asignar números aleatorios',
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Helper para bindear parámetros de registro
      */
     private function bindRegisterParams(PDOStatement $stmt, array $data): void

@@ -122,6 +122,7 @@
         </div>
     </div>
 
+    <?php require_once __DIR__ . '/form.php'; ?>
     <?php require_once __DIR__ . '/../components/js.php'; ?>
     <script src="<?= Enrutamiento::dominio() ?>/views/tickets/tickets.js"></script>
 </body>

@@ -34,6 +34,9 @@ function Routes(): void
         'api/rifas/publicas',
         'api/rifas/getById',
         'api/rifas/numeros/get',
+        'api/rifas/numeros/disponibles',
+        'api/rifas/numeros/reservar',
+        'api/rifas/numeros/aleatorio',
         'api/tickets/create',
         'api/tickets/getByCodigo',
         'api/tickets/uploadComprobante'

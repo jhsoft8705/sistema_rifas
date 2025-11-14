@@ -413,10 +413,14 @@ BEGIN
         t.codigo_ticket,
         t.nombres,
         t.apellidos,
+        t.tipo_documento,
         t.numero_documento,
         t.email,
         t.telefono,
         t.precio_pagado,
+        t.numero_boleto,
+        t.numero_boleto_entero,
+        t.estado AS estado_ticket,
         r.codigo AS rifa_codigo,
         r.nombre AS rifa_nombre,
         mp.nombre AS metodo_pago_nombre,
@@ -447,6 +451,8 @@ CREATE PROCEDURE validar_comprobante (
 proc: BEGIN
     DECLARE v_ticket_id INT;
     DECLARE v_numero_id INT;
+    DECLARE v_numero_entero INT;
+    DECLARE v_numero_formateado VARCHAR(50);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -484,6 +490,13 @@ proc: BEGIN
 
     -- Si se aprueba, actualizar ticket y número
     IF p_estado = 'APROBADO' THEN
+        -- Obtener información del número reservado para asegurar que el ticket tenga el número asignado
+        SELECT numero_entero, numero_formateado INTO v_numero_entero, v_numero_formateado
+        FROM numeros_rifa
+        WHERE ticket_id = v_ticket_id
+          AND estado = 'RESERVADO'
+        LIMIT 1;
+        
         UPDATE tickets
         SET estado = 'APROBADO',
             aprobado_por = p_validado_por,
@@ -492,13 +505,18 @@ proc: BEGIN
             validado = 1,
             fecha_validacion = NOW(),
             fecha_modificacion = NOW(),
-            modificado_por = p_validado_por
+            modificado_por = p_validado_por,
+            -- Asegurar que el ticket tenga el número asignado (por si acaso no se asignó en register_ticket)
+            numero_boleto = COALESCE(numero_boleto, v_numero_formateado),
+            numero_boleto_entero = COALESCE(numero_boleto_entero, v_numero_entero)
         WHERE id = v_ticket_id;
 
-        -- Actualizar número a VENDIDO
+        -- Actualizar número a VENDIDO (confirmar venta definitiva)
         UPDATE numeros_rifa
         SET estado = 'VENDIDO',
             fecha_venta = NOW(),
+            reservado_hasta = NULL,
+            reservado_por_sesion = NULL,
             fecha_modificacion = NOW()
         WHERE ticket_id = v_ticket_id
           AND estado = 'RESERVADO';
@@ -521,10 +539,14 @@ proc: BEGIN
             fecha_rechazo = NOW(),
             motivo_rechazo = p_motivo_rechazo,
             fecha_modificacion = NOW(),
-            modificado_por = p_validado_por
+            modificado_por = p_validado_por,
+            -- Limpiar número del ticket al rechazar
+            numero_boleto = NULL,
+            numero_boleto_entero = NULL,
+            numero_seleccionado_usuario = 0
         WHERE id = v_ticket_id;
 
-        -- Liberar número reservado
+        -- Liberar número reservado (volver a DISPONIBLE)
         UPDATE numeros_rifa
         SET estado = 'DISPONIBLE',
             ticket_id = NULL,

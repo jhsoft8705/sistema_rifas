@@ -12,7 +12,7 @@ class Ticket extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL register_ticket(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @ticket_id, @codigo_ticket, @mensaje)";
+            $sql = "CALL register_ticket(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @ticket_id, @codigo_ticket, @mensaje)";
             $query = $conectar->prepare($sql);
             
             $query->bindValue(1, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);

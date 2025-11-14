@@ -45,6 +45,13 @@ const Utils = {
      * @returns {Promise}
      */
     showAlert(message, type = 'info', options = {}) {
+        // Verificar si SweetAlert2 está disponible
+        if (typeof Swal === 'undefined') {
+            console.warn('SweetAlert2 no está disponible, usando alert nativo');
+            alert(message);
+            return Promise.resolve({ isConfirmed: true });
+        }
+
         const defaultOptions = {
             title: this.getTitleByType(type),
             text: message,
@@ -66,16 +73,53 @@ const Utils = {
      * @returns {Promise}
      */
     showConfirm(title = '¿Está seguro?', text = '', confirmText = 'Sí, confirmar', cancelText = 'Cancelar') {
-        return Swal.fire({
-            title: title,
-            text: text,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: confirmText,
-            cancelButtonText: cancelText
-        });
+        // Verificar si SweetAlert2 está disponible
+        if (typeof Swal === 'undefined') {
+            console.warn('SweetAlert2 no está disponible, usando confirm nativo');
+            const confirmed = confirm(title + '\n\n' + text);
+            return Promise.resolve({ isConfirmed: confirmed });
+        }
+
+        try {
+            const swalPromise = Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: confirmText,
+                cancelButtonText: cancelText,
+                allowOutsideClick: true,
+                allowEscapeKey: true
+            });
+            
+            // Manejar la promesa con timeout para evitar problemas con extensiones del navegador
+            return Promise.race([
+                swalPromise,
+                new Promise((resolve) => {
+                    // Timeout de seguridad (30 segundos)
+                    setTimeout(() => {
+                        resolve({ isConfirmed: false, isDismissed: true });
+                    }, 30000);
+                })
+            ]).catch(error => {
+                // Manejar errores de SweetAlert (incluyendo el error de message channel)
+                if (error && error.message && error.message.includes('message channel')) {
+                    // Ignorar errores de message channel (generalmente causados por extensiones)
+                    console.warn('Error de message channel ignorado (probablemente causado por extensión del navegador)');
+                    return Promise.resolve({ isConfirmed: false, isDismissed: true });
+                }
+                console.warn('Error en SweetAlert confirm:', error);
+                const confirmed = confirm(title + '\n\n' + text);
+                return Promise.resolve({ isConfirmed: confirmed });
+            });
+        } catch (error) {
+            // Si hay un error al crear el modal, usar confirm nativo
+            console.warn('Error al crear SweetAlert:', error);
+            const confirmed = confirm(title + '\n\n' + text);
+            return Promise.resolve({ isConfirmed: confirmed });
+        }
     },
 
     /**
@@ -85,6 +129,26 @@ const Utils = {
      * @param {object} options - Opciones adicionales
      */
     showToast(message, type = 'info', options = {}) {
+        // Verificar si jQuery y jQuery Toast están disponibles
+        if (typeof $ === 'undefined' || typeof $.toast === 'undefined') {
+            console.warn('jQuery Toast no está disponible, usando console.log');
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            
+            // Intentar usar SweetAlert2 como fallback si está disponible
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: type,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
+            return;
+        }
+
         const defaultOptions = {
             text: message,
             heading: this.getTitleByType(type),
@@ -103,6 +167,12 @@ const Utils = {
      * @param {string} message - Mensaje de carga
      */
     showLoading(message = 'Cargando...') {
+        // Verificar si SweetAlert2 está disponible
+        if (typeof Swal === 'undefined') {
+            console.log(message);
+            return;
+        }
+
         Swal.fire({
             html: `<div style="font-size: 0.95rem;">${message}</div>`,
             allowOutsideClick: false,
@@ -118,7 +188,10 @@ const Utils = {
      * Cerrar loading/modal de SweetAlert2
      */
     closeLoading() {
-        Swal.close();
+        // Verificar si SweetAlert2 está disponible
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
     },
 
     /**
@@ -200,6 +273,18 @@ const Utils = {
      * @param {string} formId - ID del formulario
      */
     limpiarValidaciones(formId = null) {
+        if (typeof $ === 'undefined') {
+            // Fallback sin jQuery
+            const selector = formId ? `#${formId} .is-invalid` : '.is-invalid';
+            document.querySelectorAll(selector).forEach(el => {
+                el.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('.invalid-feedback').forEach(el => {
+                el.textContent = '';
+            });
+            return;
+        }
+
         if (formId) {
             $(`#${formId} .is-invalid`).removeClass("is-invalid");
             $(`#${formId} .invalid-feedback`).text("");
@@ -304,6 +389,18 @@ const Utils = {
      * @returns {object} - { originalText, originalHtml }
      */
     disableButton(btnSelector, loadingText = 'Procesando...') {
+        if (typeof $ === 'undefined') {
+            // Fallback sin jQuery
+            const btn = document.querySelector(btnSelector);
+            if (!btn) return { originalText: '', originalHtml: '' };
+            
+            const originalText = btn.textContent;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="ri-loader-4-line me-1"></i>${loadingText}`;
+            return { originalText, originalHtml };
+        }
+
         const $btn = $(btnSelector);
         const originalText = $btn.text();
         const originalHtml = $btn.html();
@@ -320,6 +417,16 @@ const Utils = {
      * @param {string} originalHtml - HTML original del botón
      */
     enableButton(btnSelector, originalHtml) {
+        if (typeof $ === 'undefined') {
+            // Fallback sin jQuery
+            const btn = document.querySelector(btnSelector);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+            return;
+        }
+
         $(btnSelector).prop("disabled", false).html(originalHtml);
     },
 
@@ -332,8 +439,26 @@ const Utils = {
      * @param {string} placeholderText - Texto del placeholder (opcional)
      */
     poblarSelect(selector, data, valueField, textField, placeholderText = null) {
+        if (typeof $ === 'undefined') {
+            // Fallback sin jQuery
+            const select = document.querySelector(selector);
+            if (!select) return;
+            
+            const placeholder = placeholderText || (select.options[0] ? select.options[0].text : 'Seleccionar...');
+            select.innerHTML = '';
+            select.appendChild(new Option(placeholder, ''));
+            
+            if (data && data.length > 0) {
+                data.forEach(item => {
+                    const option = new Option(item[textField], item[valueField]);
+                    select.appendChild(option);
+                });
+            }
+            return;
+        }
+
         const $select = $(selector);
-        const placeholder = placeholderText || $select.find('option:first').text();
+        const placeholder = placeholderText || ($select.find('option:first').length ? $select.find('option:first').text() : 'Seleccionar...');
         $select.empty();
         $select.append(`<option value="">${placeholder}</option>`);
         
@@ -433,6 +558,19 @@ const Utils = {
      * @param {number} offset - Offset en píxeles (opcional)
      */
     scrollTo(selector, offset = 0) {
+        if (typeof $ === 'undefined') {
+            // Fallback sin jQuery
+            const element = document.querySelector(selector);
+            if (element) {
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({
+                    top: elementPosition - offset,
+                    behavior: 'smooth'
+                });
+            }
+            return;
+        }
+
         const element = $(selector);
         if (element.length) {
             $('html, body').animate({
