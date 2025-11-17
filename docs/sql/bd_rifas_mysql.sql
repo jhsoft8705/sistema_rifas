@@ -75,7 +75,7 @@ CREATE TABLE sedes (
     
     INDEX idx_sede_estado (estado),
     INDEX idx_sede_pais (pais)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Tabla de sedes por país';
+) COMMENT='Tabla de sedes por país';
 
 -- =====================================================
 -- 2. TABLAS DE AUTENTICACIÓN (Multi-sede)
@@ -97,7 +97,7 @@ CREATE TABLE roles (
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     UNIQUE KEY unique_rol_sede (sede_id, nombre),
     INDEX idx_roles_sede (sede_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de permisos del sistema
 CREATE TABLE permisos (
@@ -117,7 +117,7 @@ CREATE TABLE permisos (
     UNIQUE KEY unique_permiso_sede (sede_id, nombre),
     INDEX idx_permisos_sede (sede_id),
     INDEX idx_permisos_modulo (modulo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de usuarios del sistema
 CREATE TABLE usuarios (
@@ -153,7 +153,7 @@ CREATE TABLE usuarios (
     UNIQUE KEY unique_email_sede (sede_id, email),
     INDEX idx_usuarios_sede (sede_id),
     INDEX idx_usuarios_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de relación usuario-rol
 CREATE TABLE usuario_roles (
@@ -173,7 +173,7 @@ CREATE TABLE usuario_roles (
     FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE,
     UNIQUE KEY unique_usuario_rol_sede (sede_id, usuario_id, rol_id),
     INDEX idx_usuario_roles_usuario (usuario_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de relación usuario-permiso
 CREATE TABLE usuario_permisos (
@@ -192,7 +192,7 @@ CREATE TABLE usuario_permisos (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     FOREIGN KEY (permiso_id) REFERENCES permisos(id) ON DELETE CASCADE,
     UNIQUE KEY unique_usuario_permiso_sede (sede_id, usuario_id, permiso_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de relación rol-permiso
 CREATE TABLE rol_permisos (
@@ -210,7 +210,7 @@ CREATE TABLE rol_permisos (
     FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permiso_id) REFERENCES permisos(id) ON DELETE CASCADE,
     UNIQUE KEY unique_rol_permiso_sede (sede_id, rol_id, permiso_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de sesiones activas
 CREATE TABLE sesiones (
@@ -231,7 +231,7 @@ CREATE TABLE sesiones (
     UNIQUE KEY unique_token_sede (sede_id, token_sesion),
     INDEX idx_sesiones_usuario (usuario_id),
     INDEX idx_sesiones_activa (activa, fecha_expiracion)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de intentos de acceso
 CREATE TABLE intentos_acceso (
@@ -246,27 +246,8 @@ CREATE TABLE intentos_acceso (
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE SET NULL,
     INDEX idx_intentos_username (username, fecha_intento)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- =====================================================
--- 3. TABLA DE CARGOS (TEMPORAL - REFERENCIA)
--- =====================================================
-CREATE TABLE cargos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    nombre_cargo VARCHAR(100) NOT NULL,
-    descripcion VARCHAR(255) NULL,
-    salario_base DECIMAL(10, 2) NULL,
-    estado INT NOT NULL DEFAULT 1,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creado_por VARCHAR(50) NULL,
-    modificado_por VARCHAR(50) NULL,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_cargo_sede (sede_id, nombre_cargo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='TABLA TEMPORAL - SERÁ ELIMINADA';
-
+);
+ 
 -- =====================================================
 -- 4. TABLAS DEL SISTEMA DE RIFAS
 -- =====================================================
@@ -289,7 +270,7 @@ CREATE TABLE configuracion_sede (
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     UNIQUE KEY unique_config_sede (sede_id, clave),
     INDEX idx_config_sede (sede_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4COMMENT='Configuraciones personalizables por sede (colores, textos, límites, etc.)';
+)COMMENT='Configuraciones personalizables por sede (colores, textos, límites, etc.)';
 
 -- Tabla de ubicaciones de rifa
 CREATE TABLE ubicaciones_rifa (
@@ -324,7 +305,7 @@ CREATE TABLE ubicaciones_rifa (
     FOREIGN KEY (sede_id) REFERENCES sedes(id)  ,
     INDEX idx_ubicaciones_sede (sede_id),
     INDEX idx_ubicaciones_ciudad (ciudad)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de estados de ticket
 CREATE TABLE estados_ticket (
@@ -342,7 +323,7 @@ CREATE TABLE estados_ticket (
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     UNIQUE KEY unique_estado_sede (sede_id, nombre)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de métodos de pago
 CREATE TABLE metodos_pago (
@@ -377,7 +358,7 @@ CREATE TABLE metodos_pago (
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     INDEX idx_metodos_pago_sede (sede_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de categorías de premios
 CREATE TABLE categorias_premios (
@@ -396,7 +377,7 @@ CREATE TABLE categorias_premios (
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     UNIQUE KEY unique_categoria_sede (sede_id, nombre)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de premios
 CREATE TABLE premios (
@@ -443,7 +424,7 @@ CREATE TABLE premios (
     INDEX idx_premios_sede (sede_id),
     INDEX idx_premios_categoria (categoria_id),
     INDEX idx_premios_destacado (es_destacado)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de rifas/sorteos
 CREATE TABLE rifas (
@@ -531,7 +512,7 @@ CREATE TABLE rifas (
     INDEX idx_rifas_premio (premio_id),
     INDEX idx_rifas_estado (estado),
     INDEX idx_rifas_fechas (fecha_inicio_venta, fecha_fin_venta)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla relación rifas-premios (múltiples premios por sorteo)
 CREATE TABLE rifas_premios (
@@ -557,7 +538,7 @@ CREATE TABLE rifas_premios (
     INDEX idx_rifas_premios_rifa (rifa_id),
     INDEX idx_rifas_premios_premio (premio_id),
     INDEX idx_rifas_premios_principal (rifa_id, es_principal)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Premios asociados a cada rifa';
+) COMMENT='Premios asociados a cada rifa';
 
 -- Tabla de tickets (compras de participación)
 CREATE TABLE tickets (
@@ -635,7 +616,7 @@ CREATE TABLE tickets (
     INDEX idx_tickets_numero_boleto (numero_boleto),
     INDEX idx_tickets_canal (canal_venta),
     INDEX idx_tickets_volantario (volantario_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de comprobantes de pago
 CREATE TABLE comprobantes_pago (
@@ -679,7 +660,7 @@ CREATE TABLE comprobantes_pago (
     INDEX idx_comprobantes_sede (sede_id),
     INDEX idx_comprobantes_ticket (ticket_id),
     INDEX idx_comprobantes_estado (estado)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- =====================================================
 -- TABLAS PARA SISTEMA DE NUMERACIÓN Y VOLANTARIOS
@@ -728,7 +709,7 @@ CREATE TABLE numeros_rifa (
     INDEX idx_numeros_estado (estado),
     INDEX idx_numeros_disponibles (rifa_id, estado),
     INDEX idx_numeros_volantario (volantario_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de volantarios (para venta física)
 CREATE TABLE volantarios (
@@ -800,7 +781,7 @@ CREATE TABLE volantarios (
     INDEX idx_volantarios_rifa (rifa_id),
     INDEX idx_volantarios_estado (estado),
     INDEX idx_volantarios_vendedor (asignado_vendedor_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Gestión de volantarios impresos para venta física';
+) COMMENT='Gestión de volantarios impresos para venta física';
 
 -- Tabla de participantes (tickets aprobados listos para sorteo)
 CREATE TABLE participantes (
@@ -829,7 +810,7 @@ CREATE TABLE participantes (
     INDEX idx_participantes_sede (sede_id),
     INDEX idx_participantes_rifa (rifa_id),
     INDEX idx_participantes_numero (rifa_id, numero_participacion)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de intentos de sorteo
 CREATE TABLE intentos_sorteo (
@@ -860,7 +841,7 @@ CREATE TABLE intentos_sorteo (
     INDEX idx_intentos_sede (sede_id),
     INDEX idx_intentos_rifa (rifa_id),
     INDEX idx_intentos_numero (rifa_id, numero_intento)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Tabla de ganadores
 CREATE TABLE ganadores (
@@ -917,7 +898,7 @@ CREATE TABLE ganadores (
     INDEX idx_ganadores_sede (sede_id),
     INDEX idx_ganadores_rifa (rifa_id),
     INDEX idx_ganadores_publicar (publicar_ganador)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- =====================================================
 -- 5. TABLA DE AUDITORÍA
@@ -939,7 +920,7 @@ CREATE TABLE audit_logs (
     INDEX idx_audit_tabla (tabla_afectada, fecha_operacion),
     INDEX idx_audit_usuario (usuario_id, fecha_operacion),
     INDEX idx_audit_fecha (fecha_operacion)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- =====================================================
 -- 6. DATOS INICIALES
@@ -1005,7 +986,7 @@ SELECT id, 'REPORTES_VER', 'Ver reportes', 'REPORTES', 'LEER', 'SYSTEM' FROM sed
 -- Nota: En producción usar un hash real y cambiar contraseña
 INSERT INTO usuarios (sede_id, username, password_hash, email, primer_nombre, apellido_paterno, debe_cambiar_password, estado, creado_por)
 VALUES
-    (1, 'admin', '$2y$10$9rR0ZrEaFxR29HsrlaobmeB8g34E/mAajSvBjnwpYs3rO6lGzB5cG', '@rifas.com', 'Zed', 'Administrador', 1, 1, 'SYSTEM');
+    (1, 'zed_admin', '$2y$10$9rR0ZrEaFxR29HsrlaobmeB8g34E/mAajSvBjnwpYs3rO6lGzB5cG', 'zed_admin@rifas.com', 'zed_admin', 'Administrador', 1, 1, 'SYSTEM');
 
 -- Asignar rol SUPERADMIN al usuario zed_admin
 INSERT INTO usuario_roles (sede_id, usuario_id, rol_id, asignado_por)
@@ -1016,7 +997,7 @@ SELECT
     'SYSTEM'
 FROM usuarios u
 CROSS JOIN roles r
-WHERE u.username = 'admin'
+WHERE u.username = 'zed_admin'
   AND u.sede_id = 1
   AND r.nombre = 'SUPERADMIN'
   AND r.sede_id = 1;

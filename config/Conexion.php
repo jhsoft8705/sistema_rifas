@@ -4,8 +4,7 @@ session_start();
 
 class Conectar
 {
-    protected $dbh;
-
+    protected $dbh; 
     //Solo cambia esto según tu ambiente:
     // 'dev', 'testing' o 'prod'
     private $ambiente = 'dev'; // <-- CAMBIA
@@ -15,17 +14,19 @@ class Conectar
         try {
             if ($this->ambiente == 'dev') {
                 // DESARROLLO
-                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=sorteos_bd", "root", "");
+                 
+                 $conectar = $this->dbh = new PDO("mysql:host=88.223.84.166;dbname=u696088465_bd_sorteos","u696088465_user_sorteos","@2Zq0s>q8P");
+
                 // Establecer zona horaria de Perú
                 $conectar->exec("SET time_zone = '-05:00';");
             } elseif ($this->ambiente == 'testing') {
                 // TESTING
-                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=sorteos_bd", "root", "");
+                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=db_rifas", "root", "");
                 // Establecer zona horaria de Perú
                 $conectar->exec("SET time_zone = '-05:00';");
             } else {
                 // PRODUCCION
-                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=sorteos_bd", "root", "");
+                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=db_rifas", "root", "");
                 // Establecer zona horaria de Perú
                 $conectar->exec("SET time_zone = '-05:00';");
             }
@@ -51,7 +52,7 @@ class Conectar
         } elseif ($instance->ambiente == 'testing') {
             return "/testing/";
         } else {
-            return "/frm.sorteos_bd.gob.pe/"; // prod
+            return "/frm.db_rifas.gob.pe/"; // prod
         }
     }
  
