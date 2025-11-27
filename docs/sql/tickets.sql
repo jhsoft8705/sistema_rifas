@@ -26,6 +26,7 @@ CREATE PROCEDURE register_ticket (
     IN p_numeros_seleccionados TEXT,
     IN p_ip_compra VARCHAR(45),
     IN p_canal_venta VARCHAR(20),
+    IN p_estado_inicial VARCHAR(30),
     OUT p_ticket_id INT,
     OUT p_codigo_ticket VARCHAR(50),
     OUT p_mensaje VARCHAR(255)
@@ -49,6 +50,7 @@ proc: BEGIN
     DECLARE v_numero_texto VARCHAR(20);
     DECLARE v_posicion INT DEFAULT 1;
     DECLARE v_posicion_siguiente INT;
+    DECLARE v_estado_inicial VARCHAR(30);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -119,6 +121,19 @@ proc: BEGIN
         );
     END WHILE;
 
+    -- Determinar estado inicial según canal de venta o parámetro proporcionado
+    -- Si p_estado_inicial es NULL, determinar según canal_venta:
+    --   - WEB: PENDIENTE_PAGO (usuario final debe subir comprobante)
+    --   - ADMINISTRATIVO: PENDIENTE_PAGO (por defecto, admin puede cambiar después)
+    -- Si p_estado_inicial tiene valor, usarlo directamente
+    IF p_estado_inicial IS NOT NULL AND p_estado_inicial != '' THEN
+        SET v_estado_inicial = p_estado_inicial;
+    ELSEIF IFNULL(p_canal_venta, 'WEB') = 'WEB' THEN
+        SET v_estado_inicial = 'PENDIENTE_PAGO';
+    ELSE
+        SET v_estado_inicial = 'PENDIENTE_PAGO';
+    END IF;
+
     -- Crear ticket principal
     INSERT INTO tickets (
         sede_id,
@@ -156,7 +171,7 @@ proc: BEGIN
         p_precio_pagado,
         p_ip_compra,
         IFNULL(p_canal_venta, 'WEB'),
-        'PENDIENTE_PAGO',
+        v_estado_inicial,
         NOW(),
         NOW(),
         CONCAT(p_nombres, ' ', p_apellidos)
@@ -199,15 +214,25 @@ proc: BEGIN
                 LIMIT 1;
                 
                 IF v_numero_id IS NOT NULL THEN
-                    -- Reservar número
-                    UPDATE numeros_rifa
-                    SET estado = 'RESERVADO',
-                        ticket_id = p_ticket_id,
-                        reservado_hasta = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
-                        reservado_por_sesion = CONCAT('TICKET-', p_ticket_id),
-                        fecha_reserva = NOW(),
-                        fecha_modificacion = NOW()
-                    WHERE id = v_numero_id;
+                    -- Si el ticket está aprobado directamente, marcar número como VENDIDO
+                    -- Si está pendiente, marcar como RESERVADO
+                    IF v_estado_inicial = 'APROBADO' THEN
+                        UPDATE numeros_rifa
+                        SET estado = 'VENDIDO',
+                            ticket_id = p_ticket_id,
+                            fecha_venta = NOW(),
+                            fecha_modificacion = NOW()
+                        WHERE id = v_numero_id;
+                    ELSE
+                        UPDATE numeros_rifa
+                        SET estado = 'RESERVADO',
+                            ticket_id = p_ticket_id,
+                            reservado_hasta = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
+                            reservado_por_sesion = CONCAT('TICKET-', p_ticket_id),
+                            fecha_reserva = NOW(),
+                            fecha_modificacion = NOW()
+                        WHERE id = v_numero_id;
+                    END IF;
                     
                     -- Actualizar ticket con número
                     UPDATE tickets
@@ -232,14 +257,24 @@ proc: BEGIN
         LIMIT 1;
         
         IF v_numero_id IS NOT NULL THEN
-            UPDATE numeros_rifa
-            SET estado = 'RESERVADO',
-                ticket_id = p_ticket_id,
-                reservado_hasta = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
-                reservado_por_sesion = CONCAT('TICKET-', p_ticket_id),
-                fecha_reserva = NOW(),
-                fecha_modificacion = NOW()
-            WHERE id = v_numero_id;
+            -- Si el ticket está aprobado directamente, marcar número como VENDIDO
+            IF v_estado_inicial = 'APROBADO' THEN
+                UPDATE numeros_rifa
+                SET estado = 'VENDIDO',
+                    ticket_id = p_ticket_id,
+                    fecha_venta = NOW(),
+                    fecha_modificacion = NOW()
+                WHERE id = v_numero_id;
+            ELSE
+                UPDATE numeros_rifa
+                SET estado = 'RESERVADO',
+                    ticket_id = p_ticket_id,
+                    reservado_hasta = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
+                    reservado_por_sesion = CONCAT('TICKET-', p_ticket_id),
+                    fecha_reserva = NOW(),
+                    fecha_modificacion = NOW()
+                WHERE id = v_numero_id;
+            END IF;
             
             UPDATE tickets
             SET numero_boleto = v_numero_formateado,
@@ -250,7 +285,13 @@ proc: BEGIN
     END IF;
 
     COMMIT;
-    SET p_mensaje = 'Ticket creado correctamente. Sube tu comprobante de pago para validar.';
+    
+    -- Mensaje según estado inicial
+    IF v_estado_inicial = 'APROBADO' THEN
+        SET p_mensaje = 'Ticket creado y aprobado correctamente. El participante puede participar en el sorteo.';
+    ELSE
+        SET p_mensaje = 'Ticket creado correctamente. Sube tu comprobante de pago para validar.';
+    END IF;
 END proc //
 
 -- ==========================================================

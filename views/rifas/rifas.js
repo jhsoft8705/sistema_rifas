@@ -47,7 +47,6 @@ let rifasData = [];
 let modalRifa = null;
 let modalPremios = null;
 let modalNumeros = null;
-let modalComprarNumero = null;
 
 $(document).ready(async () => {
     if (!Auth.requireAuth()) return;
@@ -56,7 +55,6 @@ $(document).ready(async () => {
     modalRifa = new bootstrap.Modal(document.getElementById('modal_rifa'));
     modalPremios = new bootstrap.Modal(document.getElementById('modal_premios_rifa'));
     modalNumeros = new bootstrap.Modal(document.getElementById('modal_numeros_rifa'));
-    modalComprarNumero = new bootstrap.Modal(document.getElementById('modal_comprar_numero'));
 
     inicializarSelectSede();
     inicializarFlatpickr();
@@ -249,26 +247,11 @@ function inicializarEventosUI() {
         event.preventDefault();
         await guardarEstadoNumero();
     });
-    $('#btn_comprar_numero').on('click', function() {
-        const numeroId = $('#numero_id_hidden').val();
-        const rifaId = $('#numeros_rifa_id_hidden').val();
-        const numeroFormateado = $('#numero_formateado_resumen').val();
-        if (!numeroId || !rifaId) {
-            SafeUtils.showToast('Selecciona un número primero', 'warning');
-            return;
-        }
-        abrirModalComprarNumero(numeroId, rifaId, numeroFormateado);
-    });
-    $('#form_comprar_numero').on('submit', async (event) => {
-        event.preventDefault();
-        await registrarCompraNumero();
-    });
     $('#btn_limpiar_participante').on('click', function() {
         $('#form_asignar_numero')[0].reset();
         $('#numero_id_hidden').val('');
         $('#numero_formateado_resumen').val('');
         $('#info_participante_existente').addClass('d-none');
-        $('#btn_comprar_numero').addClass('d-none');
         $('#btn_guardar_numero').removeClass('d-none');
     });
     $('#btn_filtrar_numeros').on('click', () => cargarNumerosRifa($('#numeros_rifa_id_hidden').val()));
@@ -1039,7 +1022,6 @@ function seleccionarNumero(data) {
         $('#numero_participante_documento').val(data.numero_documento || '');
         $('#numero_participante_email').val(data.email || '');
         $('#numero_participante_telefono').val(data.telefono || '');
-        $('#btn_comprar_numero').addClass('d-none');
         $('#btn_guardar_numero').removeClass('d-none');
     } else {
         $('#info_participante_existente').addClass('d-none');
@@ -1050,14 +1032,8 @@ function seleccionarNumero(data) {
         $('#numero_participante_email').val('');
         $('#numero_participante_telefono').val('');
         
-        // Mostrar botón comprar si está disponible
-        if (data.estado === 'DISPONIBLE') {
-            $('#btn_comprar_numero').removeClass('d-none');
-            $('#btn_guardar_numero').addClass('d-none');
-        } else {
-            $('#btn_comprar_numero').addClass('d-none');
-            $('#btn_guardar_numero').removeClass('d-none');
-        }
+        // Mostrar botón guardar para actualizar datos
+        $('#btn_guardar_numero').removeClass('d-none');
     }
 }
 
@@ -1105,82 +1081,6 @@ async function guardarEstadoNumero() {
     }
 }
 
-function abrirModalComprarNumero(numeroId, rifaId, numeroFormateado) {
-    $('#compra_numero_id_hidden').val(numeroId);
-    $('#compra_rifa_id_hidden').val(rifaId);
-    $('#compra_numero_formateado').text(numeroFormateado);
-    $('#form_comprar_numero')[0].reset();
-    $('#compra_pais').val('Perú');
-    modalComprarNumero.show();
-}
-
-async function registrarCompraNumero() {
-    const form = document.getElementById('form_comprar_numero');
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        return;
-    }
-
-    const numeroId = parseInt($('#compra_numero_id_hidden').val(), 10);
-    const rifaId = parseInt($('#compra_rifa_id_hidden').val(), 10);
-    
-    // Obtener información de la rifa desde rifaSeleccionada o rifasData
-    const rifa = rifaSeleccionada || rifasData.find(r => r.id === rifaId);
-    
-    if (!rifa) {
-        SafeUtils.showToast('No se pudo obtener información de la rifa', 'error');
-        return;
-    }
-
-    // Obtener el número entero desde la tabla de números
-    let numeroEntero = numeroId;
-    if (tablaNumeros) {
-        const numerosTabla = tablaNumeros.rows().data().toArray();
-        const numeroEncontrado = numerosTabla.find(n => n.id === numeroId);
-        if (numeroEncontrado && numeroEncontrado.numero_entero) {
-            numeroEntero = numeroEncontrado.numero_entero;
-        }
-    }
-
-    const payload = {
-        sede_id: userInfo.sede_id,
-        rifa_id: rifaId,
-        nombres: $('#compra_nombres').val().trim(),
-        apellidos: $('#compra_apellidos').val().trim(),
-        tipo_documento: $('#compra_tipo_documento').val(),
-        numero_documento: $('#compra_numero_documento').val().trim(),
-        email: $('#compra_email').val().trim(),
-        telefono: $('#compra_telefono').val().trim(),
-        ciudad: $('#compra_ciudad').val().trim() || null,
-        pais: $('#compra_pais').val().trim() || 'Perú',
-        precio_pagado: parseFloat(rifa.precio_ticket),
-        cantidad_tickets: 1,
-        numeros_seleccionados: numeroEntero.toString(),
-        canal_venta: 'ADMIN'
-    };
-
-    try {
-        SafeUtils.showLoading('Registrando compra...');
-        const respuesta = await API.post('tickets/create', payload);
-        SafeUtils.closeLoading();
-
-        if (respuesta?.ok) {
-            SafeUtils.showToast('Compra registrada correctamente. El participante debe subir su comprobante de pago.', 'success');
-            modalComprarNumero.hide();
-            await cargarNumerosRifa(rifaId);
-            $('#form_asignar_numero')[0].reset();
-            $('#numero_id_hidden').val('');
-            $('#numero_formateado_resumen').val('');
-            $('#info_participante_existente').addClass('d-none');
-        } else {
-            SafeUtils.showToast(respuesta?.msj || 'No se pudo registrar la compra', 'error');
-        }
-    } catch (error) {
-        SafeUtils.closeLoading();
-        SafeUtils.showToast('Error al registrar la compra', 'error');
-        console.error(error);
-    }
-}
 
 function imprimirCartillas(numerosPorPagina) {
     if (!rifaSeleccionada) {

@@ -12,7 +12,7 @@ class Ticket extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL register_ticket(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @ticket_id, @codigo_ticket, @mensaje)";
+            $sql = "CALL register_ticket(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @ticket_id, @codigo_ticket, @mensaje)";
             $query = $conectar->prepare($sql);
             
             $query->bindValue(1, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);
@@ -31,6 +31,7 @@ class Ticket extends Conectar
             $this->bindNullable($query, 14, isset($data['numeros_seleccionados']) ? json_encode($data['numeros_seleccionados']) : null, PDO::PARAM_STR);
             $this->bindNullable($query, 15, $this->getValue($data, 'ip_compra'), PDO::PARAM_STR);
             $this->bindNullable($query, 16, $this->getValue($data, 'canal_venta', 'WEB'), PDO::PARAM_STR);
+            $this->bindNullable($query, 17, $this->getValue($data, 'estado_inicial'), PDO::PARAM_STR);
             
             $query->execute();
             $query->closeCursor();

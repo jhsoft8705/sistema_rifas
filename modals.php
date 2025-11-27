@@ -75,13 +75,27 @@
                                                         <p class="text-muted mb-4">Por favor, ingresa tus datos para participar</p>
                                                     </div>
                                                     
-                                                    <div class="mb-3">
-                                                        <label for="nombre_completo" class="form-label">
-                                                            Nombre Completo <span class="text-danger">*</span>
-                                                        </label>
-                                                        <input type="text" class="form-control" id="nombre_completo" 
-                                                               name="nombre_completo" placeholder="Ingrese su nombre completo">
-                                                        <div class="text-danger small mt-1" id="nombre_completo_error" style="display: none;"></div>
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="nombres" class="form-label">
+                                                                    Nombres <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="text" class="form-control" id="nombres" 
+                                                                       name="nombres" placeholder="Ingrese sus nombres" required>
+                                                                <div class="text-danger small mt-1" id="nombres_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="mb-3">
+                                                                <label for="apellidos" class="form-label">
+                                                                    Apellidos <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="text" class="form-control" id="apellidos" 
+                                                                       name="apellidos" placeholder="Ingrese sus apellidos" required>
+                                                                <div class="text-danger small mt-1" id="apellidos_error" style="display: none;"></div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     
                                                     <div class="row">

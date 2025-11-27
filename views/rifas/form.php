@@ -431,11 +431,6 @@
                                             title="Limpiar formulario">
                                             <i class="ri-eraser-line me-1"></i>Limpiar
                                         </button>
-                                        <button type="button" class="btn btn-success d-none" id="btn_comprar_numero"
-                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="Registrar compra de este número">
-                                            <i class="ri-shopping-cart-line me-1"></i>Comprar
-                                        </button>
                                         <button type="submit" class="btn btn-primary" id="btn_guardar_numero"
                                             data-bs-toggle="tooltip" data-bs-placement="top"
                                             title="Guardar cambios del número">
@@ -449,83 +444,6 @@
                 </div>
 
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para registrar compra de número -->
-<div class="modal fade" id="modal_comprar_numero" tabindex="-1" aria-labelledby="modal_comprar_numero_label" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal_comprar_numero_label">
-                    <i class="ri-shopping-cart-line me-2"></i>Registrar Compra de Número
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="form_comprar_numero" novalidate>
-                <div class="modal-body">
-                    <input type="hidden" id="compra_numero_id_hidden">
-                    <input type="hidden" id="compra_rifa_id_hidden">
-                    <div class="alert alert-info" role="alert">
-                        <i class="ri-information-line me-2"></i>
-                        <strong>Número seleccionado:</strong> <span id="compra_numero_formateado" class="fw-semibold"></span>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="compra_nombres" class="form-label">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="compra_nombres" name="compra_nombres" required placeholder="Nombres completos">
-                            <div class="invalid-feedback" id="compra_nombres_error"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="compra_apellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="compra_apellidos" name="compra_apellidos" required placeholder="Apellidos completos">
-                            <div class="invalid-feedback" id="compra_apellidos_error"></div>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="compra_tipo_documento" class="form-label">Tipo documento <span class="text-danger">*</span></label>
-                            <select class="form-select" id="compra_tipo_documento" name="compra_tipo_documento" required>
-                                <option value="">Seleccionar</option>
-                                <option value="DNI">DNI</option>
-                                <option value="CE">CE</option>
-                                <option value="Pasaporte">Pasaporte</option>
-                            </select>
-                            <div class="invalid-feedback" id="compra_tipo_documento_error"></div>
-                        </div>
-                        <div class="col-md-8">
-                            <label for="compra_numero_documento" class="form-label">N° Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="compra_numero_documento" name="compra_numero_documento" required placeholder="12345678">
-                            <div class="invalid-feedback" id="compra_numero_documento_error"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="compra_email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="compra_email" name="compra_email" required placeholder="correo@ejemplo.com">
-                            <div class="invalid-feedback" id="compra_email_error"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="compra_telefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="compra_telefono" name="compra_telefono" required placeholder="+51 999 999 999">
-                            <div class="invalid-feedback" id="compra_telefono_error"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="compra_ciudad" class="form-label">Ciudad</label>
-                            <input type="text" class="form-control" id="compra_ciudad" name="compra_ciudad" placeholder="Lima">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="compra_pais" class="form-label">País</label>
-                            <input type="text" class="form-control" id="compra_pais" name="compra_pais" placeholder="Perú" value="Perú">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="ri-close-line me-1"></i>Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-success" id="btn_confirmar_compra">
-                        <i class="ri-check-line me-1"></i>Confirmar Compra
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

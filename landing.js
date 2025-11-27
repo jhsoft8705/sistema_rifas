@@ -940,7 +940,9 @@ document.head.appendChild(style);
             });
             
             document.getElementById('resumen_rifa_nombre').textContent = rifaNombreGlobal || 'Rifa';
-            document.getElementById('resumen_nombre').textContent = document.getElementById('nombre_completo').value || '-';
+            const nombres = document.getElementById('nombres').value || '';
+            const apellidos = document.getElementById('apellidos').value || '';
+            document.getElementById('resumen_nombre').textContent = `${nombres} ${apellidos}`.trim() || '-';
             document.getElementById('resumen_email').textContent = document.getElementById('email_participante').value || '-';
             document.getElementById('resumen_telefono').textContent = document.getElementById('telefono').value || '-';
             document.getElementById('resumen_documento').textContent = documento;
@@ -991,7 +993,8 @@ document.head.appendChild(style);
         
         // Función para validar Tab 1 - Información Personal
         function validarTabPersonal() {
-            const nombreInput = document.getElementById('nombre_completo');
+            const nombresInput = document.getElementById('nombres');
+            const apellidosInput = document.getElementById('apellidos');
             const emailInput = document.getElementById('email_participante');
             const telefonoInput = document.getElementById('telefono');
             const tipoDocumentoInput = document.getElementById('tipo_documento');
@@ -1000,7 +1003,8 @@ document.head.appendChild(style);
             const estadoInput = document.getElementById('estado');
             const direccionInput = document.getElementById('direccion_envio');
             
-            const nombreCompleto = nombreInput.value.trim();
+            const nombres = nombresInput.value.trim();
+            const apellidos = apellidosInput.value.trim();
             const email = emailInput.value.trim();
             const telefono = telefonoInput.value.trim();
             const tipoDocumento = tipoDocumentoInput.value.trim();
@@ -1010,7 +1014,8 @@ document.head.appendChild(style);
             const direccion = direccionInput.value.trim();
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             
-            const nombreValido = nombreCompleto.length >= 3;
+            const nombresValido = nombres.length >= 2;
+            const apellidosValido = apellidos.length >= 2;
             const emailValido = emailRegex.test(email);
             const telefonoValido = telefono.length >= 8;
             const tipoDocumentoValido = tipoDocumento !== '';
@@ -1019,16 +1024,30 @@ document.head.appendChild(style);
             const estadoValido = estado.length >= 3;
             const direccionValida = direccion.length >= 10;
             
-            // Feedback visual para nombre
-            if (nombreCompleto.length > 0) {
-                if (nombreValido) {
-                    nombreInput.classList.remove('border-danger');
-                    nombreInput.classList.add('border-success');
+            // Feedback visual para nombres
+            if (nombres.length > 0) {
+                if (nombresValido) {
+                    nombresInput.classList.remove('border-danger');
+                    nombresInput.classList.add('border-success');
                 } else {
-                    nombreInput.classList.remove('border-success');
+                    nombresInput.classList.remove('border-success');
+                    nombresInput.classList.add('border-danger');
                 }
             } else {
-                nombreInput.classList.remove('border-success', 'border-danger');
+                nombresInput.classList.remove('border-success', 'border-danger');
+            }
+            
+            // Feedback visual para apellidos
+            if (apellidos.length > 0) {
+                if (apellidosValido) {
+                    apellidosInput.classList.remove('border-danger');
+                    apellidosInput.classList.add('border-success');
+                } else {
+                    apellidosInput.classList.remove('border-success');
+                    apellidosInput.classList.add('border-danger');
+                }
+            } else {
+                apellidosInput.classList.remove('border-success', 'border-danger');
             }
             
             // Feedback visual para email
@@ -1114,25 +1133,46 @@ document.head.appendChild(style);
                 direccionInput.classList.remove('border-success', 'border-danger');
             }
             
-            const esValido = nombreValido && emailValido && telefonoValido && tipoDocumentoValido && numeroDocumentoValido && estadoValido && direccionValida;
+            const esValido = nombresValido && apellidosValido && emailValido && telefonoValido && tipoDocumentoValido && numeroDocumentoValido && estadoValido && direccionValida;
+            
+            // Debug logging
+            console.log('🔍 [DEBUG] validarTabPersonal() - Validación:', {
+                nombres: nombres,
+                nombresValido: nombresValido,
+                apellidos: apellidos,
+                apellidosValido: apellidosValido,
+                emailValido: emailValido,
+                telefonoValido: telefonoValido,
+                tipoDocumentoValido: tipoDocumentoValido,
+                numeroDocumentoValido: numeroDocumentoValido,
+                estadoValido: estadoValido,
+                direccionValida: direccionValida,
+                esValido: esValido
+            });
             
             // Habilitar o deshabilitar botón
             const btnContinuar = document.getElementById('btn_continuar_personal');
-            btnContinuar.disabled = !esValido;
+            if (btnContinuar) {
+                btnContinuar.disabled = !esValido;
+            } else {
+                console.error('❌ [ERROR] No se encontró el botón btn_continuar_personal');
+            }
             
             // Cambiar el texto del botón si está deshabilitado (responsive)
-            if (!esValido) {
-                btnContinuar.innerHTML = `
-                    <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
-                    <span class="d-none d-sm-inline">Complete los datos obligatorios</span>
-                    <span class="d-inline d-sm-none">Complete datos</span>
-                `;
-            } else {
-                btnContinuar.innerHTML = `
-                    <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
-                    <span class="d-none d-sm-inline">Continuar a tu Orden</span>
-                    <span class="d-inline d-sm-none">Continuar</span>
-                `;
+            if (btnContinuar) {
+                if (!esValido) {
+                    btnContinuar.innerHTML = `
+                        <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
+                        <span class="d-none d-sm-inline">Complete los datos obligatorios</span>
+                        <span class="d-inline d-sm-none">Complete datos</span>
+                    `;
+                } else {
+                    btnContinuar.innerHTML = `
+                        <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
+                        <span class="d-none d-sm-inline">Continuar a tu Orden</span>
+                        <span class="d-inline d-sm-none">Continuar</span>
+                    `;
+                }
             }
             
             return esValido;
@@ -1343,37 +1383,44 @@ document.head.appendChild(style);
         // ======= EVENTOS DE VALIDACIÓN EN TIEMPO REAL =======
         
         // Validar campos del Tab 1 en tiempo real
-        document.getElementById('nombre_completo').addEventListener('input', function() {
-            validarTabPersonal();
-        });
+        // Usar delegación de eventos para asegurar que funcione incluso si los elementos se cargan después
+        const modalComprarTicket = document.getElementById('modal_comprar_ticket');
+        if (modalComprarTicket) {
+            modalComprarTicket.addEventListener('input', function(e) {
+                const targetId = e.target.id;
+                if (['nombres', 'apellidos', 'email_participante', 'telefono', 'numero_documento', 'ciudad', 'estado', 'direccion_envio'].includes(targetId)) {
+                    validarTabPersonal();
+                }
+            });
+            
+            modalComprarTicket.addEventListener('change', function(e) {
+                const targetId = e.target.id;
+                if (['tipo_documento'].includes(targetId)) {
+                    validarTabPersonal();
+                }
+            });
+        }
         
-        document.getElementById('email_participante').addEventListener('input', function() {
-            validarTabPersonal();
-        });
+        // También agregar listeners directos si los elementos existen
+        const nombresEl = document.getElementById('nombres');
+        const apellidosEl = document.getElementById('apellidos');
+        const emailEl = document.getElementById('email_participante');
+        const telefonoEl = document.getElementById('telefono');
+        const tipoDocEl = document.getElementById('tipo_documento');
+        const numDocEl = document.getElementById('numero_documento');
+        const ciudadEl = document.getElementById('ciudad');
+        const estadoEl = document.getElementById('estado');
+        const direccionEl = document.getElementById('direccion_envio');
         
-        document.getElementById('telefono').addEventListener('input', function() {
-            validarTabPersonal();
-        });
-        
-        document.getElementById('tipo_documento').addEventListener('change', function() {
-            validarTabPersonal();
-        });
-        
-        document.getElementById('numero_documento').addEventListener('input', function() {
-            validarTabPersonal();
-        });
-        
-        document.getElementById('ciudad').addEventListener('input', function() {
-            validarTabPersonal();
-        });
-        
-        document.getElementById('estado').addEventListener('input', function() {
-            validarTabPersonal();
-        });
-        
-        document.getElementById('direccion_envio').addEventListener('input', function() {
-            validarTabPersonal();
-        });
+        if (nombresEl) nombresEl.addEventListener('input', validarTabPersonal);
+        if (apellidosEl) apellidosEl.addEventListener('input', validarTabPersonal);
+        if (emailEl) emailEl.addEventListener('input', validarTabPersonal);
+        if (telefonoEl) telefonoEl.addEventListener('input', validarTabPersonal);
+        if (tipoDocEl) tipoDocEl.addEventListener('change', validarTabPersonal);
+        if (numDocEl) numDocEl.addEventListener('input', validarTabPersonal);
+        if (ciudadEl) ciudadEl.addEventListener('input', validarTabPersonal);
+        if (estadoEl) estadoEl.addEventListener('input', validarTabPersonal);
+        if (direccionEl) direccionEl.addEventListener('input', validarTabPersonal);
         
         // Validar cantidad de tickets en tiempo real (este listener se maneja más abajo también)
         // Se mantiene aquí solo para validación rápida, pero el listener completo está más abajo
@@ -1535,10 +1582,17 @@ document.head.appendChild(style);
             limpiarErrores();
             let esValido = true;
 
-            // Validar nombre completo
-            const nombreCompleto = document.getElementById('nombre_completo').value.trim();
-            if (nombreCompleto === '') {
-                mostrarError('nombre_completo', 'Por favor, ingrese su nombre completo');
+            // Validar nombres
+            const nombres = document.getElementById('nombres').value.trim();
+            if (nombres === '') {
+                mostrarError('nombres', 'Por favor, ingrese sus nombres');
+                esValido = false;
+            }
+            
+            // Validar apellidos
+            const apellidos = document.getElementById('apellidos').value.trim();
+            if (apellidos === '') {
+                mostrarError('apellidos', 'Por favor, ingrese sus apellidos');
                 esValido = false;
             }
 
@@ -1735,10 +1789,8 @@ document.head.appendChild(style);
 
             // Obtener datos del formulario
             const rifaId = document.getElementById('rifa_id').value;
-            const nombreCompleto = document.getElementById('nombre_completo').value.trim();
-            const partesNombre = nombreCompleto.split(' ');
-            const nombres = partesNombre[0] || '';
-            const apellidos = partesNombre.slice(1).join(' ') || '';
+            const nombres = document.getElementById('nombres').value.trim();
+            const apellidos = document.getElementById('apellidos').value.trim();
             
             // Obtener precio del total
             const totalPagarText = document.getElementById('total_pagar').textContent;
@@ -1770,7 +1822,8 @@ document.head.appendChild(style);
                 pais: 'Perú', // TODO: Obtener de configuración
                 precio_pagado: precioPagado,
                 cantidad_tickets: parseInt(document.getElementById('cantidad_tickets').value) || 1,
-                numeros_seleccionados: numerosSeleccionados
+                numeros_seleccionados: numerosSeleccionados,
+                canal_venta: 'WEB' // Usuario final comprando desde landing
             };
             
             console.log('Enviando datos de compra:', datosCompra);
@@ -1933,8 +1986,20 @@ document.head.appendChild(style);
         
         // Validar estado inicial cuando se muestran los tabs
         document.getElementById('pills-personal-tab').addEventListener('shown.bs.tab', function() {
-            validarTabPersonal();
+            console.log('🔵 [DEBUG] Tab 1 (Personal) - MOSTRADO, ejecutando validación...');
+            setTimeout(() => {
+                validarTabPersonal();
+            }, 50);
         });
+        
+        // Validar también cuando se carga la página si el tab está activo
+        setTimeout(() => {
+            const personalTab = document.getElementById('pills-personal-tab');
+            if (personalTab && personalTab.classList.contains('active')) {
+                console.log('🔵 [DEBUG] Tab 1 está activo al cargar, ejecutando validación inicial...');
+                validarTabPersonal();
+            }
+        }, 200);
         
         document.getElementById('pills-order-tab').addEventListener('shown.bs.tab', function() {
             console.log('🔵 [DEBUG] Tab 2 (Tu Orden) - MOSTRADO');
