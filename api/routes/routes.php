@@ -11,6 +11,8 @@ require_once(__DIR__ . "/routes_premios.php");
 require_once(__DIR__ . "/routes_categorias_premios.php");
 require_once(__DIR__ . "/routes_rifas.php");
 require_once(__DIR__ . "/routes_tickets.php");
+require_once(__DIR__ . "/routes_personas.php");
+require_once(__DIR__ . "/routes_juegos.php");
 
 function Routes(): void
 {
@@ -73,6 +75,14 @@ function Routes(): void
 
         case strpos($url, 'api/tickets') === 0:
             RoutesTickets($url, $method);
+            break;
+
+        case strpos($url, 'api/personas') === 0:
+            RoutesPersonas($url, $method);
+            break;
+
+        case strpos($url, 'api/juegos') === 0:
+            RoutesJuegos($url, $method);
             break;
  
         default:

@@ -17,7 +17,7 @@
                                 <!-- Columna Izquierda - Formulario con Tabs -->
                                 <div class="col-xl-8">
                                     <div class="card">
-                                        <div class="card-body checkout-tab">
+                                        <div class="card-body">
                                             
                                             <!-- Navigation Tabs -->
                                             <div class="step-arrow-nav mt-n3 mx-n3 mb-3">
@@ -27,9 +27,8 @@
                                                                 data-bs-toggle="pill" data-bs-target="#pills-personal" 
                                                                 type="button" role="tab" aria-controls="pills-personal" 
                                                                 aria-selected="true" data-position="0">
-                                                            <i class="ri-user-2-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
-                                                            <span class="d-none d-sm-inline">Información</span>
-                                                            <span class="d-inline d-sm-none"><i class="ri-user-2-line me-1"></i>Info</span>
+                                                            <i class="ri-user-2-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2"></i> 
+                                                            <span>Información Personal</span>
                                                         </button>
                                                     </li>
                                                     <li class="nav-item" role="presentation">
@@ -37,9 +36,8 @@
                                                                 data-bs-toggle="pill" data-bs-target="#pills-order" 
                                                                 type="button" role="tab" aria-controls="pills-order" 
                                                                 aria-selected="false" data-position="1" disabled>
-                                                            <i class="ri-shopping-cart-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
-                                                            <span class="d-none d-sm-inline">Tu Orden</span>
-                                                            <span class="d-inline d-sm-none"><i class="ri-shopping-cart-line me-1"></i>Orden</span>
+                                                            <i class="ri-shopping-cart-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2"></i> 
+                                                            <span>Tu Orden</span>
                                                         </button>
                                                     </li>
                                                     <li class="nav-item" role="presentation">
@@ -47,9 +45,8 @@
                                                                 data-bs-toggle="pill" data-bs-target="#pills-payment" 
                                                                 type="button" role="tab" aria-controls="pills-payment" 
                                                                 aria-selected="false" data-position="2" disabled>
-                                                            <i class="ri-bank-card-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
-                                                            <span class="d-none d-sm-inline">Pago</span>
-                                                            <span class="d-inline d-sm-none"><i class="ri-bank-card-line me-1"></i>Pago</span>
+                                                            <i class="ri-bank-card-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2"></i> 
+                                                            <span>Pago</span>
                                                         </button>
                                                     </li>
                                                     <li class="nav-item" role="presentation">
@@ -57,9 +54,8 @@
                                                                 data-bs-toggle="pill" data-bs-target="#pills-finish" 
                                                                 type="button" role="tab" aria-controls="pills-finish" 
                                                                 aria-selected="false" data-position="3" disabled>
-                                                            <i class="ri-checkbox-circle-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2 d-none d-sm-inline-flex"></i> 
-                                                            <span class="d-none d-sm-inline">Confirmar</span>
-                                                            <span class="d-inline d-sm-none"><i class="ri-checkbox-circle-line me-1"></i>OK</span>
+                                                            <i class="ri-checkbox-circle-line fs-16 p-2 bg-soft-primary text-primary rounded-circle align-middle me-2"></i> 
+                                                            <span>Confirmar</span>
                                                         </button>
                                                     </li>
                                                 </ul>
@@ -188,8 +184,7 @@
                                                         <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" 
                                                                 data-nexttab="pills-order-tab" id="btn_continuar_personal" disabled>
                                                             <i class="ri-shopping-cart-line label-icon align-middle fs-16 ms-2"></i>
-                                                            <span class="d-none d-sm-inline">Continuar a tu Orden</span>
-                                                            <span class="d-inline d-sm-none">Continuar</span>
+                                                            Continuar a tu Orden
                                                         </button>
                                                     </div>
                                                 </div>
@@ -316,14 +311,12 @@
                                                         <button type="button" class="btn btn-light btn-label previestab" 
                                                                 data-previous="pills-personal-tab">
                                                             <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
-                                                            <span class="d-none d-sm-inline">Volver a Información Personal</span>
-                                                            <span class="d-inline d-sm-none">Volver</span>
+                                                            Volver
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" 
                                                                 data-nexttab="pills-payment-tab" id="btn_continuar_orden">
                                                             <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>
-                                                            <span class="d-none d-sm-inline">Continuar a Pago</span>
-                                                            <span class="d-inline d-sm-none">Continuar</span>
+                                                            Continuar a Pago
                                                         </button>
                                                     </div>
                                                 </div>
@@ -475,14 +468,12 @@
                                                         <button type="button" class="btn btn-light btn-label previestab" 
                                                                 data-previous="pills-order-tab">
                                                             <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
-                                                            <span class="d-none d-sm-inline">Volver a tu Orden</span>
-                                                            <span class="d-inline d-sm-none">Volver</span>
+                                                            Volver
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" 
                                                                 data-nexttab="pills-finish-tab" id="btn_continuar_pago">
                                                             <i class="ri-checkbox-circle-line label-icon align-middle fs-16 ms-2"></i>
-                                                            <span class="d-none d-sm-inline">Revisar Orden</span>
-                                                            <span class="d-inline d-sm-none">Continuar</span>
+                                                            Continuar a Confirmar
                                                         </button>
                                                     </div>
                                                 </div>
@@ -548,11 +539,11 @@
                                                                         </tr>
                                                                         <tr>
                                                                             <td class="text-muted">Precio por Ticket:</td>
-                                                                            <td class="text-end" id="resumen_precio">$0.00</td>
+                                                                            <td class="text-end" id="resumen_precio">S/ 0.00</td>
                                                                         </tr>
                                                                         <tr class="border-top">
                                                                             <td class="fw-semibold fs-15">Total a Pagar:</td>
-                                                                            <td class="text-end fw-bold text-success fs-18" id="resumen_total">$0.00</td>
+                                                                            <td class="text-end fw-bold text-success fs-18" id="resumen_total">S/ 0.00</td>
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -575,13 +566,11 @@
                                                         <button type="button" class="btn btn-light btn-label previestab" 
                                                                 data-previous="pills-payment-tab">
                                                             <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
-                                                            <span class="d-none d-sm-inline">Volver a Pago</span>
-                                                            <span class="d-inline d-sm-none">Volver</span>
+                                                            Volver
                                                         </button>
                                                         <button type="submit" class="btn btn-success btn-label right ms-auto" id="btn_realizar_compra" disabled>
                                                             <i class="ri-shopping-bag-line label-icon align-middle fs-16 ms-2"></i>
-                                                            <span id="btn_compra_text" class="d-none d-sm-inline">Confirmar Compra</span>
-                                                            <span id="btn_compra_text_mobile" class="d-inline d-sm-none">Confirmar</span>
+                                                            Confirmar Compra
                                                         </button>
                                                     </div>
                                                 </div>
@@ -621,7 +610,7 @@
                                                     <tbody>
                                                         <tr>
                                                             <td class="text-muted">Precio por Ticket:</td>
-                                                            <td class="text-end fw-semibold">$<span id="precio_ticket">0.00</span></td>
+                                                            <td class="text-end fw-semibold">S/ <span id="precio_ticket">0.00</span></td>
                                                         </tr>
                                                         <tr>
                                                             <td class="text-muted">Cantidad:</td>
@@ -639,7 +628,7 @@
                                                             <th class="fs-15">Total:</th>
                                                             <th class="text-end">
                                                                 <span class="fw-semibold text-success fs-18">
-                                                                    $<span id="total_pagar">0.00</span>
+                                                                    S/ <span id="total_pagar">0.00</span>
                                                                 </span>
                                                             </th>
                                                         </tr>

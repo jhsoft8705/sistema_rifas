@@ -47,6 +47,7 @@ const SafeUtils = {
 };
 
 let tablaRifasVentas = null;
+let tablaVentasRealizadas = null;
 let userInfo = null;
 let rifasData = [];
 let modalVenta = null;
@@ -65,37 +66,75 @@ $(document).ready(async () => {
 
     userInfo = Auth.getUserInfo();
     modalVenta = new bootstrap.Modal(document.getElementById('modal_registrar_venta'));
+    modalAprobarVenta = new bootstrap.Modal(document.getElementById('modal_aprobar_venta'));
 
-    inicializarSelectSede();
     inicializarTablas();
     inicializarEventosUI();
-
-    await cargarRifasVentas();
+    inicializarTablaVentas();
+    cargarRifasParaFiltro();
 });
-
-function inicializarSelectSede() {
-    if (!userInfo) return;
-    const option = `<option value="${userInfo.sede_id}">${userInfo.sede_nombre || 'Sede principal'}</option>`;
-    $('#filtro_sede_venta').html(option).val(userInfo.sede_id);
-}
 
 function inicializarTablas() {
     tablaRifasVentas = $('#tabla_rifas_ventas').DataTable({
-        processing: false,
+        processing: true,
         serverSide: false,
-        data: [],
+        ajax: {
+            url: window.API_BASE_URL + '/rifas/getAll',
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            },
+            data: function (d) {
+                d.sede_id = userInfo?.sede_id || '';
+                const estado = $('#filtro_estado_venta').val();
+                if (estado !== '') {
+                    d.estado = estado;
+                }
+                return d;
+            },
+            dataSrc: function (json) {
+                if (json && json.ok) {
+                    rifasData = json.data || [];
+                    return rifasData;
+                } else {
+                    rifasData = [];
+                    return [];
+                }
+            },
+            error: function (xhr, error, thrown) {
+                console.error('Error al cargar rifas:', error);
+                rifasData = [];
+                if (xhr.status === 401) {
+                    Auth.logout();
+                } else {
+                    Utils.showAlert('Error de conexión al cargar las rifas', 'error');
+                }
+            }
+        },
         language: Utils.getDataTableLanguageES(),
+        lengthChange: false,
+        dom: 'frtip',
+        pageLength: 10,
+        responsive: true,
         columns: [
             {
                 data: null,
                 orderable: false,
                 className: 'text-center',
+                width: '140px',
                 render: function(data, type, row) {
+                    // Si la rifa está cerrada o finalizada, NO mostrar botón (ya está cerrada)
+                    if (row.estado === 'CERRADA' || row.estado === 'FINALIZADA') {
+                        return `<span class="text-muted small">Cerrada</span>`;
+                    }
+                    // Si está abierta, mostrar botón "Vender"
                     return `
-                        <button class="btn btn-success btn-sm btn-registrar-venta" 
+                        <button class="btn btn-sm btn-success btn-registrar-venta" 
                                 data-rifa-id="${row.id}" 
-                                title="Registrar venta">
-                            <i class="ri-shopping-cart-line"></i> Vender
+                                title="Registrar venta"
+                                style="min-width: 100px;">
+                            <i class="ri-shopping-cart-line me-1"></i>Vender
                         </button>
                     `;
                 }
@@ -103,7 +142,7 @@ function inicializarTablas() {
             { data: 'codigo' },
             { data: 'nombre' },
             {
-                data: 'premio_principal',
+                data: 'premio_principal_nombre',
                 render: function(data) {
                     return data || '-';
                 }
@@ -141,23 +180,20 @@ function inicializarTablas() {
                 }
             }
         ],
-        order: [[1, 'desc']],
-        pageLength: 10,
-        responsive: true
+        order: [[1, 'desc']]
     });
 }
 
 function inicializarEventosUI() {
     // Botón filtrar
     $('#btn_filtrar_ventas').on('click', () => {
-        cargarRifasVentas();
+        tablaRifasVentas.ajax.reload();
     });
 
     // Botón recargar
     $('#btn_recargar_ventas').on('click', () => {
-        $('#filtro_sede_venta').val(userInfo.sede_id);
         $('#filtro_estado_venta').val('');
-        cargarRifasVentas();
+        tablaRifasVentas.ajax.reload();
     });
 
     // Registrar venta
@@ -225,110 +261,131 @@ function inicializarEventosUI() {
         validarTabPersonalVenta();
     });
 
-    // Resetear modal al cerrar
-    $('#modal_registrar_venta').on('hidden.bs.modal', function() {
-        resetearModalVenta();
+    // Botón recargar ventas listado
+    $('#btn_recargar_ventas_listado').on('click', () => {
+        $('#filtro_rifa_ventas').val('');
+        $('#filtro_estado_ventas').val('');
+        if (tablaVentasRealizadas) {
+            tablaVentasRealizadas.ajax.reload();
+        }
+    });
+
+    // Botón filtrar ventas listado
+    $('#btn_filtrar_ventas_listado').on('click', () => {
+        if (tablaVentasRealizadas) {
+            tablaVentasRealizadas.ajax.reload();
+        }
+    });
+
+    // Cambio de acción en modal de aprobar
+    $('#venta_accion_aprobar').on('change', function() {
+        if ($(this).val() === 'RECHAZADO') {
+            $('#venta_contenedor_motivo_rechazo').removeClass('d-none');
+            $('#venta_motivo_rechazo').prop('required', true);
+        } else {
+            $('#venta_contenedor_motivo_rechazo').addClass('d-none');
+            $('#venta_motivo_rechazo').prop('required', false).val('');
+        }
+    });
+
+    // Formulario de aprobar venta
+    $('#form_aprobar_venta').on('submit', async function(e) {
+        e.preventDefault();
+        await guardarAprobacionVenta();
+    });
+
+    // Cambio de tab para inicializar tabla de ventas
+    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+        if (e.target.getAttribute('href') === '#ventas-realizadas') {
+            if (!tablaVentasRealizadas) {
+                inicializarTablaVentas();
+            }
+        }
     });
 }
 
-async function cargarRifasVentas() {
-    try {
-        SafeUtils.showLoading('Cargando rifas...');
-        
-        const sedeId = $('#filtro_sede_venta').val() || userInfo.sede_id;
-        const estado = $('#filtro_estado_venta').val();
-        
-        const params = new URLSearchParams({ sede_id: sedeId });
-        if (estado) params.append('estado', estado);
-        
-        const response = await fetch(`${API_BASE_URL}/rifas/getAll?${params}`, {
-            headers: {
-                'Authorization': `Bearer ${Auth.getToken()}`
-            }
-        });
-        
-        const resultado = await response.json();
-        
-        if (resultado.ok && resultado.data) {
-            rifasData = resultado.data;
-            tablaRifasVentas.clear().rows.add(rifasData).draw();
-        } else {
-            SafeUtils.showToast('No se pudieron cargar las rifas', 'error');
-        }
-    } catch (error) {
-        console.error('Error al cargar rifas:', error);
-        SafeUtils.showToast('Error al cargar las rifas', 'error');
-    } finally {
-        SafeUtils.closeLoading();
-    }
-}
-
 async function abrirModalVenta(rifaId) {
+    // Deshabilitar botón mientras carga
+    const $btn = $(`.btn-registrar-venta[data-rifa-id="${rifaId}"]`);
+    const originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+
     try {
-        SafeUtils.showLoading('Cargando información de la rifa...');
+        // Recargar datos frescos de la rifa y números disponibles en paralelo
+        const [respuestaRifa, cantidadDisponible] = await Promise.all([
+            API.get('rifas/getById', { id: rifaId, sede_id: userInfo.sede_id }),
+            cargarNumerosDisponibles(rifaId)
+        ]);
         
-        const rifa = rifasData.find(r => r.id == rifaId);
-        if (!rifa) {
-            SafeUtils.showToast('Rifa no encontrada', 'error');
+        // Restaurar botón
+        $btn.prop('disabled', false).html(originalHtml);
+        
+        if (!respuestaRifa?.ok || !respuestaRifa.data) {
+            Utils.showAlert(respuestaRifa?.msj || 'No se pudo obtener la información de la rifa', 'error');
+            return;
+        }
+        
+        const rifa = respuestaRifa.data;
+        
+        // Validar que la rifa no esté cerrada o finalizada
+        if (rifa.estado === 'CERRADA' || rifa.estado === 'FINALIZADA') {
+            Utils.showAlert('Esta rifa está cerrada. No se pueden realizar más ventas.', 'warning');
             return;
         }
         
         rifaSeleccionadaVenta = rifa;
         
-        // Cargar números disponibles
-        await cargarNumerosDisponibles(rifaId);
+        // Actualizar la cantidad disponible basada en los números realmente disponibles
+        ticketsDisponiblesVenta = cantidadDisponible;
         
-        // Inicializar modal
+        // Inicializar modal con los datos actualizados
         inicializarModalConRifa(rifa);
         
-        // Mostrar modal
+        // Mostrar modal con todo listo
         modalVenta.show();
     } catch (error) {
+        // Restaurar botón en caso de error
+        $btn.prop('disabled', false).html(originalHtml);
         console.error('Error al abrir modal de venta:', error);
         SafeUtils.showToast('Error al cargar la información', 'error');
-    } finally {
-        SafeUtils.closeLoading();
     }
 }
 
 function inicializarModalConRifa(rifa) {
     rifaNombreGlobalVenta = rifa.nombre || '';
     precioUnitarioVenta = parseFloat(rifa.precio_ticket) || 0;
-    ticketsDisponiblesVenta = parseInt(rifa.numeros_disponibles) || 0;
+    // Usar la cantidad real de números disponibles cargados, no el valor de la rifa que puede estar desactualizado
+    const cantidadRealDisponible = numerosDisponiblesVenta.length;
+    ticketsDisponiblesVenta = cantidadRealDisponible;
     
     $('#modal_titulo_rifa_venta').text(`Registrar Venta - ${rifa.nombre}`);
     $('#venta_rifa_id').val(rifa.id);
     $('#venta_precio_ticket').text(precioUnitarioVenta.toFixed(2));
-    $('#venta_tickets_disponibles').text(ticketsDisponiblesVenta);
-    $('#venta_tickets_disponibles_resumen').text(ticketsDisponiblesVenta);
-    $('#venta_cantidad_tickets').attr('max', ticketsDisponiblesVenta || 999);
+    $('#venta_tickets_disponibles').text(cantidadRealDisponible);
+    $('#venta_tickets_disponibles_resumen').text(cantidadRealDisponible);
+    $('#venta_cantidad_tickets').attr('max', cantidadRealDisponible || 999);
     
     actualizarResumenVenta();
 }
 
 async function cargarNumerosDisponibles(rifaId) {
     try {
-        const params = new URLSearchParams({
+        const resultado = await API.get('rifas/numeros/disponibles', {
             rifa_id: rifaId,
             estado: 'DISPONIBLE'
         });
         
-        const response = await fetch(`${API_BASE_URL}/rifas/numeros/get?${params}`, {
-            headers: {
-                'Authorization': `Bearer ${Auth.getToken()}`
-            }
-        });
-        
-        const resultado = await response.json();
-        
-        if (resultado.ok && resultado.data) {
+        if (resultado?.ok && resultado.data) {
             numerosDisponiblesVenta = resultado.data;
+            return resultado.data.length;
         } else {
             numerosDisponiblesVenta = [];
+            return 0;
         }
     } catch (error) {
         console.error('Error al cargar números:', error);
         numerosDisponiblesVenta = [];
+        return 0;
     }
 }
 
@@ -586,6 +643,35 @@ async function confirmarVenta() {
         const textoOriginal = btnConfirmar.html();
         btnConfirmar.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin me-1"></i> Procesando...');
         
+        // Obtener números seleccionados - convertir a array de números enteros
+        let numerosSeleccionados = null;
+        const numerosReservadosJSON = $('#venta_numeros_reservados').val();
+        
+        if (numerosReservadosJSON && numerosReservadosJSON !== '' && numerosReservadosJSON !== '[]') {
+            try {
+                const numerosArray = JSON.parse(numerosReservadosJSON);
+                // Asegurar que sea un array de números enteros
+                if (Array.isArray(numerosArray)) {
+                    numerosSeleccionados = numerosArray.map(n => {
+                        // Si es un objeto, tomar el entero; si es un número, usarlo directamente
+                        return typeof n === 'object' && n !== null ? n.numero_entero || n.entero || n : parseInt(n, 10);
+                    }).filter(n => !isNaN(n) && n > 0);
+                }
+            } catch (e) {
+                console.error('Error parsing números reservados:', e);
+            }
+        }
+        
+        // Si no hay números en el campo oculto pero hay números en memoria, usarlos
+        if ((!numerosSeleccionados || numerosSeleccionados.length === 0) && 
+            window.numerosSeleccionadosVenta && window.numerosSeleccionadosVenta.length > 0) {
+            numerosSeleccionados = window.numerosSeleccionadosVenta.map(n => {
+                return typeof n === 'object' && n !== null ? n.numero_entero || n.entero || n : parseInt(n, 10);
+            }).filter(n => !isNaN(n) && n > 0);
+        }
+        
+        console.log('🔵 [DEBUG VENTAS] Números a enviar al backend:', numerosSeleccionados);
+        
         // Obtener datos del formulario
         const datosVenta = {
             sede_id: userInfo.sede_id,
@@ -600,8 +686,7 @@ async function confirmarVenta() {
             direccion: $('#venta_direccion').val().trim() || null,
             cantidad_tickets: parseInt($('#venta_cantidad_tickets').val()) || 1,
             precio_pagado: parseFloat($('#venta_total_pagar').text().replace('S/.', '').trim()) || 0,
-            numeros_reservados: $('#venta_numeros_reservados').val(),
-            numeros_formateados: $('#venta_numeros_formateados').val(),
+            numeros_seleccionados: numerosSeleccionados, // Enviar como array de números enteros
             canal_venta: 'ADMINISTRATIVO',
             estado_inicial: $('input[name="estado_pago"]:checked').val() === 'PAGADO' ? 'APROBADO' : 'PENDIENTE_PAGO'
         };
@@ -629,9 +714,12 @@ async function confirmarVenta() {
                 'success'
             );
             
-            // Cerrar modal y recargar tabla
+            // Cerrar modal y recargar tablas
             modalVenta.hide();
-            await cargarRifasVentas();
+            tablaRifasVentas.ajax.reload();
+            if (tablaVentasRealizadas) {
+                tablaVentasRealizadas.ajax.reload();
+            }
         } else {
             const mensajeError = resultado.msj || resultado.detalle || 'No se pudo procesar la venta.';
             await SafeUtils.showAlert(mensajeError, 'error');
@@ -685,3 +773,629 @@ $('#venta-confirmar-tab').on('shown.bs.tab', function() {
     actualizarResumenNumerosVenta();
 });
 
+// ==========================================================
+// FUNCIONES PARA TABLA DE VENTAS REALIZADAS
+// ==========================================================
+
+function inicializarTablaVentas() {
+    if (tablaVentasRealizadas) {
+        return; // Ya está inicializada
+    }
+
+    tablaVentasRealizadas = $('#tabla_ventas_realizadas').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: window.API_BASE_URL + '/tickets/listVentas',
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            },
+            data: function (d) {
+                d.sede_id = userInfo?.sede_id || '';
+                const rifaId = $('#filtro_rifa_ventas').val();
+                if (rifaId && rifaId !== '') {
+                    d.rifa_id = rifaId;
+                }
+                const estado = $('#filtro_estado_ventas').val();
+                if (estado && estado !== '') {
+                    d.estado = estado;
+                }
+                return d;
+            },
+            dataSrc: function (json) {
+                if (json && json.ok) {
+                    return json.data || [];
+                } else {
+                    return [];
+                }
+            },
+            error: function (xhr, error, thrown) {
+                console.error('Error al cargar ventas:', error);
+                if (xhr.status === 401) {
+                    Auth.logout();
+                } else {
+                    Utils.showAlert('Error de conexión al cargar las ventas', 'error');
+                }
+            }
+        },
+        language: Utils.getDataTableLanguageES(),
+        lengthChange: true,
+        dom: 'frtip',
+        pageLength: 25,
+        responsive: true,
+        columns: [
+            {
+                data: null,
+                orderable: false,
+                className: 'text-center',
+                width: '120px',
+                render: function(data) {
+                    let acciones = '';
+                    // Botón para ver/imprimir comprobante
+                    acciones += `<button class="btn btn-sm btn-info btn-comprobante me-1 btn-action-table" data-ticket-id="${data.id}" title="Ver comprobante">
+                        <i class="ri-file-3-line"></i>
+                    </button>`;
+                    
+                    // Botón para aprobar/rechazar si el estado lo permite
+                    if (data.estado === 'PENDIENTE_PAGO' || data.estado === 'PAGO_SUBIDO' || data.estado === 'VALIDANDO') {
+                        acciones += `<button class="btn btn-sm btn-success btn-aprobar-venta me-1 btn-action-table" data-ticket-id="${data.id}" title="Aprobar pago">
+                            <i class="ri-checkbox-circle-line"></i>
+                        </button>`;
+                    }
+                    
+                    return acciones || '-';
+                }
+            },
+            { data: 'codigo_ticket' },
+            {
+                data: null,
+                title: 'Números Comprados',
+                render: function(data) {
+                    // Mostrar todos los números comprados si existen, sino mostrar el número del boleto
+                    if (data.numeros_comprados && data.numeros_comprados.trim() !== '') {
+                        const cantidad = data.cantidad_numeros || 1;
+                        const numeros = data.numeros_comprados.split(', ').map(n => `<span class="badge bg-primary me-1">${n}</span>`).join('');
+                        const badgeCantidad = cantidad > 1 ? `<span class="badge bg-info ms-1" title="Cantidad de números">${cantidad}</span>` : '';
+                        return `<div>${numeros}${badgeCantidad}</div>`;
+                    } else if (data.numero_boleto) {
+                        return `<span class="badge bg-primary">${data.numero_boleto}</span>`;
+                    }
+                    return '-';
+                }
+            },
+            {
+                data: null,
+                render: function(data) {
+                    return `${data.nombres || ''} ${data.apellidos || ''}`.trim() || '-';
+                }
+            },
+            {
+                data: null,
+                render: function(data) {
+                    const tipoDoc = data.tipo_documento || 'DNI';
+                    const numDoc = data.numero_documento || '-';
+                    return `${tipoDoc}: ${numDoc}`;
+                }
+            },
+            { data: 'rifa_nombre' },
+            {
+                data: 'precio_pagado',
+                render: function(data) {
+                    return SafeUtils.formatCurrency(data || 0);
+                }
+            },
+            {
+                data: 'estado',
+                render: function(data) {
+                    const estados = {
+                        'PENDIENTE_PAGO': '<span class="badge bg-warning">Pendiente Pago</span>',
+                        'PAGO_SUBIDO': '<span class="badge bg-info">Pago Subido</span>',
+                        'VALIDANDO': '<span class="badge bg-primary">Validando</span>',
+                        'APROBADO': '<span class="badge bg-success">Aprobado</span>',
+                        'RECHAZADO': '<span class="badge bg-danger">Rechazado</span>',
+                        'PARTICIPANDO': '<span class="badge bg-success">Participando</span>',
+                        'GANADOR': '<span class="badge bg-success">Ganador</span>',
+                        'EXPIRADO': '<span class="badge bg-secondary">Expirado</span>'
+                    };
+                    return estados[data] || `<span class="badge bg-secondary">${data}</span>`;
+                }
+            },
+            {
+                data: 'fecha_creacion',
+                render: function(data) {
+                    if (!data) return '-';
+                    const fecha = new Date(data);
+                    return fecha.toLocaleDateString('es-PE', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            }
+        ],
+        order: [[8, 'desc']]
+    });
+    
+    // Evento para botón de comprobante
+    $('#tabla_ventas_realizadas tbody').on('click', '.btn-comprobante', async function() {
+        const $btn = $(this);
+        const ticketId = $btn.data('ticket-id');
+        const originalHtml = $btn.html();
+        
+        // Deshabilitar botón y mostrar spinner
+        $btn.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin"></i>');
+        
+        try {
+            await mostrarComprobante(ticketId);
+        } finally {
+            // Restaurar botón
+            $btn.prop('disabled', false).html(originalHtml);
+        }
+    });
+    
+    // Evento para botón de aprobar venta
+    $('#tabla_ventas_realizadas tbody').on('click', '.btn-aprobar-venta', async function() {
+        const $btn = $(this);
+        const ticketId = $btn.data('ticket-id');
+        const originalHtml = $btn.html();
+        
+        // Deshabilitar botón y mostrar spinner
+        $btn.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin"></i>');
+        
+        try {
+            await abrirModalAprobarVenta(ticketId);
+        } finally {
+            // Restaurar botón
+            $btn.prop('disabled', false).html(originalHtml);
+        }
+    });
+}
+
+async function cargarRifasParaFiltro() {
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/rifas/getAll?sede_id=${userInfo?.sede_id || ''}`, {
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const resultado = await response.json();
+        
+        if (resultado.ok && resultado.data) {
+            const select = $('#filtro_rifa_ventas');
+            select.html('<option value="">Todas las rifas</option>');
+            resultado.data.forEach(rifa => {
+                select.append(`<option value="${rifa.id}">${rifa.codigo} - ${rifa.nombre}</option>`);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar rifas para filtro:', error);
+    }
+}
+
+// ==========================================================
+// FUNCIONES PARA COMPROBANTE
+// ==========================================================
+
+let modalComprobante = null;
+let modalAprobarVenta = null;
+let datosComprobante = null;
+
+async function mostrarComprobante(ticketId) {
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/tickets/getComprobante?ticket_id=${ticketId}&sede_id=${userInfo.sede_id}`, {
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const resultado = await response.json();
+        
+        if (resultado.ok && resultado.data) {
+            datosComprobante = resultado.data;
+            llenarModalComprobante(resultado.data);
+            if (!modalComprobante) {
+                modalComprobante = new bootstrap.Modal(document.getElementById('modal_comprobante'));
+            }
+            modalComprobante.show();
+        } else {
+            SafeUtils.showToast(resultado.msj || 'No se pudo cargar el comprobante', 'error');
+        }
+    } catch (error) {
+        console.error('Error al cargar comprobante:', error);
+        SafeUtils.showToast('Error al cargar el comprobante', 'error');
+    }
+}
+
+function llenarModalComprobante(datos) {
+    // Formatear fecha
+    const fecha = datos.fecha_creacion ? new Date(datos.fecha_creacion) : new Date();
+    const fechaFormateada = fecha.toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // Llenar datos del comprobante
+    $('#comprobante_codigo').text(datos.codigo_ticket || '-');
+    $('#comprobante_fecha').text(fechaFormateada);
+    $('#comprobante_cliente').text(`${datos.nombres || ''} ${datos.apellidos || ''}`.trim() || '-');
+    $('#comprobante_documento').text(`${datos.tipo_documento || ''}: ${datos.numero_documento || ''}`.trim() || '-');
+    $('#comprobante_telefono').text(datos.telefono || '-');
+    $('#comprobante_email').text(datos.email || '-');
+    $('#comprobante_rifa').text(datos.rifa_nombre || '-');
+    
+    // Formatear números comprados como badges
+    let numerosHtml = '-';
+    if (datos.numeros_comprados && datos.numeros_comprados.trim() !== '') {
+        const numeros = datos.numeros_comprados.split(', ').map(n => `<span class="badge bg-primary me-1">${n}</span>`).join('');
+        numerosHtml = `<div class="d-flex flex-wrap gap-1">${numeros}</div>`;
+    } else if (datos.numero_boleto) {
+        numerosHtml = `<span class="badge bg-primary">${datos.numero_boleto}</span>`;
+    }
+    $('#comprobante_numeros').html(numerosHtml);
+    
+    $('#comprobante_cantidad').text(`${datos.cantidad_numeros || 1} ticket(s)`);
+    $('#comprobante_precio_unitario').text(SafeUtils.formatCurrency(datos.precio_ticket || 0));
+    $('#comprobante_total').text(SafeUtils.formatCurrency(datos.precio_pagado || 0));
+    $('#comprobante_estado').html(obtenerBadgeEstado(datos.estado || ''));
+    $('#comprobante_sede').text(datos.sede_nombre || '-');
+    
+    // Guardar ticket_id para acciones
+    $('#modal_comprobante').data('ticket-id', datos.id);
+}
+
+function obtenerBadgeEstado(estado) {
+    const estados = {
+        'PENDIENTE_PAGO': '<span class="badge bg-warning">Pendiente Pago</span>',
+        'PAGO_SUBIDO': '<span class="badge bg-info">Pago Subido</span>',
+        'VALIDANDO': '<span class="badge bg-primary">Validando</span>',
+        'APROBADO': '<span class="badge bg-success">Aprobado</span>',
+        'RECHAZADO': '<span class="badge bg-danger">Rechazado</span>',
+        'PARTICIPANDO': '<span class="badge bg-success">Participando</span>',
+        'GANADOR': '<span class="badge bg-success">Ganador</span>',
+        'EXPIRADO': '<span class="badge bg-secondary">Expirado</span>'
+    };
+    return estados[estado] || `<span class="badge bg-secondary">${estado}</span>`;
+}
+
+function copiarComprobante() {
+    const contenido = generarTextoComprobante();
+    navigator.clipboard.writeText(contenido).then(() => {
+        SafeUtils.showToast('Comprobante copiado al portapapeles', 'success');
+    }).catch(() => {
+        SafeUtils.showToast('Error al copiar el comprobante', 'error');
+    });
+}
+
+function compartirComprobante() {
+    const texto = generarTextoComprobante();
+    const url = window.location.href;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Comprobante de Compra - ' + datosComprobante.codigo_ticket,
+            text: texto,
+            url: url
+        }).catch(() => {
+            SafeUtils.showToast('Error al compartir', 'error');
+        });
+    } else {
+        // Fallback: copiar al portapapeles
+        copiarComprobante();
+    }
+}
+
+function generarTextoComprobante() {
+    if (!datosComprobante) return '';
+    
+    return `COMPROBANTE DE COMPRA
+Código: ${datosComprobante.codigo_ticket}
+Fecha: ${new Date(datosComprobante.fecha_creacion).toLocaleDateString('es-PE')}
+Cliente: ${datosComprobante.nombres} ${datosComprobante.apellidos}
+Documento: ${datosComprobante.tipo_documento}: ${datosComprobante.numero_documento}
+Rifa: ${datosComprobante.rifa_nombre}
+Números: ${datosComprobante.numeros_comprados || datosComprobante.numero_boleto}
+Total: ${SafeUtils.formatCurrency(datosComprobante.precio_pagado)}`;
+}
+
+async function imprimirComprobantePDF() {
+    try {
+        // Cargar html2pdf desde CDN si no está disponible
+        if (typeof html2pdf === 'undefined') {
+            await cargarLibreriaPDF();
+        }
+        
+        const elemento = document.getElementById('contenido_comprobante_imprimir');
+        const opt = {
+            margin: 0.5,
+            filename: `comprobante_${datosComprobante.codigo_ticket}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        await html2pdf().set(opt).from(elemento).save();
+        SafeUtils.showToast('PDF generado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error al generar PDF:', error);
+        SafeUtils.showToast('Error al generar el PDF', 'error');
+    }
+}
+
+function cargarLibreriaPDF() {
+    return new Promise((resolve, reject) => {
+        if (typeof html2pdf !== 'undefined') {
+            resolve();
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// ==========================================================
+// FUNCIONES PARA APROBAR/RECHAZAR VENTA
+// ==========================================================
+
+async function abrirModalAprobarVenta(ticketId) {
+    try {
+        // Obtener información del ticket
+        const responseTicket = await fetch(`${window.API_BASE_URL}/tickets/getAll?sede_id=${userInfo.sede_id}`, {
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const resultadoTicket = await responseTicket.json();
+        
+        if (!resultadoTicket?.ok) {
+            SafeUtils.showToast('Error al cargar información del ticket', 'error');
+            return;
+        }
+        
+        const ticket = resultadoTicket.data.find(t => t.id == ticketId);
+        if (!ticket) {
+            SafeUtils.showToast('Ticket no encontrado', 'error');
+            return;
+        }
+        
+        // Llenar información del ticket
+        $('#venta_ticket_id_aprobar').val(ticket.id);
+        $('#venta_sede_id_aprobar').val(userInfo.sede_id);
+        
+        let infoTicket = `
+            <div class="row g-2">
+                <div class="col-md-6"><strong>Código:</strong> <span class="badge bg-primary">${ticket.codigo_ticket}</span></div>
+                <div class="col-md-6"><strong>Estado:</strong> ${obtenerBadgeEstado(ticket.estado)}</div>
+                <div class="col-md-12"><strong>Cliente:</strong> ${ticket.nombres || ''} ${ticket.apellidos || ''}</div>
+                <div class="col-md-6"><strong>Documento:</strong> ${ticket.tipo_documento || 'DNI'} ${ticket.numero_documento || ''}</div>
+                <div class="col-md-6"><strong>Email:</strong> ${ticket.email || '-'}</div>
+                <div class="col-md-12"><strong>Rifa:</strong> ${ticket.rifa_codigo || ''} - ${ticket.rifa_nombre || ''}</div>
+        `;
+        
+        if (ticket.numero_boleto) {
+            infoTicket += `
+                <div class="col-md-12 mt-2">
+                    <div class="alert alert-success mb-0 py-2">
+                        <strong><i class="ri-number-1 me-1"></i>Números:</strong> 
+                        <span class="badge bg-success fs-6">${ticket.numero_boleto}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        infoTicket += `</div>`;
+        $('#venta_info_ticket_aprobar').html(infoTicket);
+        
+        $('#venta_precio_aprobar').val(SafeUtils.formatCurrency(ticket.precio_pagado || 0));
+        $('#venta_fecha_compra_aprobar').val(ticket.fecha_compra ? new Date(ticket.fecha_compra).toLocaleString('es-PE') : '-');
+        
+        // Mostrar mensaje de carga mientras se obtiene el comprobante
+        $('#venta_preview_comprobante_aprobar').html('<p class="text-muted"><i class="ri-loader-4-line animate-spin me-1"></i>Cargando comprobante...</p>');
+        
+        // Cargar comprobante si existe
+        try {
+            const respuestaComprobantes = await fetch(`${window.API_BASE_URL}/tickets/getComprobantes?sede_id=${userInfo.sede_id}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + Auth.getToken(),
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const resultadoComprobantes = await respuestaComprobantes.json();
+            
+            if (resultadoComprobantes?.ok && resultadoComprobantes.data?.length > 0) {
+                const comprobante = resultadoComprobantes.data.find(c => c.ticket_id == ticketId);
+                
+                if (comprobante && comprobante.archivo_comprobante) {
+                    // Construir URL correctamente
+                    let archivoPath = comprobante.archivo_comprobante.trim();
+                    let imageUrl = '';
+                    
+                    // Si ya es una URL completa (http/https), usarla directamente
+                    if (archivoPath.startsWith('http://') || archivoPath.startsWith('https://')) {
+                        imageUrl = archivoPath;
+                    } else {
+                        // Construir URL relativa
+                        const baseUrl = (window.BASE_URL || '').replace(/\/$/, ''); // Remover barra final si existe
+                        if (archivoPath.startsWith('/')) {
+                            imageUrl = baseUrl + archivoPath;
+                        } else {
+                            imageUrl = baseUrl + '/' + archivoPath;
+                        }
+                    }
+                    
+                    // Verificar si es imagen o PDF
+                    const esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(archivoPath);
+                    const esPDF = /\.pdf$/i.test(archivoPath);
+                    
+                    let previewHtml = '';
+                    if (esImagen) {
+                        previewHtml = `
+                            <img src="${imageUrl}" class="img-fluid rounded border" style="max-height: 400px; width: auto;" alt="Comprobante" onerror="this.onerror=null; this.parentElement.innerHTML='<p class=\\'text-danger\\'>Error al cargar la imagen</p>'">
+                            <br><a href="${imageUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                <i class="ri-external-link-line"></i> Ver en nueva ventana
+                            </a>
+                        `;
+                    } else if (esPDF) {
+                        previewHtml = `
+                            <div class="alert alert-info">
+                                <i class="ri-file-pdf-line me-2"></i>Archivo PDF
+                            </div>
+                            <a href="${imageUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="ri-external-link-line"></i> Abrir PDF en nueva ventana
+                            </a>
+                        `;
+                    } else {
+                        previewHtml = `
+                            <div class="alert alert-warning">
+                                <i class="ri-file-line me-2"></i>Tipo de archivo no soportado para vista previa
+                            </div>
+                            <a href="${imageUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="ri-external-link-line"></i> Ver archivo
+                            </a>
+                        `;
+                    }
+                    
+                    $('#venta_preview_comprobante_aprobar').html(previewHtml);
+                } else {
+                    $('#venta_preview_comprobante_aprobar').html('<p class="text-muted">No hay comprobante disponible</p>');
+                }
+            } else {
+                $('#venta_preview_comprobante_aprobar').html('<p class="text-muted">No hay comprobante disponible</p>');
+            }
+        } catch (error) {
+            console.error('Error al cargar comprobante:', error);
+            $('#venta_preview_comprobante_aprobar').html('<p class="text-muted">Error al cargar comprobante</p>');
+        }
+        
+        // Resetear formulario
+        $('#venta_accion_aprobar').val('');
+        $('#venta_contenedor_motivo_rechazo').addClass('d-none');
+        $('#venta_motivo_rechazo').val('');
+        
+        modalAprobarVenta.show();
+    } catch (error) {
+        SafeUtils.showToast('Error al cargar información del ticket', 'error');
+        console.error(error);
+    }
+}
+
+async function guardarAprobacionVenta() {
+    const accion = $('#venta_accion_aprobar').val();
+    if (!accion) {
+        SafeUtils.showToast('Seleccione una acción', 'warning');
+        $('#venta_accion_aprobar').addClass('is-invalid');
+        return;
+    }
+
+    if (accion === 'RECHAZADO' && !$('#venta_motivo_rechazo').val().trim()) {
+        SafeUtils.showToast('El motivo de rechazo es obligatorio', 'warning');
+        $('#venta_motivo_rechazo').addClass('is-invalid');
+        return;
+    }
+
+    const confirmar = await Swal.fire({
+        title: accion === 'APROBADO' ? 'Aprobar pago' : 'Rechazar pago',
+        text: accion === 'APROBADO' 
+            ? '¿Está seguro de aprobar este pago? El ticket pasará a estado APROBADO y podrá participar en el sorteo.'
+            : '¿Está seguro de rechazar este pago? El número será liberado.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmar.isConfirmed) return;
+
+    // Obtener botón y guardar HTML original
+    const $btnGuardar = $('#btn_guardar_aprobacion_venta');
+    const originalBtnHtml = $btnGuardar.html();
+    
+    // Deshabilitar botón y mostrar spinner
+    $btnGuardar.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin me-1"></i>Procesando...');
+
+    try {
+        const ticketId = parseInt($('#venta_ticket_id_aprobar').val());
+        
+        // Buscar el comprobante asociado al ticket
+        const respuestaComprobantes = await fetch(`${window.API_BASE_URL}/tickets/getComprobantes?sede_id=${userInfo.sede_id}`, {
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const resultadoComprobantes = await respuestaComprobantes.json();
+        
+        if (!resultadoComprobantes?.ok) {
+            // Restaurar botón
+            $btnGuardar.prop('disabled', false).html(originalBtnHtml);
+            SafeUtils.showToast('Error al buscar comprobante', 'error');
+            return;
+        }
+        
+        const comprobante = resultadoComprobantes.data?.find(c => c.ticket_id == ticketId);
+        
+        if (!comprobante) {
+            // Restaurar botón
+            $btnGuardar.prop('disabled', false).html(originalBtnHtml);
+            SafeUtils.showToast('No se encontró comprobante asociado a este ticket', 'warning');
+            return;
+        }
+        
+        // Validar el comprobante
+        const payload = {
+            comprobante_id: comprobante.id,
+            sede_id: userInfo.sede_id,
+            estado: accion,
+            validado_por: userInfo.nombre_completo || userInfo.username || 'SYSTEM',
+            motivo_rechazo: accion === 'RECHAZADO' ? $('#venta_motivo_rechazo').val().trim() : null
+        };
+
+        const respuesta = await fetch(`${window.API_BASE_URL}/tickets/validarComprobante`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + Auth.getToken()
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const resultado = await respuesta.json();
+        
+        // Restaurar botón
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
+
+        if (resultado?.ok) {
+            SafeUtils.showToast(resultado.msj || 'Validación realizada correctamente', 'success');
+            modalAprobarVenta.hide();
+            
+            // Recargar tabla de ventas
+            if (tablaVentasRealizadas) {
+                tablaVentasRealizadas.ajax.reload();
+            }
+        } else {
+            SafeUtils.showToast(resultado?.msj || 'Error al validar el pago', 'error');
+        }
+    } catch (error) {
+        // Restaurar botón en caso de error
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
+            SafeUtils.showToast('Error al validar el pago', 'error');
+        console.error(error);
+    }
+}

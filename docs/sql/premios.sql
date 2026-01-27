@@ -9,9 +9,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS list_premios //
 CREATE PROCEDURE list_premios (
     IN p_sede_id INT,
-    IN p_estado INT,
-    IN p_fecha_inicio DATE,
-    IN p_fecha_fin DATE
+    IN p_estado INT
 )
 BEGIN
     SELECT
@@ -46,8 +44,6 @@ BEGIN
     LEFT JOIN categorias_premios cp ON p.categoria_id = cp.id
     WHERE p.sede_id = p_sede_id
       AND (p_estado IS NULL OR p.estado = p_estado)
-      AND (p_fecha_inicio IS NULL OR DATE(p.fecha_creacion) >= p_fecha_inicio)
-      AND (p_fecha_fin IS NULL OR DATE(p.fecha_creacion) <= p_fecha_fin)
     ORDER BY p.es_destacado DESC, p.orden_visualizacion ASC, p.fecha_creacion DESC;
 END //
 
@@ -94,6 +90,10 @@ CREATE PROCEDURE register_premio (
     OUT p_mensaje VARCHAR(255)
 )
 proc: BEGIN
+    DECLARE v_codigo_generado VARCHAR(50);
+    DECLARE v_ultimo_numero INT DEFAULT 0;
+    DECLARE v_nuevo_numero INT DEFAULT 1;
+    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -108,15 +108,40 @@ proc: BEGIN
         LEAVE proc;
     END IF;
 
-    IF EXISTS (
-        SELECT 1
+    -- Generar código automáticamente si no se proporciona o está vacío
+    IF p_codigo IS NULL OR (p_codigo IS NOT NULL AND TRIM(p_codigo) = '') THEN
+        -- Obtener el último número de código para esta sede
+        SELECT COALESCE(MAX(CAST(SUBSTRING(codigo, 5) AS UNSIGNED)), 0) INTO v_ultimo_numero
         FROM premios
         WHERE sede_id = p_sede_id
-          AND codigo = p_codigo
-    ) THEN
-        SET p_mensaje = 'El código del premio ya existe en esta sede';
-        ROLLBACK;
-        LEAVE proc;
+          AND codigo LIKE 'PRM-%'
+          AND SUBSTRING(codigo, 5) REGEXP '^[0-9]+$';
+        
+        SET v_nuevo_numero = v_ultimo_numero + 1;
+        SET v_codigo_generado = CONCAT('PRM-', LPAD(v_nuevo_numero, 6, '0'));
+        
+        -- Verificar que el código generado no exista (por si acaso)
+        WHILE EXISTS (
+            SELECT 1 FROM premios
+            WHERE sede_id = p_sede_id AND codigo = v_codigo_generado
+        ) DO
+            SET v_nuevo_numero = v_nuevo_numero + 1;
+            SET v_codigo_generado = CONCAT('PRM-', LPAD(v_nuevo_numero, 6, '0'));
+        END WHILE;
+        
+        SET p_codigo = v_codigo_generado;
+    ELSE
+        -- Validar que el código proporcionado no exista
+        IF EXISTS (
+            SELECT 1
+            FROM premios
+            WHERE sede_id = p_sede_id
+              AND codigo = p_codigo
+        ) THEN
+            SET p_mensaje = 'El código del premio ya existe en esta sede';
+            ROLLBACK;
+            LEAVE proc;
+        END IF;
     END IF;
 
     INSERT INTO premios (

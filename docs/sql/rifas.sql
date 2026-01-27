@@ -20,7 +20,6 @@ BEGIN
         s.nombre AS sede_nombre,
         r.premio_id AS premio_principal_id,
         p.nombre AS premio_principal_nombre,
-        r.ubicacion_id,
         r.codigo,
         r.nombre,
         r.descripcion,
@@ -40,10 +39,6 @@ BEGIN
         r.permitir_seleccion_numero,
         r.asignacion_automatica,
         r.mostrar_numeros_disponibles,
-        r.generar_volantarios,
-        r.numeros_por_volantario,
-        r.formato_impresion,
-        r.numeros_por_pagina,
         r.fecha_inicio_venta,
         r.fecha_fin_venta,
         r.fecha_sorteo,
@@ -51,8 +46,6 @@ BEGIN
         r.mostrar_contador,
         r.mostrar_participantes,
         r.mostrar_tickets_vendidos,
-        r.tipo_publicidad,
-        r.url_banner,
         r.texto_promocional,
         r.reglas_participacion,
         r.terminos_condiciones,
@@ -107,7 +100,6 @@ BEGIN
         r.mostrar_contador,
         r.mostrar_participantes,
         r.mostrar_tickets_vendidos,
-        r.url_banner,
         r.texto_promocional,
         r.reglas_participacion,
         r.terminos_condiciones,
@@ -209,7 +201,6 @@ DROP PROCEDURE IF EXISTS register_rifa //
 CREATE PROCEDURE register_rifa (
     IN p_sede_id INT,
     IN p_premio_id INT,
-    IN p_ubicacion_id INT,
     IN p_codigo VARCHAR(50),
     IN p_nombre VARCHAR(200),
     IN p_descripcion TEXT,
@@ -228,10 +219,6 @@ CREATE PROCEDURE register_rifa (
     IN p_permitir_seleccion_numero TINYINT,
     IN p_asignacion_automatica TINYINT,
     IN p_mostrar_numeros_disponibles TINYINT,
-    IN p_generar_volantarios TINYINT,
-    IN p_numeros_por_volantario INT,
-    IN p_formato_impresion VARCHAR(50),
-    IN p_numeros_por_pagina INT,
     IN p_numeros_bloqueados TEXT,
     IN p_numeros_especiales TEXT,
     IN p_fecha_inicio_venta DATETIME,
@@ -240,18 +227,20 @@ CREATE PROCEDURE register_rifa (
     IN p_mostrar_contador TINYINT,
     IN p_mostrar_participantes TINYINT,
     IN p_mostrar_tickets_vendidos TINYINT,
-    IN p_tipo_publicidad VARCHAR(50),
-    IN p_url_banner VARCHAR(255),
     IN p_texto_promocional TEXT,
     IN p_reglas_participacion TEXT,
     IN p_terminos_condiciones TEXT,
+    IN p_estado VARCHAR(30),
     IN p_creado_por VARCHAR(50),
     OUT p_rifa_id INT,
     OUT p_mensaje VARCHAR(255)
 )
 proc: BEGIN
     DECLARE v_mensaje_numeros VARCHAR(255);
-
+    DECLARE v_codigo_generado VARCHAR(50);
+    DECLARE v_ultimo_numero INT DEFAULT 0;
+    DECLARE v_nuevo_numero INT DEFAULT 1;
+    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -275,15 +264,40 @@ proc: BEGIN
         END IF;
     END IF;
 
-    IF EXISTS (
-        SELECT 1
+    -- Generar código automáticamente si no se proporciona o está vacío
+    IF p_codigo IS NULL OR (p_codigo IS NOT NULL AND TRIM(p_codigo) = '') THEN
+        -- Obtener el último número de código para esta sede
+        SELECT COALESCE(MAX(CAST(SUBSTRING(codigo, 5) AS UNSIGNED)), 0) INTO v_ultimo_numero
         FROM rifas
         WHERE sede_id = p_sede_id
-          AND codigo = p_codigo
-    ) THEN
-        SET p_mensaje = 'El código de la rifa ya existe en esta sede';
-        ROLLBACK;
-        LEAVE proc;
+          AND codigo LIKE 'RIFA-%'
+          AND SUBSTRING(codigo, 5) REGEXP '^[0-9]+$';
+        
+        SET v_nuevo_numero = v_ultimo_numero + 1;
+        SET v_codigo_generado = CONCAT('RIFA-', LPAD(v_nuevo_numero, 6, '0'));
+        
+        -- Verificar que el código generado no exista (por si acaso)
+        WHILE EXISTS (
+            SELECT 1 FROM rifas
+            WHERE sede_id = p_sede_id AND codigo = v_codigo_generado
+        ) DO
+            SET v_nuevo_numero = v_nuevo_numero + 1;
+            SET v_codigo_generado = CONCAT('RIFA-', LPAD(v_nuevo_numero, 6, '0'));
+        END WHILE;
+        
+        SET p_codigo = v_codigo_generado;
+    ELSE
+        -- Validar que el código proporcionado no exista
+        IF EXISTS (
+            SELECT 1
+            FROM rifas
+            WHERE sede_id = p_sede_id
+              AND codigo = p_codigo
+        ) THEN
+            SET p_mensaje = 'El código de la rifa ya existe en esta sede';
+            ROLLBACK;
+            LEAVE proc;
+        END IF;
     END IF;
 
     IF p_numero_inicial >= p_numero_final THEN
@@ -295,7 +309,6 @@ proc: BEGIN
     INSERT INTO rifas (
         sede_id,
         premio_id,
-        ubicacion_id,
         codigo,
         nombre,
         descripcion,
@@ -315,10 +328,6 @@ proc: BEGIN
         permitir_seleccion_numero,
         asignacion_automatica,
         mostrar_numeros_disponibles,
-        generar_volantarios,
-        numeros_por_volantario,
-        formato_impresion,
-        numeros_por_pagina,
         numeros_bloqueados,
         numeros_especiales,
         fecha_inicio_venta,
@@ -327,8 +336,6 @@ proc: BEGIN
         mostrar_contador,
         mostrar_participantes,
         mostrar_tickets_vendidos,
-        tipo_publicidad,
-        url_banner,
         texto_promocional,
         reglas_participacion,
         terminos_condiciones,
@@ -340,7 +347,6 @@ proc: BEGIN
     ) VALUES (
         p_sede_id,
         p_premio_id,
-        p_ubicacion_id,
         p_codigo,
         p_nombre,
         p_descripcion,
@@ -360,10 +366,6 @@ proc: BEGIN
         IFNULL(p_permitir_seleccion_numero, 1),
         IFNULL(p_asignacion_automatica, 1),
         IFNULL(p_mostrar_numeros_disponibles, 1),
-        IFNULL(p_generar_volantarios, 0),
-        IFNULL(p_numeros_por_volantario, 100),
-        IFNULL(p_formato_impresion, 'A4'),
-        IFNULL(p_numeros_por_pagina, 10),
         p_numeros_bloqueados,
         p_numeros_especiales,
         p_fecha_inicio_venta,
@@ -372,12 +374,10 @@ proc: BEGIN
         IFNULL(p_mostrar_contador, 1),
         IFNULL(p_mostrar_participantes, 1),
         IFNULL(p_mostrar_tickets_vendidos, 1),
-        p_tipo_publicidad,
-        p_url_banner,
         p_texto_promocional,
         p_reglas_participacion,
         p_terminos_condiciones,
-        'BORRADOR',
+        IFNULL(p_estado, 'BORRADOR'),
         1,
         p_creado_por,
         NOW(),
@@ -410,7 +410,6 @@ CREATE PROCEDURE update_rifa (
     IN p_id INT,
     IN p_sede_id INT,
     IN p_premio_id INT,
-    IN p_ubicacion_id INT,
     IN p_codigo VARCHAR(50),
     IN p_nombre VARCHAR(200),
     IN p_descripcion TEXT,
@@ -429,10 +428,6 @@ CREATE PROCEDURE update_rifa (
     IN p_permitir_seleccion_numero TINYINT,
     IN p_asignacion_automatica TINYINT,
     IN p_mostrar_numeros_disponibles TINYINT,
-    IN p_generar_volantarios TINYINT,
-    IN p_numeros_por_volantario INT,
-    IN p_formato_impresion VARCHAR(50),
-    IN p_numeros_por_pagina INT,
     IN p_numeros_bloqueados TEXT,
     IN p_numeros_especiales TEXT,
     IN p_fecha_inicio_venta DATETIME,
@@ -442,8 +437,6 @@ CREATE PROCEDURE update_rifa (
     IN p_mostrar_contador TINYINT,
     IN p_mostrar_participantes TINYINT,
     IN p_mostrar_tickets_vendidos TINYINT,
-    IN p_tipo_publicidad VARCHAR(50),
-    IN p_url_banner VARCHAR(255),
     IN p_texto_promocional TEXT,
     IN p_reglas_participacion TEXT,
     IN p_terminos_condiciones TEXT,
@@ -471,6 +464,19 @@ proc: BEGIN
         LEAVE proc;
     END IF;
 
+    -- Validar que no se pueda cambiar el estado de una rifa cerrada o finalizada
+    IF EXISTS (
+        SELECT 1 FROM rifas 
+        WHERE id = p_id 
+          AND sede_id = p_sede_id 
+          AND estado IN ('CERRADA', 'FINALIZADA')
+          AND p_estado NOT IN ('CERRADA', 'FINALIZADA')
+    ) THEN
+        SET p_mensaje = 'No se puede cambiar el estado de una rifa cerrada o finalizada. Use la opción "Reabrir Rifa" si es necesario.';
+        ROLLBACK;
+        LEAVE proc;
+    END IF;
+
     IF EXISTS (
         SELECT 1
         FROM rifas
@@ -492,7 +498,6 @@ proc: BEGIN
     UPDATE rifas
     SET
         premio_id = p_premio_id,
-        ubicacion_id = p_ubicacion_id,
         codigo = p_codigo,
         nombre = p_nombre,
         descripcion = p_descripcion,
@@ -511,10 +516,6 @@ proc: BEGIN
         permitir_seleccion_numero = p_permitir_seleccion_numero,
         asignacion_automatica = p_asignacion_automatica,
         mostrar_numeros_disponibles = p_mostrar_numeros_disponibles,
-        generar_volantarios = p_generar_volantarios,
-        numeros_por_volantario = p_numeros_por_volantario,
-        formato_impresion = p_formato_impresion,
-        numeros_por_pagina = p_numeros_por_pagina,
         numeros_bloqueados = p_numeros_bloqueados,
         numeros_especiales = p_numeros_especiales,
         fecha_inicio_venta = p_fecha_inicio_venta,
@@ -524,8 +525,6 @@ proc: BEGIN
         mostrar_contador = p_mostrar_contador,
         mostrar_participantes = p_mostrar_participantes,
         mostrar_tickets_vendidos = p_mostrar_tickets_vendidos,
-        tipo_publicidad = p_tipo_publicidad,
-        url_banner = p_url_banner,
         texto_promocional = p_texto_promocional,
         reglas_participacion = p_reglas_participacion,
         terminos_condiciones = p_terminos_condiciones,
@@ -882,13 +881,14 @@ CREATE PROCEDURE list_rifa_numeros (
 BEGIN
     SELECT
         nr.*,
-        t.nombres,
-        t.apellidos,
-        t.numero_documento,
-        t.email,
-        t.telefono
+        p.nombres,
+        p.apellidos,
+        p.numero_documento,
+        p.email,
+        p.telefono
     FROM numeros_rifa nr
     LEFT JOIN tickets t ON nr.ticket_id = t.id
+    LEFT JOIN personas p ON t.persona_id = p.id
     WHERE nr.rifa_id = p_rifa_id
       AND (p_estado IS NULL OR p_estado = '' OR nr.estado = p_estado)
     ORDER BY nr.numero_entero ASC;
@@ -938,6 +938,42 @@ proc: BEGIN
     COMMIT;
     SET p_mensaje = 'Estado del número actualizado correctamente';
 END proc //
+
+-- ==========================================================
+-- PROCEDIMIENTO PARA CERRAR RIFA
+-- ==========================================================
+DROP PROCEDURE IF EXISTS cerrar_rifa //
+CREATE PROCEDURE cerrar_rifa (
+    IN p_id INT,
+    IN p_sede_id INT,
+    IN p_modificado_por VARCHAR(50),
+    OUT p_mensaje VARCHAR(255)
+)
+proc: BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_mensaje = 'Error al cerrar la rifa';
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS (SELECT 1 FROM rifas WHERE id = p_id AND sede_id = p_sede_id) THEN
+        SET p_mensaje = 'La rifa no existe en esta sede';
+        ROLLBACK;
+        LEAVE proc;
+    END IF;
+
+    UPDATE rifas
+    SET estado = 'CERRADA',
+        modificado_por = p_modificado_por,
+        fecha_modificacion = NOW()
+    WHERE id = p_id
+      AND sede_id = p_sede_id;
+
+    COMMIT;
+    SET p_mensaje = 'Rifa cerrada correctamente';
+END //
 
 DELIMITER ;
 

@@ -25,7 +25,9 @@ function RoutesRifas(string $url, string $method): void
         'api/rifas/numeros/generar'   => ['POST'],
         'api/rifas/numeros/disponibles' => ['GET'],
         'api/rifas/numeros/reservar'  => ['POST'],
-        'api/rifas/numeros/aleatorio' => ['POST']
+        'api/rifas/numeros/aleatorio' => ['POST'],
+        'api/rifas/numeros/liberar' => ['POST'],
+        'api/rifas/cerrar' => ['POST']
     ];
 
     if (!array_key_exists($url, $routes)) {
@@ -98,8 +100,14 @@ function RoutesRifas(string $url, string $method): void
         case 'api/rifas/numeros/aleatorio':
             $controller->handleRequest('asignarNumeroAleatorio');
             break;
+        case 'api/rifas/numeros/liberar':
+            $controller->handleRequest('liberarNumeros');
+            break;
         case 'api/rifas/publicas':
             $controller->handleRequest('getPublicas');
+            break;
+        case 'api/rifas/cerrar':
+            $controller->handleRequest('cerrar');
             break;
     }
 }

@@ -15756,3 +15756,57 @@ span.flatpickr-weekday {
   display: block;
 }
 /*# sourceMappingURL=app.min.css.map */
+
+
+
+/* DataTables Loading Overlay */
+.datatables-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.datatables-loading-content {
+  text-align: center;
+}
+
+.datatables-loading-text {
+  margin-top: 0.75rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.spinner-sm {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 0.15rem;
+}
+
+/* Animación para spinner de botones */
+.animate-spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Botones de acción en tablas - altura aumentada */
+.btn-action-table {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  min-height: 36px;
+}

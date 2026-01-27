@@ -484,3 +484,200 @@
     </div>
 </div>
 
+<!-- Modal para Ver/Imprimir Comprobante -->
+<div class="modal fade" id="modal_comprobante" tabindex="-1" aria-labelledby="modal_comprobante_label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal_comprobante_label">
+                    <i class="ri-file-paper-line me-2"></i>Comprobante de Compra
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido para impresión -->
+                <div id="contenido_comprobante_imprimir" class="comprobante-print">
+                    <div class="row g-2">
+                        <!-- Encabezado del comprobante -->
+                        <div class="col-12">
+                            <div class="text-center mb-2 pb-2 border-bottom">
+                                <h5 class="mb-1">COMPROBANTE DE COMPRA</h5>
+                                <p class="text-muted mb-0 small">Sistema de Rifas</p>
+                            </div>
+                        </div>
+
+                        <!-- Información del ticket -->
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Código de Ticket</label>
+                            <div class="form-control-plaintext fw-bold text-primary" id="comprobante_codigo">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Fecha</label>
+                            <div class="form-control-plaintext" id="comprobante_fecha">-</div>
+                        </div>
+
+                        <!-- Datos del cliente -->
+                        <div class="col-12">
+                            <h6 class="mb-2 mt-1">
+                                <i class="ri-user-line me-2"></i>Datos del Cliente
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Cliente</label>
+                            <div class="form-control-plaintext fw-semibold" id="comprobante_cliente">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Documento</label>
+                            <div class="form-control-plaintext" id="comprobante_documento">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Teléfono</label>
+                            <div class="form-control-plaintext" id="comprobante_telefono">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Email</label>
+                            <div class="form-control-plaintext" id="comprobante_email">-</div>
+                        </div>
+
+                        <!-- Detalle de la compra -->
+                        <div class="col-12">
+                            <h6 class="mb-2 mt-1">
+                                <i class="ri-shopping-cart-line me-2"></i>Detalle de la Compra
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Rifa</label>
+                            <div class="form-control-plaintext fw-semibold" id="comprobante_rifa">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Cantidad</label>
+                            <div class="form-control-plaintext" id="comprobante_cantidad">-</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Números</label>
+                            <div class="form-control-plaintext" id="comprobante_numeros">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Precio Unitario</label>
+                            <div class="form-control-plaintext" id="comprobante_precio_unitario">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Total Pagado</label>
+                            <div class="form-control-plaintext fw-bold text-success fs-5" id="comprobante_total">-</div>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="col-12">
+                            <h6 class="mb-2 mt-1">
+                                <i class="ri-information-line me-2"></i>Información Adicional
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Estado</label>
+                            <div class="form-control-plaintext" id="comprobante_estado">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Sede</label>
+                            <div class="form-control-plaintext" id="comprobante_sede">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>Cerrar
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="copiarComprobante()">
+                    <i class="ri-file-copy-line me-1"></i>Copiar
+                </button>
+                <button type="button" class="btn btn-outline-info" onclick="compartirComprobante()">
+                    <i class="ri-share-line me-1"></i>Compartir
+                </button>
+                <button type="button" class="btn btn-success" onclick="imprimirComprobantePDF()">
+                    <i class="ri-printer-line me-1"></i>Imprimir PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Aprobar/Rechazar Venta -->
+<div class="modal fade" id="modal_aprobar_venta" tabindex="-1" aria-labelledby="modal_aprobar_venta_label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal_aprobar_venta_label">
+                    <i class="ri-checkbox-circle-line me-2"></i>Aprobar/Rechazar Pago
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form_aprobar_venta" novalidate>
+                <div class="modal-body">
+                    <input type="hidden" id="venta_ticket_id_aprobar" name="ticket_id">
+                    <input type="hidden" id="venta_sede_id_aprobar" name="sede_id">
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong><i class="ri-ticket-line me-1"></i>Información del Ticket:</strong>
+                                <div id="venta_info_ticket_aprobar" class="mt-2"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Comprobante de Pago</label>
+                            <div id="venta_preview_comprobante_aprobar" class="text-center border rounded p-3 mb-3" style="min-height: 200px;">
+                                <p class="text-muted">Cargando comprobante...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Precio Pagado</label>
+                            <input type="text" class="form-control" id="venta_precio_aprobar" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha de Compra</label>
+                            <input type="text" class="form-control" id="venta_fecha_compra_aprobar" readonly>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Acción <span class="text-danger">*</span></label>
+                            <select class="form-select" id="venta_accion_aprobar" name="accion" required>
+                                <option value="">Seleccione una acción</option>
+                                <option value="APROBADO">Aprobar pago</option>
+                                <option value="RECHAZADO">Rechazar pago</option>
+                            </select>
+                            <div class="invalid-feedback">Seleccione una acción</div>
+                        </div>
+                        
+                        <div class="col-12 d-none" id="venta_contenedor_motivo_rechazo">
+                            <label class="form-label">Motivo de rechazo <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="venta_motivo_rechazo" name="motivo_rechazo" rows="3" 
+                                placeholder="Indique el motivo por el cual se rechaza el pago"></textarea>
+                            <div class="invalid-feedback">El motivo de rechazo es obligatorio</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        <i class="ri-close-line me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btn_guardar_aprobacion_venta">
+                        <i class="ri-save-line me-1"></i>Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .comprobante-print {
+        padding: 20px;
+    }
+    .modal-footer {
+        display: none;
+    }
+}
+</style>

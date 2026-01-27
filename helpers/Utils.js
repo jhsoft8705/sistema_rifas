@@ -307,19 +307,32 @@ const Utils = {
 
     /**
      * Formatear fecha y hora
-     * @param {string} fechaHora - Fecha y hora en formato ISO
+     * @param {string} fechaHora - Fecha y hora en formato ISO o DATETIME
      * @returns {string}
      */
     formatearFechaHora(fechaHora) {
         if (!fechaHora) return '';
-        const fecha = new Date(fechaHora);
-        return fecha.toLocaleString('es-PE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        
+        try {
+            const fecha = new Date(fechaHora);
+            
+            // Verificar si la fecha es válida
+            if (isNaN(fecha.getTime())) {
+                return '';
+            }
+            
+            return fecha.toLocaleString('es-PE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        } catch (error) {
+            console.warn('Error al formatear fecha:', fechaHora, error);
+            return '';
+        }
     },
 
     /**

@@ -44,14 +44,6 @@
 
                                     <div class="d-flex flex-wrap w-100 gap-3 mt-3">
                                         <div class="d-flex flex-wrap flex-grow-1 gap-3">
-                                            <div class="w-auto" style="max-width: 260px; min-width: 200px;">
-                                                <input type="text" id="filtro_fecha" class="form-control"
-                                                    placeholder="Selecciona rango de fechas"
-                                                    style="min-height: 40px; font-size: 0.9rem;"
-                                                    data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                    title="Filtrar premios por fecha de creación">
-                                            </div>
-
                                             <div class="w-auto" style="max-width: 200px; min-width: 160px;">
                                                 <select id="filtro_estado" class="form-select"
                                                     style="min-height: 40px; font-size: 0.9rem;"

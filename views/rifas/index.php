@@ -39,21 +39,13 @@
                             <div class="card">
                                 <div class="card-header">
                                     <h5 class="card-title mb-0">
-                                        <i class="ri-ticket-2-line me-2"></i>Filtros y Acciones
+                                        <i class="ri-ticket-2-line me-2" style="font-size: 1rem;"></i>Filtros y Acciones
                                     </h5>
 
                                     <!-- Contenedor responsive para filtros y botones -->
                                     <div class="d-flex flex-wrap w-100 gap-3 mt-3">
                                         <!-- Grupo del selector de fechas - ancho completo en móvil -->
                                         <div class="d-flex flex-wrap flex-grow-1 gap-3">
-                                            <div class="input-group" style="max-width: 240px; min-width: 200px;">
-                                                <select id="filtro_sede_rifa" class="form-select"
-                                                    style="min-height: 40px; font-size: 0.9rem;"
-                                                    data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                    title="Filtrar rifas por sede">
-                                                    <option value="">Todas las sedes</option>
-                                                </select>
-                                            </div>
                                             <!-- Combo para filtrar por estado -->
                                             <div class="input-group" style="max-width: 220px; min-width: 180px;">
                                                 <select id="filtro_estado_rifa" class="form-select"
@@ -74,7 +66,7 @@
                                             <button type="button" id="btn_filtrar_rifas" class="btn btn-outline-info"
                                                 style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
                                                 data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                title="Filtrar rifas por sede y estado">
+                                                title="Filtrar rifas por estado">
                                                 <i class="ri-filter-line me-1"></i>Filtrar
                                             </button>
 

@@ -9,11 +9,8 @@ let userInfo = null;
 let modalPremio;
 let simboloMoneda = 'S/.';
 let codigoMoneda = 'PEN';
-let fechaInicioFiltro = '';
-let fechaFinFiltro = '';
-let filtroFechaPicker = null;
 
-$(document).ready(async function () {
+$(document).ready(function () {
     if (!Auth.requireAuth()) {
         return;
     }
@@ -26,32 +23,54 @@ $(document).ready(async function () {
     $('#valor_estimado_simbolo').text(simboloMoneda);
     $('#valor_estimado_simbolo_prefix').text(simboloMoneda);
 
-    await inicializarSelects();
+    $('#sede_id').val(userInfo?.sede_id || '');
+    
     inicializarTabla();
     inicializarEventos();
-
-    cargarPremios();
 });
-
-async function inicializarSelects() {
-    if (!userInfo) {
-        return;
-    }
-
-    $('#sede_id').val(userInfo.sede_id);
-    inicializarRangoFechas();
-
-    await cargarCategoriasSelect();
-}
 
 function inicializarTabla() {
     tablaPremios = $('#tabla_premios').DataTable({
-        processing: false,
+        processing: true,
         serverSide: false,
-        data: [],
+        ajax: {
+            url: window.API_BASE_URL + '/premios/getAll',
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            },
+            data: function (d) {
+                d.sede_id = userInfo?.sede_id || '';
+                const estado = $('#filtro_estado').val();
+                if (estado !== '') {
+                    d.estado = estado;
+                }
+                return d;
+            },
+            dataSrc: function (json) {
+                if (json && json.ok) {
+                    premiosData = json.data || [];
+                    return premiosData;
+                } else {
+                    premiosData = [];
+                    return [];
+                }
+            },
+            error: function (xhr, error, thrown) {
+                console.error('Error al cargar premios:', error);
+                premiosData = [];
+                if (xhr.status === 401) {
+                    Auth.logout();
+                } else {
+                    Utils.showAlert('Error de conexión al cargar los premios', 'error');
+                }
+            }
+        },
         language: Utils.getDataTableLanguageES(),
         lengthChange: false,
         dom: 'frtip',
+        autoWidth: false,
         columns: [
             {
                 data: null,
@@ -60,11 +79,11 @@ function inicializarTabla() {
                 width: '80px',
                 render: (_, __, row) => `
                     <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-primary btn-editar" data-id="${row.id}" title="Editar">
+                        <button class="btn btn-sm btn-primary btn-editar btn-action-table" data-id="${row.id}" title="Editar">
                             <i class="ri-edit-2-line"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger btn-eliminar" data-id="${row.id}" title="Eliminar">
-                            <i class="ri-delete-bin-line"></i>
+                        <button class="btn btn-sm btn-danger btn-eliminar btn-action-table" data-id="${row.id}" title="Inactivar">
+                            <i class="ri-close-circle-line"></i>
                         </button>
                     </div>
                 `
@@ -100,16 +119,30 @@ function inicializarTabla() {
 }
 
 function inicializarEventos() {
-    $('#btn_nuevo_premio').on('click', () => {
+    // Botón nuevo premio - abrir modal primero
+    $('#btn_nuevo_premio').on('click', function () {
         abrirModalPremio();
     });
 
-    $('#btn_filtrar_premios').on('click', () => filtrarPremios());
-    $('#btn_recargar_premios').on('click', () => {
-        reiniciarFiltrosPremios();
-        cargarPremios();
+    // Cargar categorías cuando el modal esté completamente abierto (solo para nuevo registro)
+    $('#modal_premio').on('shown.bs.modal', function () {
+        // Solo cargar si es nuevo registro (no tiene premio_id)
+        if (!$('#premio_id').val()) {
+            cargarCategoriasSelect();
+        }
     });
 
+    // Botones de filtro
+    $('#btn_filtrar_premios').on('click', function () {
+        tablaPremios.ajax.reload();
+    });
+
+    $('#btn_recargar_premios').on('click', function () {
+        $('#filtro_estado').val('');
+        tablaPremios.ajax.reload();
+    });
+
+    // Eventos de imágenes
     $('#imagen_principal').on('change', function () {
         actualizarPreviewArchivoUnico(this, '#imagen_principal_preview', 'Sin imagen seleccionada');
     });
@@ -122,9 +155,10 @@ function inicializarEventos() {
         actualizarPreviewGaleriaNueva(this, '#galeria_nuevas_preview', 'Sin archivos seleccionados');
     });
 
-    $('#tabla_premios tbody').on('click', '.btn-editar', async function () {
+    // Eventos de tabla
+    $('#tabla_premios tbody').on('click', '.btn-editar', function () {
         const id = $(this).data('id');
-        await editarPremio(id);
+        editarPremio(id);
     });
 
     $('#tabla_premios tbody').on('click', '.btn-eliminar', function () {
@@ -132,11 +166,13 @@ function inicializarEventos() {
         eliminarPremio(id);
     });
 
+    // Submit del formulario
     $('#form_premio').on('submit', async function (event) {
         event.preventDefault();
         await guardarPremio();
     });
 
+    // Eventos de color
     $('#color_picker').on('input', function () {
         $('#color').val($(this).val());
     });
@@ -148,7 +184,7 @@ function inicializarEventos() {
         }
     });
 
-    $('#codigo').on('blur', () => Utils.validarCampo('codigo', 'El código del premio es obligatorio'));
+    // Validación
     $('#nombre').on('blur', () => Utils.validarCampo('nombre', 'El nombre del premio es obligatorio'));
 
     $('#form_premio').on('input change', 'input, select, textarea', function () {
@@ -171,46 +207,6 @@ function inicializarEventos() {
     });
 }
 
-async function cargarPremios() {
-    if (!userInfo) return;
-
-    try {
-        Utils.showLoading('Cargando premios...');
-
-        const estado = $('#filtro_estado').val();
-
-        const params = { sede_id: userInfo.sede_id };
-        if (estado !== '') {
-            params.estado = estado;
-        }
-        if (fechaInicioFiltro) {
-            params.fecha_inicio = fechaInicioFiltro;
-        }
-        if (fechaFinFiltro) {
-            params.fecha_fin = fechaFinFiltro;
-        }
-
-        const respuesta = await API.get('premios/getAll', params);
-
-        Utils.closeLoading();
-
-        if (respuesta && respuesta.ok) {
-            premiosData = respuesta.data || [];
-            tablaPremios.clear().rows.add(premiosData).draw();
-        } else {
-            premiosData = [];
-            tablaPremios.clear().draw();
-            Utils.showToast(respuesta?.msj || 'No se pudo obtener premios', 'warning');
-        }
-    } catch (error) {
-        Utils.closeLoading();
-        console.error('Error al cargar premios:', error);
-        premiosData = [];
-        tablaPremios.clear().draw();
-        Utils.showToast('Error de conexión al cargar los premios', 'error');
-    }
-}
-
 function abrirModalPremio(premio = null) {
     limpiarFormularioPremio();
 
@@ -222,7 +218,6 @@ function abrirModalPremio(premio = null) {
         $('#modal_premio_title').text('Editar Premio');
         $('#premio_id').val(premio.id);
         $('#categoria_id').val(premio.categoria_id || '');
-        $('#codigo').val(premio.codigo || '');
         $('#nombre').val(premio.nombre || '');
         $('#descripcion').val(premio.descripcion || '');
         $('#valor_estimado').val(premio.valor_estimado || '');
@@ -272,27 +267,105 @@ function abrirModalPremio(premio = null) {
     $('#galeria_imagenes').val('');
     setPreviewTexto('#galeria_nuevas_preview', 'Sin archivos seleccionados');
 
+    // Abrir modal primero - el select se cargará cuando el modal esté completamente abierto
     modalPremio.show();
 }
 
 async function editarPremio(id) {
-    try {
-        Utils.showLoading('Cargando premio...');
-        const respuesta = await API.get('premios/getById', {
-            id: id,
-            sede_id: userInfo?.sede_id
-        });
-        Utils.closeLoading();
+    // Deshabilitar botón mientras carga
+    const $btn = $(`button.btn-editar[data-id="${id}"]`);
+    const originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
 
-        if (respuesta && respuesta.ok && respuesta.data) {
-            abrirModalPremio(respuesta.data);
-        } else {
-            Utils.showToast(respuesta?.msj || 'No se pudo obtener el premio', 'error');
+    try {
+        // Precargar datos y categorías en paralelo antes de abrir el modal
+        const [respuestaPremio, respuestaCategorias] = await Promise.all([
+            API.get('premios/getById', {
+                id: id,
+                sede_id: userInfo?.sede_id
+            }),
+            API.get('categorias/getAll', {
+                sede_id: userInfo.sede_id
+            })
+        ]);
+
+        // Restaurar botón
+        $btn.prop('disabled', false).html(originalHtml);
+
+        if (!respuestaPremio || !respuestaPremio.ok || !respuestaPremio.data) {
+            Utils.showAlert(respuestaPremio?.msj || 'No se pudo obtener el premio', 'error');
+            return;
         }
+
+        // Cargar categorías en el select
+        if (respuestaCategorias && respuestaCategorias.ok) {
+            categoriasPremioData = respuestaCategorias.data || [];
+            const $select = $('#categoria_id');
+            if (categoriasPremioData.length) {
+                const opciones = ['<option value="">Sin categoría</option>'].concat(
+                    categoriasPremioData.map(cat => `<option value="${cat.id}">${cat.nombre}</option>`)
+                );
+                $select.html(opciones.join(''));
+            } else {
+                $select.html('<option value="">Sin categorías registradas</option>');
+            }
+        }
+
+        // Llenar formulario con los datos
+        const premio = respuestaPremio.data;
+        limpiarFormularioPremio();
+        
+        $('#modal_premio_title').text('Editar Premio');
+        $('#premio_id').val(premio.id);
+        $('#categoria_id').val(premio.categoria_id || '');
+        $('#nombre').val(premio.nombre || '');
+        $('#descripcion').val(premio.descripcion || '');
+        $('#valor_estimado').val(premio.valor_estimado || '');
+        $('#marca').val(premio.marca || '');
+        $('#modelo').val(premio.modelo || '');
+        $('#color').val(premio.color || '');
+        $('#video_url').val(premio.video_url || '');
+        $('#especificaciones').val(premio.especificaciones || '');
+        $('#terminos_condiciones').val(premio.terminos_condiciones || '');
+        $('#restricciones').val(premio.restricciones || '');
+        $('#es_destacado').val(premio.es_destacado || 0);
+        $('#orden_visualizacion').val(premio.orden_visualizacion || 0);
+        $('#estado').val(premio.estado ?? 1);
+
+        $('#imagen_principal_actual').val(premio.imagen_principal || '');
+        actualizarTextoImagen('#imagen_principal_actual_text', premio.imagen_principal);
+        renderPreviewPersistente('#imagen_principal_preview', premio.imagen_principal, 'Sin imagen seleccionada');
+
+        $('#imagen_secundaria_actual').val(premio.imagen_secundaria || '');
+        actualizarTextoImagen('#imagen_secundaria_actual_text', premio.imagen_secundaria);
+        renderPreviewPersistente('#imagen_secundaria_preview', premio.imagen_secundaria, 'Sin imagen seleccionada');
+
+        const galeria = parseGaleria(premio.galeria_imagenes);
+        actualizarListaGaleria(galeria);
+
+        const colorHex = premio.color || '';
+        if (esHexColor(colorHex)) {
+            $('#color_picker').val(colorHex);
+        } else {
+            $('#color_picker').val('#ffffff');
+        }
+
+        $('#sede_id').val(userInfo?.sede_id || '');
+        $('#valor_estimado_simbolo').text(simboloMoneda);
+        $('#valor_estimado_simbolo_prefix').text(simboloMoneda);
+
+        $('#imagen_principal').val('');
+        $('#imagen_secundaria').val('');
+        $('#galeria_imagenes').val('');
+        setPreviewTexto('#galeria_nuevas_preview', 'Sin archivos seleccionados');
+
+        // Abrir modal con todo listo
+        modalPremio.show();
     } catch (error) {
+        // Restaurar botón en caso de error
+        $btn.prop('disabled', false).html(originalHtml);
         console.error('Error al obtener premio:', error);
-        Utils.closeLoading();
-        Utils.showToast('Ocurrió un problema al obtener el premio', 'error');
+        Utils.showAlert('Ocurrió un problema al obtener el premio', 'error');
     }
 }
 
@@ -305,10 +378,14 @@ async function guardarPremio() {
     const premioId = $('#premio_id').val();
     const esEdicion = premioId !== '';
 
+    // Deshabilitar botón de guardar para evitar doble clic
+    const $btnGuardar = $('#form_premio button[type="submit"]');
+    const originalBtnHtml = $btnGuardar.html();
+    $btnGuardar.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin me-1"></i>Guardando...');
+
     const formData = new FormData(form);
     formData.set('sede_id', userInfo?.sede_id || '');
     formData.set('categoria_id', $('#categoria_id').val() || '');
-    formData.set('codigo', $('#codigo').val().trim());
     formData.set('nombre', $('#nombre').val().trim());
     formData.set('descripcion', $('#descripcion').val()?.trim() || '');
     formData.set('valor_estimado', $('#valor_estimado').val() || '');
@@ -327,6 +404,10 @@ async function guardarPremio() {
 
     if (esEdicion) {
         formData.set('id', premioId);
+        const premioExistente = premiosData.find(p => p.id == premioId);
+        if (premioExistente && premioExistente.codigo) {
+            formData.set('codigo', premioExistente.codigo);
+        }
         formData.set('estado', $('#estado').val());
         formData.set('modificado_por', userInfo?.nombre_completo || 'SYSTEM');
     } else {
@@ -334,22 +415,28 @@ async function guardarPremio() {
     }
 
     try {
-        Utils.showLoading(esEdicion ? 'Actualizando premio...' : 'Registrando premio...');
         const endpoint = esEdicion ? 'premios/update' : 'premios/register';
         const respuesta = await API.postFormData(endpoint, formData);
-        Utils.closeLoading();
+
+        // Restaurar botón
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
 
         if (respuesta && respuesta.ok) {
-            Utils.showToast(respuesta.msj, 'success');
+            Utils.showAlert(respuesta.msj || (esEdicion ? 'Premio actualizado correctamente' : 'Premio registrado correctamente'), 'success');
             modalPremio.hide();
-            await cargarPremios();
+            // Recargar tabla sin mostrar loading manual
+            tablaPremios.ajax.reload();
         } else {
-            Utils.showToast(respuesta?.msj || 'No se pudo guardar el premio', 'error');
+            // Mostrar el mensaje del servidor o uno genérico
+            const mensajeError = respuesta?.msj || 'No se pudo guardar el premio';
+            Utils.showAlert(mensajeError, 'error');
+            console.error('Error al guardar:', respuesta);
         }
     } catch (error) {
+        // Restaurar botón en caso de error
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
         console.error('Error al guardar premio:', error);
-        Utils.closeLoading();
-        Utils.showToast('Ocurrió un problema al guardar el premio', 'error');
+        Utils.showAlert('Ocurrió un problema al guardar el premio', 'error');
     }
 }
 
@@ -405,14 +492,14 @@ async function cargarCategoriasSelect() {
             categoriasPremioData = [];
             $select.html('<option value="">No se pudieron cargar categorías</option>');
             if (respuesta?.msj) {
-                Utils.showToast(respuesta.msj, 'warning');
+                Utils.showAlert(respuesta.msj, 'warning');
             }
         }
     } catch (error) {
         console.error('Error al cargar categorías:', error);
         categoriasPremioData = [];
         $select.html('<option value="">Error al cargar categorías</option>');
-        Utils.showToast('Ocurrió un problema al cargar las categorías', 'error');
+        Utils.showAlert('Ocurrió un problema al cargar las categorías', 'error');
     } finally {
         if (valorSeleccionado) {
             $select.val(valorSeleccionado);
@@ -421,81 +508,11 @@ async function cargarCategoriasSelect() {
     }
 }
 
-function inicializarRangoFechas(reset = false) {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-
-    const formatear = (fecha) => {
-        const iso = fecha.toISOString();
-        return iso.split('T')[0];
-    };
-
-    fechaInicioFiltro = formatear(primerDiaMes);
-    fechaFinFiltro = formatear(hoy);
-
-    if (!reset) {
-        if (typeof flatpickr !== 'undefined') {
-            filtroFechaPicker = flatpickr("#filtro_fecha", {
-                mode: "range",
-                dateFormat: "Y-m-d",
-                locale: "es",
-                defaultDate: [fechaInicioFiltro, fechaFinFiltro]
-            });
-        } else {
-            $('#filtro_fecha').val(`${fechaInicioFiltro} to ${fechaFinFiltro}`);
-        }
-    } else {
-        if (filtroFechaPicker) {
-            filtroFechaPicker.setDate([fechaInicioFiltro, fechaFinFiltro], true);
-        } else {
-            $('#filtro_fecha').val(`${fechaInicioFiltro} to ${fechaFinFiltro}`);
-        }
-    }
-}
-
-function filtrarPremios() {
-    if (!actualizarFechasDesdeInput()) {
-        Utils.showToast('Por favor selecciona un rango de fechas', 'warning');
-        return;
-    }
-
-    cargarPremios();
-}
-
-function actualizarFechasDesdeInput() {
-    const valor = $('#filtro_fecha').val();
-    if (!valor || valor.trim() === '') {
-        fechaInicioFiltro = '';
-        fechaFinFiltro = '';
-        return false;
-    }
-
-    const partes = valor.split(' to ');
-    if (partes.length === 2) {
-        fechaInicioFiltro = partes[0].trim();
-        fechaFinFiltro = partes[1].trim();
-    } else {
-        const fecha = valor.trim();
-        fechaInicioFiltro = fecha;
-        fechaFinFiltro = fecha;
-    }
-
-    return true;
-}
-
-function reiniciarFiltrosPremios() {
-    $('#filtro_estado').val('');
-    inicializarRangoFechas(true);
-    actualizarFechasDesdeInput();
-}
-
 function validarFormularioPremio() {
     let esValido = true;
     Utils.limpiarValidaciones('form_premio');
 
     const camposObligatorios = [
-        { id: 'codigo', mensaje: 'El código del premio es obligatorio' },
         { id: 'nombre', mensaje: 'El nombre del premio es obligatorio' }
     ];
 
@@ -663,39 +680,31 @@ function setPreviewTexto(selector, texto) {
 }
 
 function eliminarPremio(id) {
-    Swal.fire({
-        title: '¿Eliminar premio?',
-        text: 'Esta acción desactivará el premio seleccionado.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d'
-    }).then(async (result) => {
+    Utils.showConfirm(
+        '¿Inactivar premio?',
+        'Esta acción desactivará el premio seleccionado.',
+        'Sí, inactivar',
+        'Cancelar'
+    ).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                Utils.showLoading('Eliminando premio...');
                 const respuesta = await API.post('premios/delete', {
                     id: id,
                     sede_id: userInfo?.sede_id,
                     modificado_por: userInfo?.nombre_completo || 'SYSTEM'
                 });
-                Utils.closeLoading();
 
                 if (respuesta && respuesta.ok) {
-                    Utils.showToast(respuesta.msj, 'success');
-                    await cargarPremios();
+                    Utils.showAlert(respuesta.msj, 'success');
+                    // Recargar tabla sin mostrar loading manual
+                    tablaPremios.ajax.reload();
                 } else {
-                    Utils.showToast(respuesta?.msj || 'No se pudo eliminar el premio', 'error');
+                    Utils.showAlert(respuesta?.msj || 'No se pudo inactivar el premio', 'error');
                 }
             } catch (error) {
-                console.error('Error al eliminar premio:', error);
-                Utils.closeLoading();
-                Utils.showToast('Ocurrió un problema al eliminar el premio', 'error');
+                console.error('Error al inactivar premio:', error);
+                Utils.showAlert('Ocurrió un problema al inactivar el premio', 'error');
             }
         }
     });
 }
-
-

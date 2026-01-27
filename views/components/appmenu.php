@@ -44,27 +44,7 @@ $base_url = Enrutamiento::dominio();
                     </a>
                 </li>
 
-                <!-- CONFIGURACIÓN Y ADMINISTRACIÓN 
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarConfiguracion" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidebarConfiguracion">
-                        <i class="ri-settings-3-line"></i> <span data-key="t-configuracion">Configuración</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarConfiguracion">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="sedes" class="nav-link" data-key="t-sedes">Sedes</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="ubigeo" class="nav-link" data-key="t-ubigeo">Ubigeo</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="configuracion-sede" class="nav-link" data-key="t-config-sede">Configuración por
-                                    Sede</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>-->
+          
 
                 <!-- USUARIOS Y SEGURIDAD 
                 <li class="nav-item">
@@ -140,7 +120,7 @@ $base_url = Enrutamiento::dominio();
                                 <a href="admin-tickets" class="nav-link" data-key="t-tickets">Tickets</a>
                             </li>
                             <li class="nav-item">
-                                <a href="admin-comprobantes" class="nav-link" data-key="t-comprobantes">Comprobantes</a>
+                                <a href="admin-personas" class="nav-link" data-key="t-personas">Personas</a>
                             </li>
                        
                         </ul>
@@ -148,24 +128,17 @@ $base_url = Enrutamiento::dominio();
                 </li>
                 <!-- EMPLEADOS -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarEmpleados" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidebarEmpleados">
-                        <i class="ri-user-line"></i> <span data-key="t-empleados">Empleados</span>
+                    <a class="nav-link menu-link" href="#sidebarRifasVentas" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarRifasVentas">
+                        <i class="ri-user-line"></i> <span data-key="t-ventas">Ventas</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarEmpleados">
+                    <div class="collapse menu-dropdown" id="sidebarRifasVentas">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="empleados" class="nav-link" data-key="t-empleados">Gestión de Empleados</a>
+                                <a href="rifas-ventas" class="nav-link" data-key="t-ventas">Ventas</a>
                             </li>
                             <li class="nav-item">
-                                <a href="direcciones-empleado" class="nav-link" data-key="t-direcciones">Direcciones</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="biometrico" class="nav-link" data-key="t-biometrico">Dispositivos
-                                    Biométricos</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="mapeo-biometrico" class="nav-link" data-key="t-mapeo">Mapeo Biométrico</a>
+                                <a href="admin-juegos" class="nav-link" data-key="t-juegos">Proceso de Juego</a>
                             </li>
                         </ul>
                     </div>

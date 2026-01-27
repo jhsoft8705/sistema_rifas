@@ -6,7 +6,7 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
 
 <!-- App favicon -->
 <link rel="shortcut icon" href="assets/images/favicon.ico">
-<!-- Layout config Js -->
+ <!-- Layout config Js -->
 <script src="assets/js/layout.js"></script>
 <!-- Bootstrap Css -->
 <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />

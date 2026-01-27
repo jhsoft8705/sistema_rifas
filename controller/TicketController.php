@@ -38,6 +38,12 @@ class TicketController
             case 'validarComprobante':
                 $this->validar_comprobante();
                 break;
+            case 'listVentas':
+                $this->listar_ventas();
+                break;
+            case 'getComprobante':
+                $this->obtener_comprobante();
+                break;
             default:
                 http_response_code(400);
                 echo json_encode(['ok' => false, 'msj' => 'Acción no válida']);
@@ -88,6 +94,57 @@ class TicketController
             // Obtener IP del cliente
             $input['ip_compra'] = $_SERVER['REMOTE_ADDR'] ?? null;
             $input['canal_venta'] = $input['canal_venta'] ?? 'WEB';
+            
+            // Procesar números seleccionados
+            // Prioridad: numeros_seleccionados (directo) > numeros_reservados (transformar)
+            if (!isset($input['numeros_seleccionados']) || empty($input['numeros_seleccionados'])) {
+                // Si no viene numeros_seleccionados, intentar transformar numeros_reservados
+                if (isset($input['numeros_reservados']) && !empty($input['numeros_reservados'])) {
+                    // Si viene como JSON string, decodificarlo
+                    if (is_string($input['numeros_reservados'])) {
+                        $numeros = json_decode($input['numeros_reservados'], true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($numeros)) {
+                            $input['numeros_seleccionados'] = $numeros;
+                        } else {
+                            // Si no es JSON válido, intentar parsear como string separado por comas
+                            $numeros = array_filter(array_map('trim', explode(',', $input['numeros_reservados'])));
+                            $input['numeros_seleccionados'] = array_map('intval', $numeros);
+                        }
+                    } elseif (is_array($input['numeros_reservados'])) {
+                        $input['numeros_seleccionados'] = $input['numeros_reservados'];
+                    }
+                }
+            }
+            
+            // Asegurar que numeros_seleccionados sea un array de enteros
+            if (isset($input['numeros_seleccionados']) && !empty($input['numeros_seleccionados'])) {
+                if (is_string($input['numeros_seleccionados'])) {
+                    // Si es string JSON, decodificarlo
+                    $numeros = json_decode($input['numeros_seleccionados'], true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($numeros)) {
+                        $input['numeros_seleccionados'] = array_map('intval', $numeros);
+                    } else {
+                        // Si no es JSON, intentar separar por comas
+                        $numeros = array_filter(array_map('trim', explode(',', $input['numeros_seleccionados'])));
+                        $input['numeros_seleccionados'] = array_map('intval', $numeros);
+                    }
+                } elseif (is_array($input['numeros_seleccionados'])) {
+                    // Asegurar que todos los elementos sean enteros
+                    $input['numeros_seleccionados'] = array_map(function($n) {
+                        if (is_array($n) || is_object($n)) {
+                            // Si es objeto, extraer el número entero
+                            return intval($n['numero_entero'] ?? $n['entero'] ?? $n ?? 0);
+                        }
+                        return intval($n);
+                    }, $input['numeros_seleccionados']);
+                    // Filtrar valores inválidos
+                    $input['numeros_seleccionados'] = array_filter($input['numeros_seleccionados'], function($n) {
+                        return $n > 0;
+                    });
+                    // Reindexar array
+                    $input['numeros_seleccionados'] = array_values($input['numeros_seleccionados']);
+                }
+            }
 
             $resultado = $this->ticket->crear_ticket($input);
             http_response_code($resultado['ok'] ? 201 : 400);
@@ -289,6 +346,68 @@ class TicketController
             error_log("Error en validar_comprobante: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al validar el comprobante']);
+        }
+    }
+
+    /**
+     * Listar ventas/compras realizadas
+     */
+    private function listar_ventas(): void
+    {
+        try {
+            if (!isset($_GET['sede_id'])) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'El parámetro sede_id es obligatorio']);
+                return;
+            }
+
+            $sede_id = (int) $_GET['sede_id'];
+            $rifa_id = isset($_GET['rifa_id']) ? (int) $_GET['rifa_id'] : null;
+            $estado = isset($_GET['estado']) ? trim($_GET['estado']) : null;
+            $fecha_desde = isset($_GET['fecha_desde']) ? trim($_GET['fecha_desde']) : null;
+            $fecha_hasta = isset($_GET['fecha_hasta']) ? trim($_GET['fecha_hasta']) : null;
+            $busqueda = isset($_GET['busqueda']) ? trim($_GET['busqueda']) : null;
+
+            $resultado = $this->ticket->listar_ventas($sede_id, $rifa_id, $estado, $fecha_desde, $fecha_hasta, $busqueda);
+            http_response_code($resultado['ok'] ? 200 : 404);
+            echo json_encode($resultado);
+        } catch (Exception $e) {
+            error_log("Error en listar_ventas: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener las ventas']);
+        }
+    }
+
+    /**
+     * Obtener datos del comprobante para impresión
+     */
+    private function obtener_comprobante(): void
+    {
+        try {
+            $ticket_id = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : null;
+            $sede_id = isset($_GET['sede_id']) ? (int)$_GET['sede_id'] : null;
+
+            if (!$ticket_id || !$sede_id) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'Faltan parámetros requeridos']);
+                return;
+            }
+
+            $resultado = $this->ticket->obtener_comprobante($ticket_id, $sede_id);
+            
+            if ($resultado['ok']) {
+                echo json_encode($resultado);
+            } else {
+                http_response_code(404);
+                echo json_encode($resultado);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'ok' => false,
+                'msj' => 'Error al obtener el comprobante',
+                'detalle' => $e->getMessage()
+            ]);
         }
     }
 }

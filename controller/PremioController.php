@@ -57,10 +57,8 @@ class PremioController
 
             $sede_id = (int) $_GET['sede_id'];
             $estado = isset($_GET['estado']) && $_GET['estado'] !== '' ? (int) $_GET['estado'] : null;
-            $fechaInicio = $this->sanitizeDate($_GET['fecha_inicio'] ?? null);
-            $fechaFin = $this->sanitizeDate($_GET['fecha_fin'] ?? null);
 
-            $resultado = $this->premio->listar_premios($sede_id, $estado, $fechaInicio, $fechaFin);
+            $resultado = $this->premio->listar_premios($sede_id, $estado);
 
             http_response_code($resultado['ok'] ? 200 : 404);
             echo json_encode($resultado);
@@ -105,7 +103,7 @@ class PremioController
         }
 
         $validation = Validator::validarCamposRequeridos($input, [
-            'sede_id', 'codigo', 'nombre', 'creado_por'
+            'sede_id', 'nombre', 'creado_por'
         ]);
 
         if (!$validation['ok']) {
@@ -134,7 +132,7 @@ class PremioController
         $resultado = $this->premio->registrar_premio(
             $sedeId,
             $categoriaId,
-            trim($input['codigo']),
+            $this->nullIfEmpty($input['codigo'] ?? null),
             trim($input['nombre']),
             $this->nullIfEmpty($input['descripcion'] ?? null),
             $valorEstimado,

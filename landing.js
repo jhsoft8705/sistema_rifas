@@ -506,8 +506,8 @@ style.textContent = `
     }
     
     #modal_comprar_ticket .nav-pills .nav-link.done {
-        background-color: #198754;
-        color: white;
+        background-color: rgba(64, 81, 137, 0.05);
+        color: #405189;
     }
     
     #modal_comprar_ticket .form-control.border-danger {
@@ -764,7 +764,7 @@ document.head.appendChild(style);
             
             // Formatear precio con símbolo de moneda
             const precioFormateado = precioUnitario > 0 ? precioUnitario.toFixed(2) : '0.00';
-            document.getElementById('precio_ticket').textContent = precioFormateado;
+            document.getElementById('precio_ticket').textContent = 'S/ ' + precioFormateado;
             document.getElementById('tickets_disponibles').textContent = ticketsDisponibles;
             document.getElementById('tickets_total').textContent = ticketsTotal;
             
@@ -799,8 +799,17 @@ document.head.appendChild(style);
                 listaPremios.innerHTML = '<p class="text-muted small mb-0">No hay premios registrados</p>';
             }
 
+            // Limpiar números seleccionados al abrir el modal
+            window.numerosSeleccionados = [];
+            document.getElementById('numeros_reservados').value = '';
+            document.getElementById('numeros_formateados').value = '';
+            const displayNumeros = document.getElementById('numero_seleccionado_display');
+            if (displayNumeros) {
+                displayNumeros.style.display = 'none';
+            }
+            
             // Resetear cantidad a 1
-            document.getElementById('cantidad_tickets').value = 1;
+            document.getElementById('cantidad_tickets').value = '1';
             calcularTotal();
             
             // Validar tabs inicialmente
@@ -838,6 +847,25 @@ document.head.appendChild(style);
 
         // Evento al abrir el modal (show.bs.modal)
         modalElement.addEventListener('show.bs.modal', function (event) {
+            // Limpiar datos previos al abrir el modal
+            window.numerosSeleccionados = [];
+            document.getElementById('numeros_reservados').value = '';
+            document.getElementById('numeros_formateados').value = '';
+            document.getElementById('cantidad_tickets').value = '1';
+            const displayNumeros = document.getElementById('numero_seleccionado_display');
+            if (displayNumeros) {
+                displayNumeros.style.display = 'none';
+            }
+            // Limpiar vista previa de comprobante
+            const comprobanteInput = document.getElementById('comprobante_pago');
+            if (comprobanteInput) {
+                comprobanteInput.value = '';
+            }
+            const previewComprobante = document.getElementById('preview_comprobante');
+            if (previewComprobante) {
+                previewComprobante.style.display = 'none';
+            }
+            
             // Botón que disparó el modal (puede ser null si se abre programáticamente)
             const button = event.relatedTarget;
             let rifaData = null;
@@ -900,7 +928,7 @@ document.head.appendChild(style);
             
             const total = (cantidad * precioActual).toFixed(2);
             
-            document.getElementById('total_pagar').textContent = total;
+            document.getElementById('total_pagar').textContent = 'S/ ' + total;
             document.getElementById('cantidad_display').textContent = cantidad;
             
             console.log('Calculando total:', {
@@ -974,8 +1002,8 @@ document.head.appendChild(style);
             
             // Actualizar cantidades y precios
             document.getElementById('resumen_cantidad').textContent = cantidadTickets;
-            document.getElementById('resumen_precio').textContent = '$' + precioActual.toFixed(2);
-            document.getElementById('resumen_total').textContent = '$' + totalCalculado;
+            document.getElementById('resumen_precio').textContent = 'S/ ' + precioActual.toFixed(2);
+            document.getElementById('resumen_total').textContent = 'S/ ' + totalCalculado;
             
             // Actualizar también el total_pagar si existe
             const totalPagarEl = document.getElementById('total_pagar');
@@ -1792,20 +1820,36 @@ document.head.appendChild(style);
             const nombres = document.getElementById('nombres').value.trim();
             const apellidos = document.getElementById('apellidos').value.trim();
             
-            // Obtener precio del total
+            // Obtener precio del total (remover S/ y espacios)
             const totalPagarText = document.getElementById('total_pagar').textContent;
             const precioPagado = parseFloat(totalPagarText.replace(/[^0-9.]/g, '')) || 0;
             
-            // Números seleccionados
+            // Números seleccionados - obtener solo los números enteros
             const numerosReservadosJSON = document.getElementById('numeros_reservados').value;
             let numerosSeleccionados = null;
             if (numerosReservadosJSON && numerosReservadosJSON !== '' && numerosReservadosJSON !== '[]') {
                 try {
-                    numerosSeleccionados = JSON.parse(numerosReservadosJSON);
+                    const numerosArray = JSON.parse(numerosReservadosJSON);
+                    // Asegurar que sea un array de números enteros
+                    if (Array.isArray(numerosArray)) {
+                        numerosSeleccionados = numerosArray.map(n => {
+                            // Si es un objeto, tomar el entero; si es un número, usarlo directamente
+                            return typeof n === 'object' && n !== null ? n.entero || n : parseInt(n, 10);
+                        }).filter(n => !isNaN(n) && n > 0);
+                    }
                 } catch (e) {
                     console.error('Error parsing números:', e);
                 }
             }
+            
+            // Si no hay números seleccionados pero hay números en memoria global, usarlos
+            if ((!numerosSeleccionados || numerosSeleccionados.length === 0) && window.numerosSeleccionados && window.numerosSeleccionados.length > 0) {
+                numerosSeleccionados = window.numerosSeleccionados.map(n => {
+                    return typeof n === 'object' && n !== null ? n.entero || n : parseInt(n, 10);
+                }).filter(n => !isNaN(n) && n > 0);
+            }
+            
+            console.log('🔵 [DEBUG] Números a enviar al backend:', numerosSeleccionados);
             
             // Preparar datos para enviar
             const datosCompra = {
@@ -1868,7 +1912,20 @@ document.head.appendChild(style);
                         }
                     }
                     
-                    // Usar Utils.showAlert si está disponible, sino SweetAlert directo, sino alert
+                    // Cerrar modal primero
+                    bootstrap.Modal.getInstance(modalElement).hide();
+                    
+                    // Limpiar todos los datos seleccionados
+                    window.numerosSeleccionados = [];
+                    document.getElementById('numeros_reservados').value = '';
+                    document.getElementById('numeros_formateados').value = '';
+                    document.getElementById('cantidad_tickets').value = '1';
+                    
+                    // Resetear formulario
+                    document.getElementById('form_comprar_ticket').reset();
+                    limpiarErrores();
+                    
+                    // Mostrar mensaje de éxito y recargar después
                     if (window.Utils && window.Utils.showAlert) {
                         window.Utils.showAlert(
                             `Tu compra ha sido registrada correctamente.\n\nCódigo de ticket: ${codigoTicket}\n\n${comprobanteFile ? 'Tu comprobante ha sido subido y será validado por un administrador.' : 'Recibirás un correo con las instrucciones de pago.'}`,
@@ -1880,7 +1937,10 @@ document.head.appendChild(style);
                                     <p class="text-muted small">${comprobanteFile ? 'Tu comprobante ha sido subido y será validado por un administrador.' : 'Recibirás un correo con las instrucciones de pago.'}</p>
                                 `
                             }
-                        );
+                        ).then(() => {
+                            // Recargar página después de cerrar el alert
+                            location.reload();
+                        });
                     } else if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'success',
@@ -1891,17 +1951,17 @@ document.head.appendChild(style);
                                 <p class="text-muted small">${comprobanteFile ? 'Tu comprobante ha sido subido y será validado por un administrador.' : 'Recibirás un correo con las instrucciones de pago.'}</p>
                             `,
                             confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            // Recargar página después de cerrar el alert
+                            location.reload();
                         });
                     } else {
                         alert('¡Compra registrada exitosamente!\n\nCódigo de ticket: ' + codigoTicket + '\n\n' + (comprobanteFile ? 'Tu comprobante ha sido subido.' : 'Recibirás un correo con las instrucciones de pago.'));
+                        // Recargar página después del alert
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
                     }
-                    
-                    // Cerrar modal
-                    bootstrap.Modal.getInstance(modalElement).hide();
-                    
-                    // Resetear formulario
-                    document.getElementById('form_comprar_ticket').reset();
-                    limpiarErrores();
                 } else {
                     // Error
                     const mensajeError = resultado.msj || resultado.detalle || 'No se pudo procesar tu compra. Por favor, intenta nuevamente.';
@@ -1950,6 +2010,28 @@ document.head.appendChild(style);
             const form = document.getElementById('form_comprar_ticket');
             form.reset();
             limpiarErrores();
+            
+            // Limpiar números seleccionados
+            window.numerosSeleccionados = [];
+            document.getElementById('numeros_reservados').value = '';
+            document.getElementById('numeros_formateados').value = '';
+            document.getElementById('cantidad_tickets').value = '1';
+            
+            // Ocultar display de números seleccionados
+            const displayNumeros = document.getElementById('numero_seleccionado_display');
+            if (displayNumeros) {
+                displayNumeros.style.display = 'none';
+            }
+            
+            // Limpiar vista previa de comprobante
+            const comprobanteInput = document.getElementById('comprobante_pago');
+            if (comprobanteInput) {
+                comprobanteInput.value = '';
+            }
+            const previewComprobante = document.getElementById('preview_comprobante');
+            if (previewComprobante) {
+                previewComprobante.style.display = 'none';
+            }
             
             // Resetear navegación - solo primer tab habilitado
             const personalTab = document.getElementById('pills-personal-tab');
@@ -2323,6 +2405,11 @@ document.head.appendChild(style);
         document.getElementById('stat_reservados').textContent = reservados;
         document.getElementById('stat_porcentaje').textContent = porcentaje + '%';
         
+        // Obtener cantidad requerida y números ya seleccionados
+        const cantidadRequerida = parseInt(document.getElementById('cantidad_tickets').value) || 1;
+        const numerosYaSeleccionados = window.numerosSeleccionados || numerosSeleccionados || [];
+        const limiteAlcanzado = numerosYaSeleccionados.length >= cantidadRequerida;
+        
         // Renderizar números en grid (Bootstrap col)
         numeros.forEach(num => {
             const col = document.createElement('div');
@@ -2335,6 +2422,9 @@ document.head.appendChild(style);
             button.dataset.formateado = num.numero_formateado;
             button.dataset.estado = num.estado;
             
+            // Verificar si el número ya está seleccionado
+            const yaSeleccionado = numerosYaSeleccionados.find(n => n.entero === num.numero_entero);
+            
             // Clases según estado
             if (num.estado === 'VENDIDO') {
                 button.className = 'numero-btn numero-vendido';
@@ -2345,6 +2435,21 @@ document.head.appendChild(style);
             } else if (num.estado === 'BLOQUEADO') {
                 button.className = 'numero-btn numero-bloqueado';
                 button.disabled = true;
+            } else if (yaSeleccionado) {
+                // Número ya seleccionado por el usuario actual
+                button.className = 'numero-btn numero-seleccionado';
+                button.disabled = false; // Permitir deseleccionar
+                button.onclick = () => {
+                    const index = numerosYaSeleccionados.findIndex(n => n.entero === num.numero_entero);
+                    if (index !== -1) {
+                        eliminarNumero(index);
+                    }
+                };
+            } else if (limiteAlcanzado) {
+                // Límite alcanzado, deshabilitar números disponibles
+                button.className = 'numero-btn numero-disponible numero-deshabilitado';
+                button.disabled = true;
+                button.title = `Ya has seleccionado ${cantidadRequerida} número(s). Elimina uno para seleccionar otro.`;
             } else if (num.es_especial) {
                 button.className = 'numero-btn numero-especial numero-disponible';
                 button.onclick = () => seleccionarNumero(num.numero_entero, num.numero_formateado);
@@ -2358,8 +2463,51 @@ document.head.appendChild(style);
         });
     }
     
+    // Actualizar estado de botones en el grid después de seleccionar/eliminar
+    function actualizarEstadoBotonesGrid() {
+        const cantidadRequerida = parseInt(document.getElementById('cantidad_tickets').value) || 1;
+        const numerosYaSeleccionados = window.numerosSeleccionados || numerosSeleccionados || [];
+        const limiteAlcanzado = numerosYaSeleccionados.length >= cantidadRequerida;
+        
+        // Obtener todos los botones de números disponibles
+        const botones = document.querySelectorAll('#grid_numeros_disponibles .numero-btn.numero-disponible');
+        
+        botones.forEach(button => {
+            const numeroEntero = parseInt(button.dataset.numero);
+            const yaSeleccionado = numerosYaSeleccionados.find(n => n.entero === numeroEntero);
+            
+            if (yaSeleccionado) {
+                // Número ya seleccionado
+                button.className = 'numero-btn numero-seleccionado';
+                button.disabled = false;
+                button.onclick = () => {
+                    const index = numerosYaSeleccionados.findIndex(n => n.entero === numeroEntero);
+                    if (index !== -1) {
+                        eliminarNumero(index);
+                    }
+                };
+            } else if (limiteAlcanzado) {
+                // Límite alcanzado, deshabilitar
+                button.className = 'numero-btn numero-disponible numero-deshabilitado';
+                button.disabled = true;
+                button.title = `Ya has seleccionado ${cantidadRequerida} número(s). Elimina uno para seleccionar otro.`;
+                button.onclick = null;
+            } else {
+                // Disponible para seleccionar
+                button.className = 'numero-btn numero-disponible';
+                button.disabled = false;
+                button.onclick = () => seleccionarNumero(numeroEntero, button.dataset.formateado);
+            }
+        });
+    }
+    
     // Seleccionar número específico
     async function seleccionarNumero(numeroEntero, numeroFormateado) {
+        // Obtener cantidad requerida actualizada del input
+        const cantidadActual = parseInt(document.getElementById('cantidad_tickets').value) || 1;
+        cantidadTicketsRequerida = cantidadActual;
+        window.cantidadTicketsRequerida = cantidadActual;
+        
         // Verificar si ya está seleccionado
         const yaSeleccionado = numerosSeleccionados.find(n => n.entero === numeroEntero);
         if (yaSeleccionado) {
@@ -2371,32 +2519,15 @@ document.head.appendChild(style);
             return;
         }
         
-        // Si ya hay números seleccionados y se alcanzó el límite, preguntar si quiere reemplazar
+        // VALIDACIÓN CRÍTICA: Prevenir selección si ya se alcanzó el límite
         if (numerosSeleccionados.length >= cantidadTicketsRequerida) {
-            const numerosActuales = numerosSeleccionados.map(n => n.formateado).join(', ');
-            
-            if (window.Utils && window.Utils.showConfirm) {
-                const confirmacion = await window.Utils.showConfirm(
-                    'Ya tienes números seleccionados',
-                    `Tienes ${cantidadTicketsRequerida} número(s) seleccionado(s): ${numerosActuales}. ¿Deseas reemplazarlos por este número?`,
-                    'Sí, reemplazar',
-                    'Cancelar'
-                );
-                
-                if (!confirmacion.isConfirmed) {
-                    return;
-                }
-                
-                // Limpiar selección anterior antes de agregar el nuevo
-                numerosSeleccionados = [];
-                window.numerosSeleccionados = [];
+            const mensaje = `Ya has seleccionado ${cantidadTicketsRequerida} número(s). No puedes seleccionar más. Si deseas cambiar, primero elimina algún número seleccionado.`;
+            if (window.Utils && window.Utils.showAlert) {
+                window.Utils.showAlert(mensaje, 'warning');
             } else {
-                if (!confirm(`Ya tienes ${cantidadTicketsRequerida} número(s) seleccionado(s). ¿Deseas reemplazarlos por este número?`)) {
-                    return;
-                }
-                numerosSeleccionados = [];
-                window.numerosSeleccionados = [];
+                alert(mensaje);
             }
+            return; // IMPORTANTE: Salir sin reservar el número
         }
         
         const rifaId = document.getElementById('rifa_id').value;
@@ -2445,6 +2576,9 @@ document.head.appendChild(style);
                 
                 // Actualizar display (esto también actualiza los campos ocultos, pero ya están actualizados arriba)
                 actualizarDisplayNumeros();
+                
+                // Actualizar estado de botones en el grid (deshabilitar si se alcanzó el límite)
+                actualizarEstadoBotonesGrid();
                 
                 // Validar tab orden DESPUÉS de actualizar display (para que los campos ocultos estén actualizados)
                 setTimeout(() => {
@@ -2600,6 +2734,9 @@ document.head.appendChild(style);
         }
         
         if (confirmacion) {
+            // Obtener el número que se va a eliminar para liberarlo
+            const numeroAEliminar = numerosSeleccionados[index];
+            
             numerosSeleccionados.splice(index, 1);
             window.numerosSeleccionados = numerosSeleccionados; // Sincronizar con global
             actualizarDisplayNumeros();
@@ -2609,6 +2746,30 @@ document.head.appendChild(style);
             const formateadosArray = numerosSeleccionados.map(n => n.formateado);
             document.getElementById('numeros_reservados').value = JSON.stringify(enterosArray);
             document.getElementById('numeros_formateados').value = JSON.stringify(formateadosArray);
+            
+            // Liberar el número en el backend si existe
+            if (numeroAEliminar) {
+                const rifaId = document.getElementById('rifa_id')?.value;
+                const sesionId = obtenerOGenerarSesionId();
+                
+                if (rifaId && sesionId) {
+                    try {
+                        const API_BASE_URL = window.API_BASE_URL || (window.location.origin + '/sistema_rifas/api');
+                        await fetch(`${API_BASE_URL}/rifas/numeros/liberar`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                rifa_id: parseInt(rifaId),
+                                sesion_id: sesionId
+                            })
+                        });
+                    } catch (error) {
+                        console.warn('Error al liberar número reservado:', error);
+                    }
+                }
+            }
             
             // Validar tab orden DESPUÉS de actualizar display
             setTimeout(() => {
@@ -2629,6 +2790,9 @@ document.head.appendChild(style);
                     timerReserva = null;
                 }
             }
+            
+            // Actualizar estado de botones en el grid después de eliminar
+            actualizarEstadoBotonesGrid();
         }
     };
     
@@ -2802,7 +2966,28 @@ document.head.appendChild(style);
                     timerReserva = null;
                 }
                 
-                // TODO: En producción, liberar los números en el backend
+                // Liberar números reservados en el backend
+                const rifaId = document.getElementById('rifa_id')?.value;
+                const sesionId = obtenerOGenerarSesionId();
+                
+                if (rifaId && sesionId) {
+                    try {
+                        const API_BASE_URL = window.API_BASE_URL || (window.location.origin + '/sistema_rifas/api');
+                        await fetch(`${API_BASE_URL}/rifas/numeros/liberar`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                rifa_id: parseInt(rifaId),
+                                sesion_id: sesionId
+                            })
+                        });
+                        // No mostrar error si falla, solo loguear
+                    } catch (error) {
+                        console.warn('Error al liberar números reservados:', error);
+                    }
+                }
             }
         } catch (error) {
             console.error('Error en cancelarTodasLasSelecciones:', error);
@@ -2821,6 +3006,28 @@ document.head.appendChild(style);
                 if (timerReserva) {
                     clearInterval(timerReserva);
                     timerReserva = null;
+                }
+                
+                // Intentar liberar números reservados en el backend
+                const rifaId = document.getElementById('rifa_id')?.value;
+                const sesionId = obtenerOGenerarSesionId();
+                
+                if (rifaId && sesionId) {
+                    try {
+                        const API_BASE_URL = window.API_BASE_URL || (window.location.origin + '/sistema_rifas/api');
+                        await fetch(`${API_BASE_URL}/rifas/numeros/liberar`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                rifa_id: parseInt(rifaId),
+                                sesion_id: sesionId
+                            })
+                        });
+                    } catch (error) {
+                        console.warn('Error al liberar números reservados:', error);
+                    }
                 }
             } catch (cleanupError) {
                 console.error('Error al limpiar:', cleanupError);

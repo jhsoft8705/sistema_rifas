@@ -40,11 +40,6 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="codigo_rifa" class="form-label">Código <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="codigo_rifa" name="codigo_rifa" placeholder="RIFA-001" required>
-                            <div class="invalid-feedback" id="codigo_rifa_error"></div>
-                        </div>
-                        <div class="col-md-4">
                             <label for="nombre_rifa" class="form-label">Nombre <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nombre_rifa" name="nombre_rifa" placeholder="Nombre del sorteo" required>
                             <div class="invalid-feedback" id="nombre_rifa_error"></div>
@@ -80,14 +75,6 @@
                         <div class="col-md-3">
                             <label for="cantidad_maxima_tickets" class="form-label">Tickets máximos</label>
                             <input type="number" class="form-control" id="cantidad_maxima_tickets" name="cantidad_maxima_tickets" min="0" placeholder="Ilimitado">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="numeros_por_volantario" class="form-label">Números por volantario</label>
-                            <input type="number" class="form-control" id="numeros_por_volantario" name="numeros_por_volantario" min="1" value="100">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="numeros_por_pagina" class="form-label">Números por página</label>
-                            <input type="number" class="form-control" id="numeros_por_pagina" name="numeros_por_pagina" min="1" value="10">
                         </div>
                         <div class="col-md-3">
                             <label for="tipo_numeracion" class="form-label">Tipo de numeración</label>
@@ -299,151 +286,3 @@
     </div>
 </div>
 
-<!-- Modal de gestión de números/cartillas -->
-<div class="modal fade" id="modal_numeros_rifa" tabindex="-1" aria-labelledby="modal_numeros_rifa_label" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal_numeros_rifa_label">
-                    <i class="ri-grid-line me-2"></i>Números del sorteo
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="numeros_rifa_id_hidden">
-                <div class="alert alert-soft-info d-flex align-items-center gap-2" role="alert">
-                    <i class="ri-information-line fs-4"></i>
-                    <div>
-                        <strong>Rifa seleccionada:</strong>
-                        <span id="numeros_rifa_nombre" class="fw-semibold"></span>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-lg-8">
-                        <div class="card border shadow-sm">
-                            <div class="card-header d-flex gap-2 flex-wrap align-items-center">
-                                <div class="flex-grow-1">
-                                    <select id="filtro_estado_numero" class="form-select form-select-sm" style="max-width: 220px;">
-                                        <option value="">Todos los estados</option>
-                                        <option value="DISPONIBLE">Disponibles</option>
-                                        <option value="RESERVADO">Reservados</option>
-                                        <option value="VENDIDO">Vendidos</option>
-                                        <option value="BLOQUEADO">Bloqueados</option>
-                                    </select>
-                                </div>
-                                <button class="btn btn-success btn-sm" id="btn_generar_numeros" title="Generar números de boletos">
-                                    <i class="ri-add-circle-line me-1"></i>Generar números
-                                </button>
-                                <button class="btn btn-outline-info btn-sm" id="btn_filtrar_numeros">
-                                    <i class="ri-filter-2-line me-1"></i>Filtrar
-                                </button>
-                                <button class="btn btn-outline-secondary btn-sm" id="btn_recargar_numeros">
-                                    <i class="ri-refresh-line me-1"></i>Recargar
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="tabla_numeros_rifa" class="table table-striped table-sm align-middle">
-                                        <thead>
-                                            <tr>
-                                                <th>Número</th>
-                                                <th>Estado</th>
-                                                <th>Reservado hasta</th>
-                                                <th>Participante</th>
-                                                <th class="text-center">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-4">
-                        <div class="card border shadow-sm">
-                            <div class="card-header">
-                                <h6 class="mb-0"><i class="ri-user-add-line me-2"></i>Asignar / actualizar participante</h6>
-                            </div>
-                            <div class="card-body">
-                                <form id="form_asignar_numero" novalidate>
-                                    <input type="hidden" id="numero_id_hidden">
-                                    <div class="mb-3">
-                                        <label class="form-label">Número seleccionado</label>
-                                        <input type="text" class="form-control" id="numero_formateado_resumen" readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Estado <span class="text-danger">*</span></label>
-                                        <select id="numero_estado" class="form-select" required>
-                                            <option value="DISPONIBLE">Disponible</option>
-                                            <option value="RESERVADO">Reservado</option>
-                                            <option value="VENDIDO">Vendido</option>
-                                            <option value="BLOQUEADO">Bloqueado</option>
-                                        </select>
-                                        <div class="invalid-feedback">Seleccione un estado</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Reservado hasta</label>
-                                        <input type="datetime-local" class="form-control" id="numero_reservado_hasta">
-                                        <small class="text-muted d-block mt-1">
-                                            <i class="ri-information-line"></i> Fecha límite de reserva del número
-                                        </small>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Identificador de sesión <small class="text-muted">(Opcional)</small></label>
-                                        <input type="text" class="form-control" id="numero_sesion_reserva" placeholder="ID de sesión/orden">
-                                    </div>
-                                    <hr>
-                                    <h6 class="text-muted mb-3">Datos del participante</h6>
-                                    <div id="info_participante_existente" class="alert alert-info d-none mb-3">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <i class="ri-user-line fs-5"></i>
-                                            <div class="flex-grow-1">
-                                                <strong>Participante registrado:</strong>
-                                                <div id="participante_info_text" class="mt-1"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Nombres</label>
-                                        <input type="text" class="form-control" id="numero_participante_nombres" placeholder="Nombres completos">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Apellidos</label>
-                                        <input type="text" class="form-control" id="numero_participante_apellidos" placeholder="Apellidos completos">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Documento</label>
-                                        <input type="text" class="form-control" id="numero_participante_documento" placeholder="DNI / CE / Pasaporte">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Correo electrónico</label>
-                                        <input type="email" class="form-control" id="numero_participante_email" placeholder="correo@ejemplo.com">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Teléfono</label>
-                                        <input type="text" class="form-control" id="numero_participante_telefono" placeholder="+51 999 999 999">
-                                    </div>
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="button" class="btn btn-light" id="btn_limpiar_participante"
-                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="Limpiar formulario">
-                                            <i class="ri-eraser-line me-1"></i>Limpiar
-                                        </button>
-                                        <button type="submit" class="btn btn-primary" id="btn_guardar_numero"
-                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                            title="Guardar cambios del número">
-                                            <i class="ri-save-line me-1"></i>Guardar cambios
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</div>

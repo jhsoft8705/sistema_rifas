@@ -68,6 +68,12 @@ class RifaController
             case 'asignarNumeroAleatorio':
                 $this->asignar_numero_aleatorio();
                 break;
+            case 'liberarNumeros':
+                $this->liberar_numeros_reservados();
+                break;
+            case 'cerrar':
+                $this->cerrar_rifa();
+                break;
             default:
                 http_response_code(400);
                 echo json_encode(['ok' => false, 'msj' => 'Acción no válida']);
@@ -141,7 +147,6 @@ class RifaController
 
             $validation = Validator::validarCamposRequeridos($input, [
                 'sede_id',
-                'codigo',
                 'nombre',
                 'precio_ticket',
                 'numero_inicial',
@@ -188,7 +193,6 @@ class RifaController
             $validation = Validator::validarCamposRequeridos($input, [
                 'id',
                 'sede_id',
-                'codigo',
                 'nombre',
                 'precio_ticket',
                 'numero_inicial',
@@ -205,6 +209,14 @@ class RifaController
                 http_response_code(400);
                 echo json_encode($validation);
                 return;
+            }
+
+            // Obtener código de la rifa existente si no se envía
+            if (!isset($input['codigo']) || trim($input['codigo']) === '') {
+                $rifaExistente = $this->rifa->obtener_rifa_por_id((int) $input['id'], (int) $input['sede_id']);
+                if ($rifaExistente['ok'] && isset($rifaExistente['data']['codigo'])) {
+                    $input['codigo'] = $rifaExistente['data']['codigo'];
+                }
             }
 
             $data = $this->buildRifaDataFromInput($input, true);
@@ -264,7 +276,7 @@ class RifaController
             'sede_id' => (int) $input['sede_id'],
             'premio_id' => isset($input['premio_id']) && $input['premio_id'] !== '' ? (int) $input['premio_id'] : null,
             'ubicacion_id' => isset($input['ubicacion_id']) ? (int) $input['ubicacion_id'] : null,
-            'codigo' => trim($input['codigo']),
+            'codigo' => isset($input['codigo']) && trim($input['codigo']) !== '' ? trim($input['codigo']) : null,
             'nombre' => trim($input['nombre']),
             'descripcion' => $input['descripcion'] ?? null,
             'numero_intentos' => isset($input['numero_intentos']) ? (int) $input['numero_intentos'] : null,
@@ -303,12 +315,14 @@ class RifaController
 
         if ($isUpdate) {
             $data['id'] = (int) $input['id'];
+            $data['codigo'] = isset($input['codigo']) && trim($input['codigo']) !== '' ? trim($input['codigo']) : null;
             $data['fecha_sorteo_realizado'] = $input['fecha_sorteo_realizado'] ?? null;
             $data['estado'] = trim($input['estado']);
             $data['estado_activo'] = isset($input['estado_activo']) ? (int) $input['estado_activo'] : null;
             $data['regenerar_numeros'] = isset($input['regenerar_numeros']) ? (int) $input['regenerar_numeros'] : 0;
             $data['modificado_por'] = trim($input['modificado_por']);
         } else {
+            $data['estado'] = isset($input['estado']) && trim($input['estado']) !== '' ? trim($input['estado']) : 'BORRADOR';
             $data['creado_por'] = trim($input['creado_por']);
             $data['regenerar_numeros'] = 0;
         }
@@ -682,6 +696,101 @@ class RifaController
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al asignar número aleatorio']);
         }
+    }
+
+    /**
+     * Liberar números reservados por sesión
+     */
+    private function liberar_numeros_reservados(): void
+    {
+        try {
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'JSON inválido']);
+                return;
+            }
+
+            $validation = Validator::validarCamposRequeridos($input, [
+                'rifa_id',
+                'sesion_id'
+            ]);
+
+            if (!$validation['ok']) {
+                http_response_code(400);
+                echo json_encode($validation);
+                return;
+            }
+
+            $resultado = $this->rifa->liberar_numeros_reservados(
+                (int) $input['rifa_id'],
+                trim($input['sesion_id'])
+            );
+
+            http_response_code($resultado['ok'] ? 200 : 400);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en liberar_numeros_reservados: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al liberar los números reservados']);
+        }
+    }
+
+    /**
+     * Cerrar rifa
+     */
+    private function cerrar_rifa(): void
+    {
+        try {
+            $input = $this->obtenerDatosRequest();
+
+            $validation = Validator::validarCamposRequeridos($input, [
+                'id', 'sede_id', 'modificado_por'
+            ]);
+
+            if (!$validation['ok']) {
+                http_response_code(400);
+                echo json_encode($validation, JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            $resultado = $this->rifa->cerrar_rifa(
+                (int) $input['id'],
+                (int) $input['sede_id'],
+                trim($input['modificado_por'])
+            );
+
+            http_response_code($resultado['ok'] ? 200 : 400);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en cerrar_rifa: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al cerrar la rifa'], JSON_UNESCAPED_UNICODE);
+        }
+    }
+
+    private function obtenerDatosRequest(): array
+    {
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (stripos($contentType, 'application/json') !== false) {
+            $input = json_decode(file_get_contents("php://input"), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception('JSON inválido');
+            }
+            return $this->sanitizeArray($input ?? []);
+        }
+        return $this->sanitizeArray($_POST ?? []);
+    }
+
+    private function sanitizeArray(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_string($value)) {
+                $data[$key] = trim($value);
+            }
+        }
+        return $data;
     }
 }
 

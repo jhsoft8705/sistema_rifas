@@ -15,7 +15,9 @@ function RoutesTickets(string $url, string $method): void
         'api/tickets/getByCodigo'         => ['GET'],
         'api/tickets/uploadComprobante'   => ['POST'],
         'api/tickets/getComprobantes'     => ['GET'],
-        'api/tickets/validarComprobante'  => ['POST']
+        'api/tickets/validarComprobante'  => ['POST'],
+        'api/tickets/listVentas'          => ['GET'],
+        'api/tickets/getComprobante'      => ['GET']
     ];
 
     if (!array_key_exists($url, $routes)) {
@@ -60,6 +62,12 @@ function RoutesTickets(string $url, string $method): void
             break;
         case 'api/tickets/validarComprobante':
             $controller->handleRequest('validarComprobante');
+            break;
+        case 'api/tickets/listVentas':
+            $controller->handleRequest('listVentas');
+            break;
+        case 'api/tickets/getComprobante':
+            $controller->handleRequest('getComprobante');
             break;
     }
 }

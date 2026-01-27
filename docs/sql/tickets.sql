@@ -40,6 +40,9 @@ proc: BEGIN
     DECLARE v_numero_seleccionado INT;
     DECLARE v_codigo VARCHAR(50);
     DECLARE v_prefijo VARCHAR(20);
+    DECLARE v_numeros_concatenados TEXT DEFAULT '';
+    DECLARE v_primer_numero_formateado VARCHAR(50) DEFAULT NULL;
+    DECLARE v_primer_numero_entero INT DEFAULT NULL;
     DECLARE v_sufijo VARCHAR(20);
     DECLARE v_digitos INT;
     DECLARE v_numero_inicial INT;
@@ -51,6 +54,8 @@ proc: BEGIN
     DECLARE v_posicion INT DEFAULT 1;
     DECLARE v_posicion_siguiente INT;
     DECLARE v_estado_inicial VARCHAR(30);
+    DECLARE v_persona_id INT;
+    DECLARE v_mensaje_persona VARCHAR(255);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -61,6 +66,28 @@ proc: BEGIN
     END;
 
     START TRANSACTION;
+
+    -- Buscar o crear persona por número de documento
+    CALL get_or_create_persona(
+        p_sede_id,
+        p_nombres,
+        p_apellidos,
+        p_tipo_documento,
+        p_numero_documento,
+        p_email,
+        p_telefono,
+        p_direccion,
+        p_ciudad,
+        p_pais,
+        v_persona_id,
+        v_mensaje_persona
+    );
+
+    IF v_persona_id IS NULL THEN
+        SET p_mensaje = 'Error al procesar los datos de la persona';
+        ROLLBACK;
+        LEAVE proc;
+    END IF;
 
     -- Validar que la rifa existe y está en venta
     IF NOT EXISTS (
@@ -88,11 +115,11 @@ proc: BEGIN
     FROM rifas
     WHERE id = p_rifa_id;
 
-    -- Validar cantidad máxima por persona
+    -- Validar cantidad máxima por persona (usando persona_id)
     SELECT COUNT(*) INTO v_tickets_existentes
     FROM tickets
     WHERE rifa_id = p_rifa_id
-      AND numero_documento = p_numero_documento
+      AND persona_id = v_persona_id
       AND estado IN ('PENDIENTE_PAGO', 'PAGO_SUBIDO', 'VALIDANDO', 'APROBADO', 'PARTICIPANDO');
 
     IF v_tickets_existentes + p_cantidad_tickets > IFNULL(v_cantidad_maxima_por_persona, 999999) THEN
@@ -134,20 +161,12 @@ proc: BEGIN
         SET v_estado_inicial = 'PENDIENTE_PAGO';
     END IF;
 
-    -- Crear ticket principal
+    -- Crear ticket principal (REFACTORIZADO: solo persona_id, sin duplicar datos)
     INSERT INTO tickets (
         sede_id,
         rifa_id,
+        persona_id,
         codigo_ticket,
-        nombres,
-        apellidos,
-        tipo_documento,
-        numero_documento,
-        email,
-        telefono,
-        direccion,
-        ciudad,
-        pais,
         precio_pagado,
         ip_compra,
         canal_venta,
@@ -158,23 +177,15 @@ proc: BEGIN
     ) VALUES (
         p_sede_id,
         p_rifa_id,
+        v_persona_id,
         v_codigo,
-        p_nombres,
-        p_apellidos,
-        p_tipo_documento,
-        p_numero_documento,
-        p_email,
-        p_telefono,
-        p_direccion,
-        p_ciudad,
-        p_pais,
         p_precio_pagado,
         p_ip_compra,
         IFNULL(p_canal_venta, 'WEB'),
         v_estado_inicial,
         NOW(),
         NOW(),
-        CONCAT(p_nombres, ' ', p_apellidos)
+        'SISTEMA'
     );
 
     SET p_ticket_id = LAST_INSERT_ID();
@@ -205,12 +216,18 @@ proc: BEGIN
             IF v_numero_texto != '' AND v_numero_texto REGEXP '^[0-9]+$' THEN
                 SET v_numero_seleccionado = CAST(v_numero_texto AS UNSIGNED);
                 
-                -- Buscar número disponible
+                -- Primero liberar números vencidos
+                CALL liberar_numeros_vencidos();
+                
+                -- Buscar número disponible o reservado sin ticket_id (reservado desde landing)
                 SELECT id, numero_entero, numero_formateado INTO v_numero_id, v_numero_entero, v_numero_formateado
                 FROM numeros_rifa
                 WHERE rifa_id = p_rifa_id
                   AND numero_entero = v_numero_seleccionado
-                  AND estado = 'DISPONIBLE'
+                  AND (
+                      estado = 'DISPONIBLE' 
+                      OR (estado = 'RESERVADO' AND ticket_id IS NULL AND (reservado_hasta IS NULL OR reservado_hasta < NOW()))
+                  )
                 LIMIT 1;
                 
                 IF v_numero_id IS NOT NULL THEN
@@ -220,6 +237,8 @@ proc: BEGIN
                         UPDATE numeros_rifa
                         SET estado = 'VENDIDO',
                             ticket_id = p_ticket_id,
+                            reservado_por_sesion = NULL,
+                            reservado_hasta = NULL,
                             fecha_venta = NOW(),
                             fecha_modificacion = NOW()
                         WHERE id = v_numero_id;
@@ -227,32 +246,53 @@ proc: BEGIN
                         UPDATE numeros_rifa
                         SET estado = 'RESERVADO',
                             ticket_id = p_ticket_id,
-                            reservado_hasta = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
+                            reservado_hasta = DATE_ADD(NOW(), INTERVAL 10 MINUTE),
                             reservado_por_sesion = CONCAT('TICKET-', p_ticket_id),
                             fecha_reserva = NOW(),
                             fecha_modificacion = NOW()
                         WHERE id = v_numero_id;
                     END IF;
                     
-                    -- Actualizar ticket con número
-                    UPDATE tickets
-                    SET numero_boleto = v_numero_formateado,
-                        numero_boleto_entero = v_numero_entero,
-                        numero_seleccionado_usuario = 1
-                    WHERE id = p_ticket_id;
+                    -- Guardar el primer número para numero_boleto_entero
+                    IF v_contador = 0 THEN
+                        SET v_primer_numero_formateado = v_numero_formateado;
+                        SET v_primer_numero_entero = v_numero_entero;
+                    END IF;
+                    
+                    -- Concatenar números para numero_boleto (todos los números separados por coma)
+                    IF v_numeros_concatenados = '' THEN
+                        SET v_numeros_concatenados = v_numero_formateado;
+                    ELSE
+                        SET v_numeros_concatenados = CONCAT(v_numeros_concatenados, ', ', v_numero_formateado);
+                    END IF;
                     
                     SET v_contador = v_contador + 1;
                 END IF;
             END IF;
         END WHILE;
+        
+        -- Actualizar ticket con todos los números concatenados (después de procesar todos)
+        IF v_contador > 0 THEN
+            UPDATE tickets
+            SET numero_boleto = v_numeros_concatenados,
+                numero_boleto_entero = v_primer_numero_entero,
+                numero_seleccionado_usuario = 1
+            WHERE id = p_ticket_id;
+        END IF;
     END IF;
 
     -- Si no se seleccionaron números y hay asignación automática, asignar uno disponible
     IF (p_numeros_seleccionados IS NULL OR p_numeros_seleccionados = '') AND p_cantidad_tickets = 1 THEN
+        -- Liberar números vencidos antes de buscar
+        CALL liberar_numeros_vencidos();
+        
         SELECT id, numero_entero, numero_formateado INTO v_numero_id, v_numero_entero, v_numero_formateado
         FROM numeros_rifa
         WHERE rifa_id = p_rifa_id
-          AND estado = 'DISPONIBLE'
+          AND (
+              estado = 'DISPONIBLE' 
+              OR (estado = 'RESERVADO' AND ticket_id IS NULL AND (reservado_hasta IS NULL OR reservado_hasta < NOW()))
+          )
         ORDER BY numero_entero ASC
         LIMIT 1;
         
@@ -269,7 +309,7 @@ proc: BEGIN
                 UPDATE numeros_rifa
                 SET estado = 'RESERVADO',
                     ticket_id = p_ticket_id,
-                    reservado_hasta = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
+                    reservado_hasta = DATE_ADD(NOW(), INTERVAL 10 MINUTE),
                     reservado_por_sesion = CONCAT('TICKET-', p_ticket_id),
                     fecha_reserva = NOW(),
                     fecha_modificacion = NOW()
@@ -305,16 +345,59 @@ CREATE PROCEDURE list_tickets (
 )
 BEGIN
     SELECT
-        t.*,
+        t.id,
+        t.sede_id,
+        t.rifa_id,
+        t.codigo_ticket,
+        t.persona_id,
+        t.numero_boleto,
+        t.numero_boleto_entero,
+        t.numero_seleccionado_usuario,
+        t.precio_pagado,
+        t.fecha_compra,
+        t.ip_compra,
+        t.canal_venta,
+        t.vendedor_id,
+        t.estado,
+        t.aprobado_por,
+        t.fecha_aprobacion,
+        t.rechazado_por,
+        t.fecha_rechazo,
+        t.motivo_rechazo,
+        t.notificado_compra,
+        t.notificado_aprobacion,
+        t.notificado_sorteo,
+        t.fecha_validez,
+        t.validado,
+        t.fecha_validacion,
+        t.estado_activo,
+        t.fecha_creacion,
+        t.fecha_modificacion,
+        t.creado_por,
+        t.modificado_por,
+        -- Datos de la persona (cliente)
+        p.nombres,
+        p.apellidos,
+        p.tipo_documento,
+        p.numero_documento,
+        p.email,
+        p.telefono,
+        p.direccion,
+        p.ciudad,
+        p.pais,
+        -- Datos de la rifa
         r.codigo AS rifa_codigo,
         r.nombre AS rifa_nombre,
         r.precio_ticket,
+        -- Datos de la sede
         s.nombre AS sede_nombre,
+        -- Comprobante
         (SELECT COUNT(*) FROM comprobantes_pago cp WHERE cp.ticket_id = t.id) AS tiene_comprobante,
         (SELECT estado FROM comprobantes_pago cp WHERE cp.ticket_id = t.id ORDER BY cp.fecha_creacion DESC LIMIT 1) AS estado_comprobante
     FROM tickets t
     INNER JOIN rifas r ON t.rifa_id = r.id
     INNER JOIN sedes s ON t.sede_id = s.id
+    LEFT JOIN personas p ON t.persona_id = p.id
     WHERE t.sede_id = p_sede_id
       AND (p_rifa_id IS NULL OR t.rifa_id = p_rifa_id)
       AND (p_estado IS NULL OR p_estado = '' OR t.estado = p_estado)
@@ -452,26 +535,26 @@ BEGIN
     SELECT
         cp.*,
         t.codigo_ticket,
-        t.nombres,
-        t.apellidos,
-        t.tipo_documento,
-        t.numero_documento,
-        t.email,
-        t.telefono,
+        t.persona_id,
+        p.nombres,
+        p.apellidos,
+        p.tipo_documento,
+        p.numero_documento,
+        p.email,
+        p.telefono,
         t.precio_pagado,
         t.numero_boleto,
         t.numero_boleto_entero,
         t.estado AS estado_ticket,
         r.codigo AS rifa_codigo,
         r.nombre AS rifa_nombre,
-        mp.nombre AS metodo_pago_nombre,
         s.nombre AS sede_nombre,
         DATEDIFF(NOW(), cp.fecha_creacion) AS dias_esperando
     FROM comprobantes_pago cp
     INNER JOIN tickets t ON cp.ticket_id = t.id
+    INNER JOIN personas p ON t.persona_id = p.id
     INNER JOIN rifas r ON t.rifa_id = r.id
     INNER JOIN sedes s ON cp.sede_id = s.id
-    LEFT JOIN metodos_pago mp ON cp.metodo_pago_id = mp.id
     WHERE cp.sede_id = p_sede_id
       AND (p_estado IS NULL OR p_estado = '' OR cp.estado = p_estado)
     ORDER BY cp.fecha_creacion ASC;
@@ -607,6 +690,173 @@ proc: BEGIN
         SET p_mensaje = 'Comprobante rechazado. El usuario puede subir un nuevo comprobante.';
     END IF;
 END proc //
+
+-- ==========================================================
+-- 7. LISTAR VENTAS/COMPRAS REALIZADAS
+-- ==========================================================
+DROP PROCEDURE IF EXISTS list_ventas //
+CREATE PROCEDURE list_ventas (
+    IN p_sede_id INT,
+    IN p_rifa_id INT,
+    IN p_estado VARCHAR(30),
+    IN p_fecha_desde DATETIME,
+    IN p_fecha_hasta DATETIME,
+    IN p_busqueda VARCHAR(255)
+)
+BEGIN
+    SELECT
+        t.id,
+        t.codigo_ticket,
+        t.numero_boleto,
+        t.numero_boleto_entero,
+        t.precio_pagado,
+        t.estado,
+        t.canal_venta,
+        t.fecha_compra,
+        t.fecha_creacion,
+        t.aprobado_por,
+        t.fecha_aprobacion,
+        -- Datos de la persona (obtenidos de tabla personas)
+        t.persona_id,
+        p.nombres,
+        p.apellidos,
+        p.tipo_documento,
+        p.numero_documento,
+        p.email,
+        p.telefono,
+        p.direccion,
+        p.ciudad,
+        p.pais,
+        -- Datos de la rifa
+        r.id AS rifa_id,
+        r.codigo AS rifa_codigo,
+        r.nombre AS rifa_nombre,
+        r.precio_ticket,
+        r.fecha_sorteo,
+        -- Datos de la sede
+        s.nombre AS sede_nombre,
+        -- Números asociados al ticket (todos los números comprados)
+        GROUP_CONCAT(nr.numero_formateado ORDER BY nr.numero_entero ASC SEPARATOR ', ') AS numeros_comprados,
+        COUNT(DISTINCT nr.id) AS cantidad_numeros,
+        -- Comprobante
+        (SELECT COUNT(*) FROM comprobantes_pago cp WHERE cp.ticket_id = t.id) AS tiene_comprobante,
+        (SELECT estado FROM comprobantes_pago cp WHERE cp.ticket_id = t.id ORDER BY cp.fecha_creacion DESC LIMIT 1) AS estado_comprobante,
+        (SELECT archivo_comprobante FROM comprobantes_pago cp WHERE cp.ticket_id = t.id ORDER BY cp.fecha_creacion DESC LIMIT 1) AS archivo_comprobante
+    FROM tickets t
+    INNER JOIN rifas r ON t.rifa_id = r.id
+    INNER JOIN sedes s ON t.sede_id = s.id
+    LEFT JOIN personas p ON t.persona_id = p.id
+    LEFT JOIN numeros_rifa nr ON nr.ticket_id = t.id AND nr.estado = 'VENDIDO'
+    WHERE t.sede_id = p_sede_id
+      AND (p_rifa_id IS NULL OR t.rifa_id = p_rifa_id)
+      AND (p_estado IS NULL OR p_estado = '' OR t.estado = p_estado)
+      AND (p_fecha_desde IS NULL OR t.fecha_creacion >= p_fecha_desde)
+      AND (p_fecha_hasta IS NULL OR t.fecha_creacion <= p_fecha_hasta)
+      AND (
+          p_busqueda IS NULL OR p_busqueda = '' OR
+          t.codigo_ticket LIKE CONCAT('%', p_busqueda, '%') OR
+          t.numero_boleto LIKE CONCAT('%', p_busqueda, '%') OR
+          CONCAT(p.nombres, ' ', p.apellidos) LIKE CONCAT('%', p_busqueda, '%') OR
+          p.numero_documento LIKE CONCAT('%', p_busqueda, '%') OR
+          p.email LIKE CONCAT('%', p_busqueda, '%') OR
+          r.nombre LIKE CONCAT('%', p_busqueda, '%')
+      )
+    GROUP BY t.id, t.codigo_ticket, t.numero_boleto, t.numero_boleto_entero, t.precio_pagado, t.estado, 
+             t.canal_venta, t.fecha_compra, t.fecha_creacion, t.aprobado_por, t.fecha_aprobacion,
+             t.persona_id, p.nombres, p.apellidos, p.tipo_documento, p.numero_documento, p.email,
+             p.telefono, p.direccion, p.ciudad, p.pais, r.id, r.codigo, r.nombre, r.precio_ticket,
+             r.fecha_sorteo, s.nombre
+    ORDER BY t.fecha_creacion DESC;
+END //
+
+-- ==========================================================
+-- 5.1. OBTENER DATOS DEL COMPROBANTE PARA IMPRESIÓN
+-- ==========================================================
+DROP PROCEDURE IF EXISTS get_comprobante_ticket //
+CREATE PROCEDURE get_comprobante_ticket (
+    IN p_ticket_id INT,
+    IN p_sede_id INT
+)
+BEGIN
+    SELECT
+        t.id,
+        t.codigo_ticket,
+        t.numero_boleto,
+        t.numero_boleto_entero,
+        t.precio_pagado,
+        t.estado,
+        t.fecha_creacion,
+        t.fecha_compra,
+        t.canal_venta,
+        -- Datos de la persona
+        p.nombres,
+        p.apellidos,
+        p.tipo_documento,
+        p.numero_documento,
+        p.email,
+        p.telefono,
+        p.direccion,
+        p.ciudad,
+        p.pais,
+        -- Datos de la rifa
+        r.id AS rifa_id,
+        r.codigo AS rifa_codigo,
+        r.nombre AS rifa_nombre,
+        r.descripcion AS rifa_descripcion,
+        r.precio_ticket,
+        r.fecha_sorteo,
+        -- Datos de la sede
+        s.nombre AS sede_nombre,
+        s.direccion AS sede_direccion,
+        s.telefono AS sede_telefono,
+        s.email AS sede_email,
+        -- Números asociados al ticket
+        GROUP_CONCAT(nr.numero_formateado ORDER BY nr.numero_entero ASC SEPARATOR ', ') AS numeros_comprados,
+        COUNT(DISTINCT nr.id) AS cantidad_numeros,
+        -- Comprobante de pago si existe
+        (SELECT archivo_comprobante FROM comprobantes_pago cp WHERE cp.ticket_id = t.id ORDER BY cp.fecha_creacion DESC LIMIT 1) AS archivo_comprobante,
+        (SELECT estado FROM comprobantes_pago cp WHERE cp.ticket_id = t.id ORDER BY cp.fecha_creacion DESC LIMIT 1) AS estado_comprobante
+    FROM tickets t
+    INNER JOIN rifas r ON t.rifa_id = r.id
+    INNER JOIN sedes s ON t.sede_id = s.id
+    LEFT JOIN personas p ON t.persona_id = p.id
+    LEFT JOIN numeros_rifa nr ON nr.ticket_id = t.id AND nr.estado = 'VENDIDO'
+    WHERE t.id = p_ticket_id
+      AND t.sede_id = p_sede_id
+    GROUP BY t.id, t.codigo_ticket, t.numero_boleto, t.numero_boleto_entero, t.precio_pagado, 
+             t.estado, t.fecha_creacion, t.fecha_compra, t.canal_venta, p.nombres, p.apellidos,
+             p.tipo_documento, p.numero_documento, p.email, p.telefono, p.direccion, p.ciudad,
+             p.pais, r.id, r.codigo, r.nombre, r.descripcion, r.precio_ticket, r.fecha_sorteo,
+             s.nombre, s.direccion, s.telefono, s.email;
+END //
+
+-- ==========================================================
+-- PROCEDIMIENTO PARA LIBERAR NÚMEROS RESERVADOS VENCIDOS
+-- Libera automáticamente números que han excedido su tiempo de reserva (10 minutos)
+-- ==========================================================
+DROP PROCEDURE IF EXISTS liberar_numeros_vencidos //
+
+CREATE PROCEDURE liberar_numeros_vencidos()
+BEGIN
+    DECLARE v_numeros_liberados INT DEFAULT 0;
+    
+    -- Liberar números reservados que han excedido su tiempo de reserva
+    -- y que no tienen ticket_id asignado (reservados desde landing pero no comprados)
+    UPDATE numeros_rifa
+    SET estado = 'DISPONIBLE',
+        reservado_hasta = NULL,
+        reservado_por_sesion = NULL,
+        fecha_reserva = NULL,
+        fecha_modificacion = NOW()
+    WHERE estado = 'RESERVADO'
+      AND ticket_id IS NULL
+      AND reservado_hasta IS NOT NULL
+      AND reservado_hasta < NOW();
+    
+    SET v_numeros_liberados = ROW_COUNT();
+    
+    SELECT v_numeros_liberados AS numeros_liberados;
+END //
 
 DELIMITER ;
 

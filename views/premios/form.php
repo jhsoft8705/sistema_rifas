@@ -11,9 +11,15 @@
             <form id="form_premio" novalidate enctype="multipart/form-data">
                 <div class="modal-body">
                     <input type="hidden" id="premio_id" name="premio_id">
+                    <input type="hidden" id="sede_id" name="sede_id">
 
                     <div class="row g-3">
-                        <input type="hidden" id="sede_id" name="sede_id">
+                        <div class="col-md-4">
+                            <label for="nombre" class="form-label">Nombre del Premio <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required
+                                placeholder="Premio principal">
+                            <div class="invalid-feedback" id="nombre_error"></div>
+                        </div>
                         <div class="col-md-4">
                             <label for="categoria_id" class="form-label">Categoría</label>
                             <select class="form-select" id="categoria_id" name="categoria_id">
@@ -22,20 +28,6 @@
                             <div class="invalid-feedback" id="categoria_id_error"></div>
                         </div>
                         <div class="col-md-4">
-                            <label for="codigo" class="form-label">Código <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="codigo" name="codigo" required
-                                placeholder="PRM-001">
-                            <div class="invalid-feedback" id="codigo_error"></div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="nombre" class="form-label">Nombre del Premio <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" required
-                                placeholder="Premio principal">
-                            <div class="invalid-feedback" id="nombre_error"></div>
-                        </div>
-
-                        <div class="col-md-6">
                             <label for="valor_estimado" class="form-label">
                                 Valor estimado (<span id="valor_estimado_simbolo">S/.</span>)
                             </label>
@@ -106,28 +98,27 @@
                                 <span class="text-muted small">Sin archivos seleccionados</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="video_url" class="form-label">Video (URL)</label>
                             <input type="url" class="form-control" id="video_url" name="video_url"
                                 placeholder="https://youtube.com/...">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="especificaciones" class="form-label">Especificaciones</label>
                             <textarea class="form-control" id="especificaciones" name="especificaciones" rows="2"
                                 placeholder="Detalles técnicos o características"></textarea>
                         </div>
-
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="terminos_condiciones" class="form-label">Condiciones de entrega</label>
                             <textarea class="form-control" id="terminos_condiciones" name="terminos_condiciones" rows="2"
                                 placeholder="Ejemplo: el premio se entrega dentro de 7 días hábiles."></textarea>
                         </div>
-                        <div class="col-md-6">
+
+                        <div class="col-md-4">
                             <label for="restricciones" class="form-label">Restricciones</label>
                             <textarea class="form-control" id="restricciones" name="restricciones" rows="2"
                                 placeholder="Restricciones específicas"></textarea>
                         </div>
-
                         <div class="col-md-4">
                             <label for="es_destacado" class="form-label">Destacado</label>
                             <select class="form-select" id="es_destacado" name="es_destacado">

@@ -8,16 +8,14 @@ class Premio extends Conectar
     /**
      * Listar premios por sede (opcionalmente por estado)
      */
-    public function listar_premios(int $sede_id, ?int $estado = null, ?string $fecha_inicio = null, ?string $fecha_fin = null): array
+    public function listar_premios(int $sede_id, ?int $estado = null): array
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL list_premios(?, ?, ?, ?)";
+            $sql = "CALL list_premios(?, ?)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $sede_id, PDO::PARAM_INT);
             $this->bindNullable($query, 2, $estado, PDO::PARAM_INT);
-            $this->bindNullable($query, 3, $fecha_inicio, PDO::PARAM_STR);
-            $this->bindNullable($query, 4, $fecha_fin, PDO::PARAM_STR);
             $query->execute();
             $data = $query->fetchAll(PDO::FETCH_ASSOC);
             $query->closeCursor();
@@ -75,7 +73,7 @@ class Premio extends Conectar
     public function registrar_premio(
         int $sede_id,
         ?int $categoria_id,
-        string $codigo,
+        ?string $codigo,
         string $nombre,
         ?string $descripcion,
         ?float $valor_estimado,
@@ -100,7 +98,7 @@ class Premio extends Conectar
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $sede_id, PDO::PARAM_INT);
             $this->bindNullable($query, 2, $categoria_id, PDO::PARAM_INT);
-            $query->bindValue(3, $codigo, PDO::PARAM_STR);
+            $this->bindNullable($query, 3, $codigo, PDO::PARAM_STR);
             $query->bindValue(4, $nombre, PDO::PARAM_STR);
             $this->bindNullable($query, 5, $descripcion, PDO::PARAM_STR);
             $this->bindNullable($query, 6, $valor_estimado, PDO::PARAM_STR);

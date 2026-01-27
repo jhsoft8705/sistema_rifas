@@ -43,15 +43,7 @@
                                     </h5>
 
                                     <div class="d-flex flex-wrap w-100 gap-3 mt-3">
-                                        <div class="d-flex flex-wrap flex-grow-1 gap-3 align-items-center">
-                                            <div class="w-auto" style="max-width: 240px; min-width: 200px;">
-                                                <select id="filtro_sede_ticket" class="form-select"
-                                                    style="min-height: 40px; font-size: 0.9rem;"
-                                                    data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                    title="Filtrar tickets por sede">
-                                                    <option value="">Todas las sedes</option>
-                                                </select>
-                                            </div>
+                                        <div class="d-flex flex-wrap flex-grow-1 gap-3">
                                             <div class="w-auto" style="max-width: 240px; min-width: 200px;">
                                                 <select id="filtro_rifa_ticket" class="form-select"
                                                     style="min-height: 40px; font-size: 0.9rem;"
@@ -76,12 +68,14 @@
                                                     <option value="EXPIRADO">Expirado</option>
                                                 </select>
                                             </div>
+
                                             <button class="btn btn-outline-info" id="btn_filtrar_tickets"
                                                 style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
                                                 data-bs-toggle="tooltip" data-bs-placement="bottom"
                                                 title="Aplicar filtros">
                                                 <i class="ri-filter-line me-1"></i>Filtrar
                                             </button>
+
                                             <button class="btn btn-outline-warning" id="btn_recargar_tickets"
                                                 style="min-height: 40px; font-size: 0.9rem; padding: 0.5rem 1rem;"
                                                 data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -91,18 +85,18 @@
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="card-body">
                                     <div class="table-responsive">
-                                        <table id="tabla_tickets" class="table table-striped table-hover align-middle table-nowrap mb-0"
-                                            style="width:100%;">
+                                        <table class="table table-hover align-middle table-nowrap mb-0" id="tabla_tickets">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th class="text-center">Acciones</th>
                                                     <th>Código Ticket</th>
                                                     <th>Rifa</th>
-                                                    <th>Participante</th>
+                                                    <th>Cliente</th>
                                                     <th>Documento</th>
-                                                    <th>Número Boleto</th>
+                                                    <th>Números Comprados</th>
                                                     <th>Precio</th>
                                                     <th>Estado</th>
                                                     <th>Fecha Compra</th>

@@ -23,11 +23,11 @@
                         
                         <div class="col-12">
                             <div class="alert alert-warning" id="alert_numero_ticket" style="display: none;">
-                                <strong><i class="ri-alert-line me-1"></i>Número Reservado:</strong>
+                                <strong><i class="ri-alert-line me-1"></i>Números Reservados:</strong>
                                 <div id="info_numero_ticket" class="mt-1"></div>
                                 <small class="text-muted d-block mt-2">
                                     <i class="ri-information-line me-1"></i>
-                                    Si rechazas este ticket, el número será liberado y estará disponible para otros participantes.
+                                    Si rechazas este ticket, los números serán liberados y estarán disponibles para otros participantes.
                                 </small>
                             </div>
                         </div>

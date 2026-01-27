@@ -1,10 +1,16 @@
 -- =====================================================
--- SISTEMA DE RIFAS MULTISEDE - PROFESIONAL
--- Base de datos MySQL
--- Escalable y Personalizable para diferentes países
+-- SISTEMA DE RIFAS MULTISEDE - REFACTORIZADO
+-- Base de datos MySQL optimizada para el flujo:
+-- 1. Premios por categoría → asociados a rifas
+-- 2. Personas compran números de rifa
+-- 3. Se generan tickets (compras)
+-- 4. Se suben comprobantes de pago
+-- 5. Operador valida comprobantes → cambia estado
 -- =====================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- Eliminar tablas existentes
 DROP TABLE IF EXISTS intentos_acceso;
 DROP TABLE IF EXISTS sesiones;
 DROP TABLE IF EXISTS usuario_permisos;
@@ -17,10 +23,10 @@ DROP TABLE IF EXISTS ganadores;
 DROP TABLE IF EXISTS intentos_sorteo;
 DROP TABLE IF EXISTS participantes;
 DROP TABLE IF EXISTS comprobantes_pago;
-DROP TABLE IF EXISTS rifas_premios;
 DROP TABLE IF EXISTS numeros_rifa;
-DROP TABLE IF EXISTS volantarios;
 DROP TABLE IF EXISTS tickets;
+DROP TABLE IF EXISTS personas;
+DROP TABLE IF EXISTS rifas_premios;
 DROP TABLE IF EXISTS rifas;
 DROP TABLE IF EXISTS premios;
 DROP TABLE IF EXISTS categorias_premios;
@@ -31,6 +37,7 @@ DROP TABLE IF EXISTS configuracion_sede;
 DROP TABLE IF EXISTS cargos;
 DROP TABLE IF EXISTS sedes;
 DROP TABLE IF EXISTS audit_logs;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =====================================================
@@ -61,10 +68,6 @@ CREATE TABLE sedes (
     -- Configuración de pagos
     requiere_aprobacion_manual TINYINT(1) DEFAULT 1 COMMENT 'Si requiere validación manual de pagos',
     dias_validez_ticket INT DEFAULT 90 COMMENT 'Días de validez del ticket',
-    
-    -- Configuración de red
-    ip_red VARCHAR(45) NULL,
-    mascara_red VARCHAR(45) NULL,
     
     -- Control
     estado INT NOT NULL DEFAULT 1 COMMENT '1=Activo, 0=Inactivo',
@@ -247,118 +250,10 @@ CREATE TABLE intentos_acceso (
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE SET NULL,
     INDEX idx_intentos_username (username, fecha_intento)
 );
- 
+
 -- =====================================================
--- 4. TABLAS DEL SISTEMA DE RIFAS
+-- 3. TABLAS DEL SISTEMA DE RIFAS (CORE)
 -- =====================================================
-
--- Tabla de configuración específica por sede
-CREATE TABLE configuracion_sede (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    clave VARCHAR(100) NOT NULL,
-    valor TEXT NULL,
-    descripcion VARCHAR(255) NULL,
-    tipo_dato VARCHAR(20) DEFAULT 'STRING' COMMENT 'STRING, INTEGER, DECIMAL, BOOLEAN, JSON',
-    es_obligatorio TINYINT(1) DEFAULT 0,
-    estado INT NOT NULL DEFAULT 1,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creado_por VARCHAR(50) NULL,
-    modificado_por VARCHAR(50) NULL,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_config_sede (sede_id, clave),
-    INDEX idx_config_sede (sede_id)
-)COMMENT='Configuraciones personalizables por sede (colores, textos, límites, etc.)';
-
--- Tabla de ubicaciones de rifa
-CREATE TABLE ubicaciones_rifa (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    nombre VARCHAR(200) NOT NULL COMMENT 'Lima Centro, Chiclayo, Arequipa, etc.',
-    direccion VARCHAR(500) NULL,
-    ciudad VARCHAR(100) NOT NULL,
-    departamento_region VARCHAR(100) NULL,
-    pais VARCHAR(100) NOT NULL,
-    codigo_postal VARCHAR(20) NULL,
-    telefono VARCHAR(15) NULL,
-    email VARCHAR(100) NULL,
-    
-    -- Ubicación geográfica
-    latitud DECIMAL(10, 8) NULL,
-    longitud DECIMAL(11, 8) NULL,
-    url_mapa VARCHAR(255) NULL,
-    
-    -- Información adicional
-    descripcion TEXT NULL,
-    horario_atencion VARCHAR(500) NULL,
-    es_principal TINYINT(1) DEFAULT 0,
-    
-    -- Control
-    estado INT NOT NULL DEFAULT 1,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creado_por VARCHAR(50) NULL,
-    modificado_por VARCHAR(50) NULL,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id)  ,
-    INDEX idx_ubicaciones_sede (sede_id),
-    INDEX idx_ubicaciones_ciudad (ciudad)
-);
-
--- Tabla de estados de ticket
-CREATE TABLE estados_ticket (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    nombre VARCHAR(50) NOT NULL COMMENT 'PENDIENTE, PAGADO, APROBADO, RECHAZADO, PARTICIPANDO, GANADOR, EXPIRADO',
-    descripcion VARCHAR(255) NULL,
-    color_hex VARCHAR(7) NULL COMMENT 'Color para UI: #FF0000',
-    orden INT DEFAULT 0,
-    estado INT NOT NULL DEFAULT 1,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creado_por VARCHAR(50) NULL,
-    modificado_por VARCHAR(50) NULL,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_estado_sede (sede_id, nombre)
-);
-
--- Tabla de métodos de pago
-CREATE TABLE metodos_pago (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    nombre VARCHAR(100) NOT NULL COMMENT 'Transferencia, Yape, Plin, PayPal, etc.',
-    descripcion TEXT NULL,
-    requiere_comprobante TINYINT(1) DEFAULT 1,
-    
-    -- Información de la cuenta/método
-    numero_cuenta VARCHAR(50) NULL,
-    numero_cci VARCHAR(50) NULL,
-    titular_cuenta VARCHAR(200) NULL,
-    banco VARCHAR(100) NULL,
-    tipo_cuenta VARCHAR(50) NULL COMMENT 'Ahorros, Corriente',
-    
-    -- Para pagos digitales
-    numero_celular VARCHAR(15) NULL COMMENT 'Para Yape, Plin, etc.',
-    email_cuenta VARCHAR(100) NULL COMMENT 'Para PayPal, etc.',
-    qr_code_url VARCHAR(255) NULL COMMENT 'URL del código QR',
-    
-    -- Configuración
-    instrucciones TEXT NULL COMMENT 'Instrucciones para el usuario',
-    orden INT DEFAULT 0 COMMENT 'Orden de visualización',
-    
-    -- Control
-    estado INT NOT NULL DEFAULT 1,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creado_por VARCHAR(50) NULL,
-    modificado_por VARCHAR(50) NULL,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    INDEX idx_metodos_pago_sede (sede_id)
-);
 
 -- Tabla de categorías de premios
 CREATE TABLE categorias_premios (
@@ -430,8 +325,7 @@ CREATE TABLE premios (
 CREATE TABLE rifas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sede_id INT NOT NULL,
-    premio_id INT NULL,
-    ubicacion_id INT NULL,
+    premio_id INT NULL COMMENT 'Premio principal (opcional, puede tener múltiples)',
     
     -- Información de la rifa
     codigo VARCHAR(50) NOT NULL COMMENT 'Código único de la rifa',
@@ -463,12 +357,6 @@ CREATE TABLE rifas (
     asignacion_automatica TINYINT(1) DEFAULT 1 COMMENT 'Asignar número automático si no elige',
     mostrar_numeros_disponibles TINYINT(1) DEFAULT 1 COMMENT 'Mostrar números disponibles en web',
     
-    -- Configuración de volantarios físicos
-    generar_volantarios TINYINT(1) DEFAULT 0 COMMENT 'Si se generan volantarios para venta física',
-    numeros_por_volantario INT DEFAULT 100 COMMENT 'Cantidad de números por volantario',
-    formato_impresion VARCHAR(50) DEFAULT 'A4' COMMENT 'Formato: A4, LETTER, CUSTOM',
-    numeros_por_pagina INT DEFAULT 10 COMMENT 'Números por página al imprimir',
-    
     -- Bloqueo de números
     numeros_bloqueados TEXT NULL COMMENT 'JSON con números bloqueados/reservados',
     numeros_especiales TEXT NULL COMMENT 'JSON con números especiales (ej: promocionales, regalos)',
@@ -485,8 +373,6 @@ CREATE TABLE rifas (
     mostrar_tickets_vendidos TINYINT(1) DEFAULT 1,
     
     -- Publicidad y promoción
-    tipo_publicidad VARCHAR(50) NULL COMMENT 'Banner, Popup, Destacado',
-    url_banner VARCHAR(255) NULL,
     texto_promocional TEXT NULL,
     
     -- Reglas y términos
@@ -506,7 +392,6 @@ CREATE TABLE rifas (
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     FOREIGN KEY (premio_id) REFERENCES premios(id) ON DELETE SET NULL,
-    FOREIGN KEY (ubicacion_id) REFERENCES ubicaciones_rifa(id) ON DELETE SET NULL,
     UNIQUE KEY unique_codigo_rifa_sede (sede_id, codigo),
     INDEX idx_rifas_sede (sede_id),
     INDEX idx_rifas_premio (premio_id),
@@ -531,6 +416,7 @@ CREATE TABLE rifas_premios (
     fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     creado_por VARCHAR(50) NULL,
     modificado_por VARCHAR(50) NULL,
+    
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
     FOREIGN KEY (premio_id) REFERENCES premios(id) ON DELETE CASCADE,
@@ -540,41 +426,62 @@ CREATE TABLE rifas_premios (
     INDEX idx_rifas_premios_principal (rifa_id, es_principal)
 ) COMMENT='Premios asociados a cada rifa';
 
+-- Tabla de personas/clientes (información única por número de documento)
+CREATE TABLE personas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sede_id INT NOT NULL,
+    
+    -- Información personal
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    tipo_documento VARCHAR(20) NOT NULL COMMENT 'DNI, CE, Pasaporte',
+    numero_documento VARCHAR(20) NOT NULL,
+    email VARCHAR(100) NULL,
+    telefono VARCHAR(15) NULL,
+    direccion VARCHAR(500) NULL,
+    ciudad VARCHAR(100) NULL,
+    pais VARCHAR(100) NULL,
+    
+    -- Control
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    creado_por VARCHAR(50) NULL,
+    modificado_por VARCHAR(50) NULL,
+    
+    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_persona_documento (sede_id, tipo_documento, numero_documento),
+    INDEX idx_personas_sede (sede_id),
+    INDEX idx_personas_documento (numero_documento),
+    INDEX idx_personas_email (email)
+) COMMENT='Información única de personas/clientes por número de documento';
+
 -- Tabla de tickets (compras de participación)
+-- REFACTORIZADA: Solo referencia a persona_id, sin duplicar datos
+-- IMPORTANTE: Se crea antes de numeros_rifa porque numeros_rifa tiene FK a tickets
 CREATE TABLE tickets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sede_id INT NOT NULL,
     rifa_id INT NOT NULL,
-    estado_ticket_id INT NULL,
     
     -- Código único del ticket
     codigo_ticket VARCHAR(50) NOT NULL COMMENT 'Código único para validación',
+    
+    -- Referencia a persona (cliente) - REFACTORIZADO: solo referencia
+    persona_id INT NOT NULL COMMENT 'Referencia a la tabla personas',
     
     -- ====== NÚMERO DE BOLETO ======
     numero_boleto VARCHAR(50) NULL COMMENT 'Número del boleto asignado (ej: 0001, RIFA-0523)',
     numero_boleto_entero INT NULL COMMENT 'Número entero para búsquedas y ordenamiento',
     numero_seleccionado_usuario TINYINT(1) DEFAULT 0 COMMENT 'Si el usuario eligió el número o fue asignado',
-    volantario_id INT NULL COMMENT 'ID del volantario si fue compra física',
-    
-    -- Información del participante (usuario final)
-    nombres VARCHAR(100) NOT NULL,
-    apellidos VARCHAR(100) NOT NULL,
-    tipo_documento VARCHAR(20) NOT NULL COMMENT 'DNI, CE, Pasaporte',
-    numero_documento VARCHAR(20) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    telefono VARCHAR(15) NOT NULL,
-    direccion VARCHAR(500) NULL,
-    ciudad VARCHAR(100) NULL,
-    pais VARCHAR(100) NULL,
     
     -- Información de compra
     precio_pagado DECIMAL(10, 2) NOT NULL,
     fecha_compra DATETIME DEFAULT CURRENT_TIMESTAMP,
     ip_compra VARCHAR(45) NULL,
-    canal_venta VARCHAR(20) DEFAULT 'WEB' COMMENT 'WEB, FISICO, TELEFONO, WHATSAPP',
+    canal_venta VARCHAR(20) DEFAULT 'WEB' COMMENT 'WEB, FISICO, TELEFONO, WHATSAPP, ADMINISTRATIVO',
     vendedor_id INT NULL COMMENT 'ID usuario que realizó la venta (para venta física)',
     
-    -- Estado del ticket
+    -- Estado del ticket (simplificado con ENUM)
     estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE_PAGO' 
         COMMENT 'PENDIENTE_PAGO, PAGO_SUBIDO, VALIDANDO, APROBADO, RECHAZADO, PARTICIPANDO, GANADOR, EXPIRADO',
     
@@ -604,69 +511,20 @@ CREATE TABLE tickets (
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
     FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE RESTRICT,
-    FOREIGN KEY (estado_ticket_id) REFERENCES estados_ticket(id) ON DELETE SET NULL,
+    FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE RESTRICT,
     UNIQUE KEY unique_codigo_ticket (codigo_ticket),
     UNIQUE KEY unique_numero_boleto_rifa (rifa_id, numero_boleto_entero),
     INDEX idx_tickets_sede (sede_id),
     INDEX idx_tickets_rifa (rifa_id),
-    INDEX idx_tickets_documento (numero_documento),
-    INDEX idx_tickets_email (email),
+    INDEX idx_tickets_persona (persona_id),
     INDEX idx_tickets_estado (estado),
     INDEX idx_tickets_codigo (codigo_ticket),
     INDEX idx_tickets_numero_boleto (numero_boleto),
-    INDEX idx_tickets_canal (canal_venta),
-    INDEX idx_tickets_volantario (volantario_id)
+    INDEX idx_tickets_canal (canal_venta)
 );
-
--- Tabla de comprobantes de pago
-CREATE TABLE comprobantes_pago (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    ticket_id INT NOT NULL,
-    metodo_pago_id INT NULL,
-    
-    -- Información del comprobante
-    numero_operacion VARCHAR(100) NULL,
-    monto DECIMAL(10, 2) NOT NULL,
-    fecha_pago DATETIME NULL,
-    
-    -- Archivo del comprobante
-    archivo_comprobante VARCHAR(255) NULL COMMENT 'URL o path del comprobante subido',
-    tipo_archivo VARCHAR(10) NULL COMMENT 'jpg, png, pdf',
-    tamano_archivo INT NULL COMMENT 'Tamaño en bytes',
-    
-    -- Información adicional
-    banco_origen VARCHAR(100) NULL,
-    cuenta_origen VARCHAR(50) NULL,
-    titular_origen VARCHAR(200) NULL,
-    observaciones TEXT NULL,
-    
-    -- Validación
-    estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' 
-        COMMENT 'PENDIENTE, VALIDANDO, APROBADO, RECHAZADO, INVALIDO',
-    validado_por VARCHAR(50) NULL,
-    fecha_validacion DATETIME NULL,
-    motivo_rechazo TEXT NULL,
-    
-    -- Control
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creado_por VARCHAR(50) NULL,
-    modificado_por VARCHAR(50) NULL,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
-    FOREIGN KEY (metodo_pago_id) REFERENCES metodos_pago(id) ON DELETE SET NULL,
-    INDEX idx_comprobantes_sede (sede_id),
-    INDEX idx_comprobantes_ticket (ticket_id),
-    INDEX idx_comprobantes_estado (estado)
-);
-
--- =====================================================
--- TABLAS PARA SISTEMA DE NUMERACIÓN Y VOLANTARIOS
--- =====================================================
 
 -- Tabla de números de rifa/boletos
+-- IMPORTANTE: Se crea después de tickets porque tiene FK a tickets
 CREATE TABLE numeros_rifa (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sede_id INT NOT NULL,
@@ -679,17 +537,12 @@ CREATE TABLE numeros_rifa (
     
     -- Estado del número
     estado VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE' 
-        COMMENT 'DISPONIBLE, RESERVADO, VENDIDO, BLOQUEADO, ESPECIAL',
+        COMMENT 'DISPONIBLE, RESERVADO, VENDIDO, BLOQUEADO',
     motivo_bloqueo VARCHAR(255) NULL COMMENT 'Razón si está bloqueado',
-    es_numero_especial TINYINT(1) DEFAULT 0 COMMENT 'Si es número especial/promocional',
-    descripcion_especial VARCHAR(255) NULL,
     
     -- Reserva temporal (para proceso de compra online)
     reservado_hasta DATETIME NULL COMMENT 'Fecha hasta que está reservado (timeout compra)',
     reservado_por_sesion VARCHAR(255) NULL COMMENT 'ID de sesión que reservó',
-    
-    -- Volantario
-    volantario_id INT NULL COMMENT 'ID del volantario al que pertenece',
     
     -- Fechas
     fecha_reserva DATETIME NULL,
@@ -707,181 +560,38 @@ CREATE TABLE numeros_rifa (
     INDEX idx_numeros_sede (sede_id),
     INDEX idx_numeros_rifa (rifa_id),
     INDEX idx_numeros_estado (estado),
-    INDEX idx_numeros_disponibles (rifa_id, estado),
-    INDEX idx_numeros_volantario (volantario_id)
+    INDEX idx_numeros_disponibles (rifa_id, estado)
 );
 
--- Tabla de volantarios (para venta física)
-CREATE TABLE volantarios (
+-- Tabla de comprobantes de pago
+CREATE TABLE comprobantes_pago (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sede_id INT NOT NULL,
-    rifa_id INT NOT NULL,
-    
-    -- Información del volantario
-    codigo_volantario VARCHAR(50) NOT NULL COMMENT 'Código único del volantario',
-    nombre VARCHAR(200) NULL COMMENT 'Nombre descriptivo del volantario',
-    descripcion TEXT NULL,
-    
-    -- Rango de números incluidos
-    numero_inicial INT NOT NULL COMMENT 'Primer número del volantario',
-    numero_final INT NOT NULL COMMENT 'Último número del volantario',
-    cantidad_numeros INT NOT NULL COMMENT 'Cantidad total de números en este volantario',
-    numeros_vendidos INT DEFAULT 0 COMMENT 'Cantidad de números vendidos',
-    numeros_disponibles INT NOT NULL COMMENT 'Cantidad de números disponibles',
-    
-    -- Configuración de impresión
-    formato_impresion VARCHAR(50) DEFAULT 'A4' COMMENT 'A4, LETTER, CUSTOM',
-    orientacion VARCHAR(20) DEFAULT 'VERTICAL' COMMENT 'VERTICAL, HORIZONTAL',
-    numeros_por_pagina INT DEFAULT 10,
-    total_paginas INT NULL COMMENT 'Cantidad de páginas al imprimir',
-    
-    -- Diseño y personalización
-    incluir_logo TINYINT(1) DEFAULT 1,
-    incluir_qr TINYINT(1) DEFAULT 1 COMMENT 'QR para validación',
-    incluir_terminos TINYINT(1) DEFAULT 1,
-    texto_adicional TEXT NULL COMMENT 'Texto adicional para imprimir',
-    
-    -- Asignación para venta
-    asignado_vendedor_id INT NULL COMMENT 'Usuario vendedor asignado',
-    ubicacion_venta VARCHAR(255) NULL COMMENT 'Lugar donde se venderá',
-    
-    -- Estado del volantario
-    estado VARCHAR(30) NOT NULL DEFAULT 'BORRADOR' 
-        COMMENT 'BORRADOR, GENERADO, IMPRESO, EN_VENTA, AGOTADO, ANULADO',
-    
-    -- Fechas de impresión y entrega
-    fecha_generacion DATETIME NULL COMMENT 'Fecha de generación del PDF',
-    fecha_impresion DATETIME NULL COMMENT 'Fecha de impresión física',
-    fecha_entrega_vendedor DATETIME NULL COMMENT 'Fecha de entrega al vendedor',
-    fecha_inicio_venta DATETIME NULL,
-    fecha_fin_venta DATETIME NULL,
-    
-    -- Archivo PDF generado
-    archivo_pdf VARCHAR(255) NULL COMMENT 'URL del PDF generado',
-    tamano_archivo INT NULL COMMENT 'Tamaño del PDF en bytes',
-    
-    -- Liquidación (opcional para control de vendedores)
-    requiere_liquidacion TINYINT(1) DEFAULT 0,
-    liquidado TINYINT(1) DEFAULT 0,
-    fecha_liquidacion DATETIME NULL,
-    monto_total_esperado DECIMAL(12, 2) NULL,
-    monto_total_recibido DECIMAL(12, 2) NULL,
-    
-    -- Control
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creado_por VARCHAR(50) NULL,
-    modificado_por VARCHAR(50) NULL,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
-    FOREIGN KEY (asignado_vendedor_id) REFERENCES usuarios(id) ON DELETE SET NULL,
-    UNIQUE KEY unique_codigo_volantario_sede (sede_id, codigo_volantario),
-    INDEX idx_volantarios_sede (sede_id),
-    INDEX idx_volantarios_rifa (rifa_id),
-    INDEX idx_volantarios_estado (estado),
-    INDEX idx_volantarios_vendedor (asignado_vendedor_id)
-) COMMENT='Gestión de volantarios impresos para venta física';
-
--- Tabla de participantes (tickets aprobados listos para sorteo)
-CREATE TABLE participantes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    rifa_id INT NOT NULL,
     ticket_id INT NOT NULL,
+    metodo_pago_id INT NULL COMMENT 'Opcional: método de pago usado',
     
-    -- Número de participación
-    numero_participacion INT NOT NULL COMMENT 'Número secuencial para el sorteo',
+    -- Información del comprobante
+    numero_operacion VARCHAR(100) NULL,
+    monto DECIMAL(10, 2) NOT NULL,
+    fecha_pago DATETIME NULL,
     
-    -- Estado
-    esta_activo TINYINT(1) DEFAULT 1,
-    fue_seleccionado_intento TINYINT(1) DEFAULT 0 COMMENT 'Si fue seleccionado en algún intento',
-    numero_intento_seleccionado INT NULL COMMENT 'En qué intento fue seleccionado',
+    -- Archivo del comprobante
+    archivo_comprobante VARCHAR(255) NULL COMMENT 'URL o path del comprobante subido',
+    tipo_archivo VARCHAR(10) NULL COMMENT 'jpg, png, pdf',
+    tamano_archivo INT NULL COMMENT 'Tamaño en bytes',
     
-    -- Control
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
-    FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_ticket_rifa (rifa_id, ticket_id),
-    INDEX idx_participantes_sede (sede_id),
-    INDEX idx_participantes_rifa (rifa_id),
-    INDEX idx_participantes_numero (rifa_id, numero_participacion)
-);
-
--- Tabla de intentos de sorteo
-CREATE TABLE intentos_sorteo (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    rifa_id INT NOT NULL,
-    participante_id INT NOT NULL,
-    
-    -- Información del intento
-    numero_intento INT NOT NULL COMMENT 'Número del intento (1, 2, 3...)',
-    es_ganador TINYINT(1) DEFAULT 0 COMMENT 'Si este intento determinó al ganador',
-    
-    -- Datos del sorteo
-    fecha_intento DATETIME DEFAULT CURRENT_TIMESTAMP,
-    numero_sorteado INT NOT NULL COMMENT 'Número aleatorio sorteado',
-    hash_verificacion VARCHAR(255) NULL COMMENT 'Hash para verificar transparencia del sorteo',
-    
-    -- Metadatos
-    ip_sorteo VARCHAR(45) NULL,
-    realizado_por VARCHAR(50) NULL,
-    
-    -- Control
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
-    FOREIGN KEY (participante_id) REFERENCES participantes(id) ON DELETE CASCADE,
-    INDEX idx_intentos_sede (sede_id),
-    INDEX idx_intentos_rifa (rifa_id),
-    INDEX idx_intentos_numero (rifa_id, numero_intento)
-);
-
--- Tabla de ganadores
-CREATE TABLE ganadores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NOT NULL,
-    rifa_id INT NOT NULL,
-    participante_id INT NOT NULL,
-    ticket_id INT NOT NULL,
-    intento_sorteo_id INT NOT NULL,
-    
-    -- Información del ganador
-    nombres_completos VARCHAR(200) NOT NULL,
-    numero_documento VARCHAR(20) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    telefono VARCHAR(15) NOT NULL,
-    
-    -- Información del premio
-    premio_nombre VARCHAR(200) NOT NULL,
-    premio_valor DECIMAL(12, 2) NULL,
-    
-    -- Entrega del premio
-    fecha_ganador DATETIME DEFAULT CURRENT_TIMESTAMP,
-    premio_entregado TINYINT(1) DEFAULT 0,
-    fecha_entrega DATETIME NULL,
-    lugar_entrega VARCHAR(500) NULL,
-    entregado_por VARCHAR(100) NULL,
-    
-    -- Documentación
-    foto_entrega VARCHAR(255) NULL,
-    documento_entrega VARCHAR(255) NULL COMMENT 'Acta de entrega',
+    -- Información adicional
+    banco_origen VARCHAR(100) NULL,
+    cuenta_origen VARCHAR(50) NULL,
+    titular_origen VARCHAR(200) NULL,
     observaciones TEXT NULL,
     
-    -- Notificaciones
-    notificado_email TINYINT(1) DEFAULT 0,
-    notificado_sms TINYINT(1) DEFAULT 0,
-    fecha_notificacion DATETIME NULL,
-    
-    -- Publicación (opcional)
-    publicar_ganador TINYINT(1) DEFAULT 1 COMMENT 'Si se publica en la web',
-    mensaje_felicitacion TEXT NULL,
+    -- Validación (estado simplificado)
+    estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' 
+        COMMENT 'PENDIENTE, VALIDANDO, APROBADO, RECHAZADO, INVALIDO',
+    validado_por VARCHAR(50) NULL,
+    fecha_validacion DATETIME NULL,
+    motivo_rechazo TEXT NULL,
     
     -- Control
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -890,40 +600,87 @@ CREATE TABLE ganadores (
     modificado_por VARCHAR(50) NULL,
     
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE RESTRICT,
-    FOREIGN KEY (participante_id) REFERENCES participantes(id) ON DELETE CASCADE,
     FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
-    FOREIGN KEY (intento_sorteo_id) REFERENCES intentos_sorteo(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_ganador_rifa (rifa_id),
-    INDEX idx_ganadores_sede (sede_id),
-    INDEX idx_ganadores_rifa (rifa_id),
-    INDEX idx_ganadores_publicar (publicar_ganador)
+    INDEX idx_comprobantes_sede (sede_id),
+    INDEX idx_comprobantes_ticket (ticket_id),
+    INDEX idx_comprobantes_estado (estado)
 );
 
--- =====================================================
--- 5. TABLA DE AUDITORÍA
--- =====================================================
-CREATE TABLE audit_logs (
+
+
+-- Tabla de historial de intentos (para contar intentos antes del ganador)
+CREATE TABLE IF NOT EXISTS intentos_juego (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    sede_id INT NULL,
-    tabla_afectada VARCHAR(100) NOT NULL,
-    registro_id INT NOT NULL,
-    operacion VARCHAR(20) NOT NULL COMMENT 'INSERT, UPDATE, DELETE, LOGIN, LOGOUT',
-    datos_anteriores TEXT NULL,
-    datos_nuevos TEXT NULL,
-    usuario_id VARCHAR(50) NULL,
-    ip_address VARCHAR(45) NULL,
-    user_agent VARCHAR(500) NULL,
-    fecha_operacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    rifa_id INT NOT NULL,
+    rifa_premio_id INT NOT NULL,
+    persona_id INT NOT NULL,
+    numero_id INT NULL COMMENT 'ID del número seleccionado (nuevo: selección por número)',
+    intento_numero INT NOT NULL COMMENT 'Número de intento (1, 2, 3, etc.)',
+    es_ganador TINYINT(1) DEFAULT 0,
+    fecha_intento DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    jugado_por VARCHAR(50) NULL,
+    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
+    FOREIGN KEY (rifa_premio_id) REFERENCES rifas_premios(id) ON DELETE CASCADE,
+    FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE RESTRICT,
+    FOREIGN KEY (numero_id) REFERENCES numeros_rifa(id) ON DELETE SET NULL,
+    INDEX idx_intentos_rifa_premio (rifa_id, rifa_premio_id),
+    INDEX idx_intentos_persona (persona_id),
+    INDEX idx_intentos_numero (numero_id)
+) COMMENT='Historial de intentos de juego por premio';
+
+-- Tabla de ganadores (si no existe)
+-- Tabla de ganadores (si no existe)
+CREATE TABLE IF NOT EXISTS ganadores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sede_id INT NOT NULL,
+    rifa_id INT NOT NULL,
+    rifa_premio_id INT NOT NULL COMMENT 'ID de rifas_premios (premio específico de la rifa)',
+    premio_id INT NOT NULL COMMENT 'ID del premio ganado',
+    numero_id INT NULL COMMENT 'Número ganador específico' ,
+    persona_id INT NOT NULL COMMENT 'Persona ganadora',
+    ticket_id INT NULL COMMENT 'Ticket ganador (opcional, puede haber múltiples)',
     
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE SET NULL,
-    INDEX idx_audit_tabla (tabla_afectada, fecha_operacion),
-    INDEX idx_audit_usuario (usuario_id, fecha_operacion),
-    INDEX idx_audit_fecha (fecha_operacion)
-);
+    -- Información del ganador
+    nombre_completo VARCHAR(200) NOT NULL,
+    documento_completo VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NULL,
+    telefono VARCHAR(15) NULL,
+    
+    -- Dirección de envío (opcional)
+    direccion_envio VARCHAR(500) NULL COMMENT 'Dirección para envío del premio',
+    ciudad_envio VARCHAR(100) NULL,
+    pais_envio VARCHAR(100) NULL,
+    
+    -- Publicación
+    publicar_web TINYINT(1) DEFAULT 0 COMMENT 'Si se publica el ganador en la web',
+    
+    -- Información del juego
+    intento_ganador INT NOT NULL COMMENT 'En qué intento ganó',
+    fecha_ganador DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    jugado_por VARCHAR(50) NULL COMMENT 'Usuario que ejecutó el juego',
+    
+    -- Control
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    creado_por VARCHAR(50) NULL,
+    modificado_por VARCHAR(50) NULL,
+    
+    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+    FOREIGN KEY (rifa_id) REFERENCES rifas(id) ON DELETE CASCADE,
+    FOREIGN KEY (rifa_premio_id) REFERENCES rifas_premios(id) ON DELETE CASCADE,
+    FOREIGN KEY (premio_id) REFERENCES premios(id) ON DELETE RESTRICT,
+    FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE RESTRICT,
+    FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL,
+    FOREIGN KEY (numero_id) REFERENCES numeros_rifa(id) ON DELETE SET NULL,
+    INDEX idx_ganadores_rifa (rifa_id),
+    INDEX idx_ganadores_premio (premio_id),
+    INDEX idx_ganadores_persona (persona_id),
+    INDEX idx_ganadores_numero (numero_id),
+    INDEX idx_ganadores_publicar (publicar_web)
+) COMMENT='Ganadores de premios en rifas';
 
 -- =====================================================
--- 6. DATOS INICIALES
+-- 4. DATOS INICIALES
 -- =====================================================
 
 -- Insertar sede principal (Perú - Lima)
@@ -931,29 +688,13 @@ INSERT INTO sedes (codigo, nombre, pais, moneda, simbolo_moneda, codigo_moneda, 
 VALUES 
 ('PERU-01', 'Sede Principal Lima', 'Perú', 'Soles', 'S/.', 'PEN', 'America/Lima', 1, 1, 'SYSTEM');
 
--- Estados de ticket predefinidos
-INSERT INTO estados_ticket (sede_id, nombre, descripcion, color_hex, orden, creado_por)
-SELECT id, 'PENDIENTE', 'Pendiente de pago', '#FFA500', 1, 'SYSTEM' FROM sedes
-UNION ALL
-SELECT id, 'PAGADO', 'Pago registrado', '#2196F3', 2, 'SYSTEM' FROM sedes
-UNION ALL
-SELECT id, 'APROBADO', 'Ticket aprobado', '#4CAF50', 3, 'SYSTEM' FROM sedes
-UNION ALL
-SELECT id, 'RECHAZADO', 'Ticket rechazado', '#F44336', 4, 'SYSTEM' FROM sedes
-UNION ALL
-SELECT id, 'PARTICIPANDO', 'En sorteo', '#9C27B0', 5, 'SYSTEM' FROM sedes
-UNION ALL
-SELECT id, 'GANADOR', 'Ganador del sorteo', '#FFD700', 6, 'SYSTEM' FROM sedes
-UNION ALL
-SELECT id, 'EXPIRADO', 'Ticket expirado', '#9E9E9E', 7, 'SYSTEM' FROM sedes;
-
+-- Roles predefinidos
 INSERT INTO roles (sede_id, nombre, descripcion, nivel_acceso, creado_por) VALUES
 (1, 'SUPERADMIN', 'Administrador del sistema', 4, 'SYSTEM'),
 (1, 'ADMIN', 'Administrador de sede', 3, 'SYSTEM'),
 (1, 'VALIDADOR', 'Validador de pagos', 2, 'SYSTEM'),
 (1, 'OPERADOR', 'Operador de rifas', 2, 'SYSTEM'),
 (1, 'CONSULTA', 'Solo consulta', 1, 'SYSTEM');
-
 
 -- Permisos predefinidos
 INSERT INTO permisos (sede_id, nombre, descripcion, modulo, accion, creado_por)
@@ -973,17 +714,9 @@ SELECT id, 'PAGOS_APROBAR', 'Aprobar pagos', 'PARTICIPANTES', 'APROBAR', 'SYSTEM
 UNION ALL
 SELECT id, 'PAGOS_RECHAZAR', 'Rechazar pagos', 'PARTICIPANTES', 'RECHAZAR', 'SYSTEM' FROM sedes
 UNION ALL
-SELECT id, 'SORTEO_REALIZAR', 'Realizar sorteos', 'RIFAS', 'SORTEAR', 'SYSTEM' FROM sedes
-UNION ALL
 SELECT id, 'REPORTES_VER', 'Ver reportes', 'REPORTES', 'LEER', 'SYSTEM' FROM sedes;
 
-
-
-
-
-
 -- Usuario administrador por defecto (password: admin123)
--- Nota: En producción usar un hash real y cambiar contraseña
 INSERT INTO usuarios (sede_id, username, password_hash, email, primer_nombre, apellido_paterno, debe_cambiar_password, estado, creado_por)
 VALUES
     (1, 'zed_admin', '$2y$10$9rR0ZrEaFxR29HsrlaobmeB8g34E/mAajSvBjnwpYs3rO6lGzB5cG', 'zed_admin@rifas.com', 'zed_admin', 'Administrador', 1, 1, 'SYSTEM');
@@ -1002,9 +735,21 @@ WHERE u.username = 'zed_admin'
   AND r.nombre = 'SUPERADMIN'
   AND r.sede_id = 1;
 
-COMMIT;
-
 -- =====================================================
--- FIN DEL SCRIPT
+-- RESUMEN DE REFACTORIZACIÓN
 -- =====================================================
- 
+-- TABLAS ELIMINADAS (innecesarias para el flujo básico):
+-- - participantes (redundante con tickets aprobados)
+-- - intentos_sorteo (solo si hay sistema de sorteo múltiple)
+-- - ganadores (solo si hay sistema de sorteo)
+-- - ubicaciones_rifa (no mencionada en flujo)
+-- - estados_ticket (simplificado con ENUM en tickets)
+-- - metodos_pago (opcional, puede agregarse después si se necesita)
+-- - configuracion_sede (no mencionada en flujo básico)
+-- - audit_logs (útil pero no crítico para flujo básico)
+--
+-- CAMBIOS PRINCIPALES:
+-- 1. tickets ahora solo referencia persona_id (sin duplicar datos)
+-- 2. Estado simplificado con VARCHAR/ENUM en lugar de tabla separada
+-- 3. Estructura optimizada para el flujo: Premios → Rifas → Personas → Tickets → Comprobantes
+-- =====================================================

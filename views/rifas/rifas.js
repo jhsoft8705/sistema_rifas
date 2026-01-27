@@ -38,7 +38,6 @@ const SafeUtils = {
 };
 
 let tablaRifas = null;
-let tablaNumeros = null;
 let userInfo = null;
 let premiosCatalogo = [];
 let rifaSeleccionada = null;
@@ -46,7 +45,6 @@ let rifasData = [];
 
 let modalRifa = null;
 let modalPremios = null;
-let modalNumeros = null;
 
 $(document).ready(async () => {
     if (!Auth.requireAuth()) return;
@@ -54,26 +52,13 @@ $(document).ready(async () => {
     userInfo = Auth.getUserInfo();
     modalRifa = new bootstrap.Modal(document.getElementById('modal_rifa'));
     modalPremios = new bootstrap.Modal(document.getElementById('modal_premios_rifa'));
-    modalNumeros = new bootstrap.Modal(document.getElementById('modal_numeros_rifa'));
 
-    inicializarSelectSede();
     inicializarFlatpickr();
     inicializarTablas();
     inicializarEventosUI();
 
     await cargarPremiosCatalogo();
-    await cargarRifas();
 });
-
-function inicializarSelectSede() {
-    if (!userInfo) {
-        return;
-    }
-
-    const option = `<option value="${userInfo.sede_id}">${userInfo.sede_nombre || 'Sede principal'}</option>`;
-    $('#filtro_sede_rifa').html(option).val(userInfo.sede_id);
-    $('#sede_id_rifa').val(userInfo.sede_id);
-}
 
 function inicializarFlatpickr() {
     if (typeof flatpickr !== 'function') {
@@ -92,9 +77,42 @@ function inicializarFlatpickr() {
 
 function inicializarTablas() {
     tablaRifas = $('#tabla_rifas').DataTable({
-        processing: false,
+        processing: true,
         serverSide: false,
-        data: [],
+        ajax: {
+            url: window.API_BASE_URL + '/rifas/getAll',
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            },
+            data: function (d) {
+                d.sede_id = userInfo?.sede_id || '';
+                const estado = $('#filtro_estado_rifa').val();
+                if (estado !== '') {
+                    d.estado = estado;
+                }
+                return d;
+            },
+            dataSrc: function (json) {
+                if (json && json.ok) {
+                    rifasData = json.data || [];
+                    return rifasData;
+                } else {
+                    rifasData = [];
+                    return [];
+                }
+            },
+            error: function (xhr, error, thrown) {
+                console.error('Error al cargar rifas:', error);
+                rifasData = [];
+                if (xhr.status === 401) {
+                    Auth.logout();
+                } else {
+                    Utils.showAlert('Error de conexión al cargar las rifas', 'error');
+                }
+            }
+        },
         language: Utils.getDataTableLanguageES(),
         lengthChange: false,
         dom: 'frtip',
@@ -103,26 +121,27 @@ function inicializarTablas() {
                 data: null,
                 className: 'text-center',
                 orderable: false,
-                width: '140px',
-                render: (_, __, row) => `
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-primary btn-editar" data-id="${row.id}" title="Editar">
-                            <i class="ri-edit-2-line"></i>
+                width: '280px',
+                render: (_, __, row) => {
+                    const esCerrada = row.estado === 'CERRADA' || row.estado === 'FINALIZADA';
+                    return `
+                    <div class="d-flex gap-2 justify-content-center">
+                        ${!esCerrada ? `
+                        <button class="btn btn-sm btn-primary btn-editar" data-id="${row.id}" title="Editar" style="min-width: 80px;">
+                            <i class="ri-edit-2-line me-1"></i>Editar
                         </button>
-                        <button class="btn btn-outline-primary btn-premios" data-id="${row.id}" title="Premios">
-                            <i class="ri-gift-line"></i>
+                        ` : ''}
+                        <button class="btn btn-sm btn-outline-primary btn-premios" data-id="${row.id}" title="Premios" style="min-width: 80px;">
+                            <i class="ri-gift-line me-1"></i>Premios
                         </button>
-                        <button class="btn btn-outline-secondary btn-numeros" data-id="${row.id}" title="Números">
-                            <i class="ri-grid-line"></i>
+                        ${!esCerrada ? `
+                        <button class="btn btn-sm btn-outline-warning btn-cerrar" data-id="${row.id}" title="Cerrar Rifa" style="min-width: 80px;">
+                            <i class="ri-lock-line me-1"></i>Cerrar
                         </button>
-                        <button class="btn btn-outline-success btn-exportar-numeros" data-id="${row.id}" title="Exportar números para promoción">
-                            <i class="ri-share-line"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-eliminar" data-id="${row.id}" title="Eliminar">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
+                        ` : ''}
                     </div>
                 `
+                }
             },
             { data: 'codigo' },
             { data: 'nombre' },
@@ -149,88 +168,55 @@ function inicializarTablas() {
         ]
     });
 
-    tablaNumeros = $('#tabla_numeros_rifa').DataTable({
-        language: Utils.getDataTableLanguageES(),
-        paging: true,
-        pageLength: 25,
-        lengthChange: false,
-        dom: 'frtip',
-        columns: [
-            { data: 'numero_formateado' },
-            {
-                data: 'estado',
-                render: (estado) => `<span class="badge bg-${obtenerClaseEstadoNumero(estado)}">${estado}</span>`
-            },
-            {
-                data: 'reservado_hasta',
-                render: SafeUtils.formatDate
-            },
-            {
-                data: null,
-                render: (row) => row.nombres ? `${row.nombres} ${row.apellidos}`.trim() : '-'
-            },
-            {
-                data: null,
-                orderable: false,
-                className: 'text-center',
-                render: (row) => `
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary btn-seleccionar-numero" data-id="${row.id}" title="Seleccionar">
-                            <i class="ri-checkbox-circle-line"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-liberar-numero" data-id="${row.id}" title="Liberar">
-                            <i class="ri-close-circle-line"></i>
-                        </button>
-                    </div>
-                `
-            }
-        ]
-    });
 }
 
 function inicializarEventosUI() {
-    $('#btn_filtrar_rifas').on('click', cargarRifas);
-    $('#btn_recargar_rifas').on('click', () => {
+    $('#btn_filtrar_rifas').on('click', function () {
+        tablaRifas.ajax.reload();
+    });
+    $('#btn_recargar_rifas').on('click', function () {
         $('#filtro_estado_rifa').val('');
-        cargarRifas();
+        tablaRifas.ajax.reload();
     });
-    $('#btn_nueva_rifa').on('click', () => abrirModalRifa());
-    $('#btn_exportar_10').on('click', () => imprimirCartillas(10));
-    $('#btn_generar_numeros').on('click', generarNumerosRifa);
-    $('#btn_filtrar_numeros').on('click', () => {
-        const rifaId = $('#numeros_rifa_id_hidden').val();
-        if (rifaId) cargarNumerosRifa(rifaId);
-    });
-    $('#btn_recargar_numeros').on('click', () => {
-        const rifaId = $('#numeros_rifa_id_hidden').val();
-        if (rifaId) {
-            $('#filtro_estado_numero').val('');
-            cargarNumerosRifa(rifaId);
+    $('#btn_nueva_rifa').on('click', async function () {
+        const $btn = $('#btn_nueva_rifa');
+        const originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+        try {
+            await cargarPremiosCatalogo();
+            abrirModalRifa();
+        } catch (error) {
+            console.error('Error al preparar modal de nueva rifa:', error);
+            Utils.showAlert('Ocurrió un problema al preparar el formulario', 'error');
+        } finally {
+            $btn.prop('disabled', false).html(originalHtml);
         }
     });
-    $('#btn_exportar_20').on('click', () => imprimirCartillas(20));
 
     $('#tabla_rifas tbody').on('click', '.btn-editar', async function () {
-        await editarRifa($(this).data('id'));
-    });
-    $('#tabla_rifas tbody').on('click', '.btn-premios', async function () {
-        await mostrarModalPremios($(this).data('id'));
-    });
-    $('#tabla_rifas tbody').on('click', '.btn-numeros', async function () {
-        await mostrarModalNumeros($(this).data('id'));
-    });
-    $('#tabla_rifas tbody').on('click', '.btn-exportar-numeros', function () {
-        const rifaId = $(this).data('id');
-        const encryptedId = Utils.encryptId(rifaId);
-        if (encryptedId) {
-            window.open(`${window.BASE_URL}/rifa-numeros/${encryptedId}`, '_blank');
-        } else {
-            SafeUtils.showToast('Error al generar enlace de exportación', 'error');
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+        try {
+            await editarRifa($(this).data('id'));
+        } finally {
+            $btn.prop('disabled', false).html(originalHtml);
         }
     });
-    $('#tabla_rifas tbody').on('click', '.btn-eliminar', async function () {
-        await eliminarRifa($(this).data('id'));
+    $('#tabla_rifas tbody').on('click', '.btn-premios', async function () {
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+        try {
+            await mostrarModalPremios($(this).data('id'));
+        } finally {
+            $btn.prop('disabled', false).html(originalHtml);
+        }
     });
+    $('#tabla_rifas tbody').on('click', '.btn-cerrar', async function () {
+        await cerrarRifa($(this).data('id'));
+    });
+
 
     $('#form_rifa').on('submit', async (event) => {
         event.preventDefault();
@@ -242,23 +228,6 @@ function inicializarEventosUI() {
         await guardarPremioRifa();
     });
     $('#btn_cancelar_premio_rifa').on('click', limpiarFormularioPremio);
-
-    $('#form_asignar_numero').on('submit', async (event) => {
-        event.preventDefault();
-        await guardarEstadoNumero();
-    });
-    $('#btn_limpiar_participante').on('click', function() {
-        $('#form_asignar_numero')[0].reset();
-        $('#numero_id_hidden').val('');
-        $('#numero_formateado_resumen').val('');
-        $('#info_participante_existente').addClass('d-none');
-        $('#btn_guardar_numero').removeClass('d-none');
-    });
-    $('#btn_filtrar_numeros').on('click', () => cargarNumerosRifa($('#numeros_rifa_id_hidden').val()));
-    $('#btn_recargar_numeros').on('click', () => {
-        $('#filtro_estado_numero').val('');
-        cargarNumerosRifa($('#numeros_rifa_id_hidden').val());
-    });
 
     $('#form_rifa').on('input change', 'input, select, textarea', function () {
         if (!this.id) {
@@ -279,21 +248,6 @@ function inicializarEventosUI() {
         }
     });
 
-    $('#tabla_numeros_rifa tbody').on('click', '.btn-seleccionar-numero', function () {
-        seleccionarNumero(tablaNumeros.row($(this).closest('tr')).data());
-    });
-    $('#tabla_numeros_rifa tbody').on('click', '.btn-liberar-numero', function () {
-        liberarNumero(tablaNumeros.row($(this).closest('tr')).data());
-    });
-
-    const modalNumerosEl = document.getElementById('modal_numeros_rifa');
-    if (modalNumerosEl) {
-        modalNumerosEl.addEventListener('shown.bs.modal', () => {
-            if (tablaNumeros) {
-                tablaNumeros.columns.adjust().draw(false);
-            }
-        });
-    }
 }
 
 async function cargarPremiosCatalogo(options = {}) {
@@ -408,34 +362,6 @@ async function cargarPremiosCatalogo(options = {}) {
     }
 }
 
-async function cargarRifas() {
-    try {
-        Utils.showLoading('Cargando rifas...');
-
-        const params = {
-            sede_id: $('#filtro_sede_rifa').val() || userInfo.sede_id,
-            estado: $('#filtro_estado_rifa').val() || ''
-        };
-        const respuesta = await API.get('rifas/getAll', params);
-
-        Utils.closeLoading();
-
-        if (respuesta?.ok) {
-            rifasData = respuesta.data || [];
-            tablaRifas.clear().rows.add(rifasData).draw();
-        } else {
-            rifasData = [];
-            tablaRifas.clear().draw();
-            SafeUtils.showToast(respuesta?.msj || 'No se pudieron cargar las rifas', 'warning');
-        }
-    } catch (error) {
-        Utils.closeLoading();
-        console.error('Error al cargar rifas:', error);
-        rifasData = [];
-        tablaRifas.clear().draw();
-        SafeUtils.showToast('Error de conexión al cargar las rifas', 'error');
-    }
-}
 
 function limpiarFormularioRifa() {
     const form = document.getElementById('form_rifa');
@@ -450,6 +376,11 @@ function limpiarFormularioRifa() {
     ['fecha_inicio_venta', 'fecha_fin_venta', 'fecha_sorteo'].forEach((id) => setFechaCampo(id, ''));
 
     $('#estado_rifa').val('BORRADOR');
+    // Restaurar el campo de estado (habilitarlo y quitar ayuda)
+    $('#estado_rifa').prop('disabled', false);
+    $('#estado_rifa').removeAttr('title');
+    $('#estado_rifa').next('.form-text').remove();
+    
     $('#mostrar_contador').val('1');
     $('#mostrar_participantes').val('1');
     $('#mostrar_tickets_vendidos').val('1');
@@ -489,8 +420,23 @@ async function abrirModalRifa(detalle = null) {
         $('#rifa_id').val(detalle.id);
         $('#sede_id_rifa').val(detalle.sede_id);
         $('#premio_id').val(detalle.premio_principal_id || '');
+        
+        // Si la rifa está cerrada o finalizada, deshabilitar el campo de estado
+        const esCerrada = detalle.estado === 'CERRADA' || detalle.estado === 'FINALIZADA';
         $('#estado_rifa').val(detalle.estado);
-        $('#codigo_rifa').val(detalle.codigo);
+        $('#estado_rifa').prop('disabled', esCerrada);
+        
+        if (esCerrada) {
+            $('#estado_rifa').attr('title', 'No se puede cambiar el estado de una rifa cerrada');
+            // Agregar ayuda visual
+            if (!$('#estado_rifa').next('.form-text').length) {
+                $('#estado_rifa').after('<small class="form-text text-muted"><i class="ri-information-line"></i> Una rifa cerrada no puede cambiar de estado</small>');
+            }
+        } else {
+            $('#estado_rifa').removeAttr('title');
+            $('#estado_rifa').next('.form-text').remove();
+        }
+        
         $('#nombre_rifa').val(detalle.nombre);
         $('#precio_ticket').val(detalle.precio_ticket);
         $('#descripcion_rifa').val(detalle.descripcion || '');
@@ -499,8 +445,6 @@ async function abrirModalRifa(detalle = null) {
         $('#cantidad_digitos').val(detalle.cantidad_digitos || 4);
         $('#cantidad_maxima_por_persona').val(detalle.cantidad_maxima_por_persona || 1);
         $('#cantidad_maxima_tickets').val(detalle.cantidad_maxima_tickets || '');
-        $('#numeros_por_volantario').val(detalle.numeros_por_volantario || 100);
-        $('#numeros_por_pagina').val(detalle.numeros_por_pagina || 10);
         $('#tipo_numeracion').val(detalle.tipo_numeracion || 'CORRELATIVO');
         $('#prefijo_numero').val(detalle.prefijo_numero || '');
         $('#sufijo_numero').val(detalle.sufijo_numero || '');
@@ -529,21 +473,27 @@ async function abrirModalRifa(detalle = null) {
 }
 
 async function editarRifa(id) {
-    try {
-        SafeUtils.showLoading('Cargando rifa...');
-        const respuesta = await API.get('rifas/getById', { id, sede_id: userInfo.sede_id });
-        SafeUtils.closeLoading();
+    const $btn = $(`button.btn-editar[data-id="${id}"]`);
+    const originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
 
-        if (respuesta?.ok && respuesta.data) {
-            rifaSeleccionada = respuesta.data;
-            abrirModalRifa(respuesta.data);
+    try {
+        const [respuestaRifa, respuestaPremios] = await Promise.all([
+            API.get('rifas/getById', { id, sede_id: userInfo.sede_id }),
+            cargarPremiosCatalogo()
+        ]);
+
+        if (respuestaRifa?.ok && respuestaRifa.data) {
+            rifaSeleccionada = respuestaRifa.data;
+            abrirModalRifa(respuestaRifa.data);
         } else {
-            SafeUtils.showToast(respuesta?.msj || 'No se pudo obtener la rifa', 'error');
+            Utils.showAlert(respuestaRifa?.msj || 'No se pudo obtener la rifa', 'error');
         }
     } catch (error) {
-        SafeUtils.closeLoading();
-        SafeUtils.showToast('Error al obtener la rifa', 'error');
-        console.error(error);
+        console.error('Error al obtener rifa:', error);
+        Utils.showAlert('Ocurrió un problema al obtener la rifa', 'error');
+    } finally {
+        $btn.prop('disabled', false).html(originalHtml);
     }
 }
 
@@ -551,7 +501,7 @@ function construirPayloadRifa() {
     const payload = {
         sede_id: userInfo.sede_id,
         premio_id: parseIntOrNull($('#premio_id').val()),
-        codigo: $('#codigo_rifa').val().trim(),
+        codigo: null, // Se genera automáticamente en el backend
         nombre: $('#nombre_rifa').val().trim(),
         descripcion: $('#descripcion_rifa').val()?.trim() || null,
         numero_intentos: 5,
@@ -569,10 +519,6 @@ function construirPayloadRifa() {
         permitir_seleccion_numero: $('#permitir_seleccion_numero').is(':checked') ? 1 : 0,
         asignacion_automatica: $('#asignacion_automatica').is(':checked') ? 1 : 0,
         mostrar_numeros_disponibles: 1,
-        generar_volantarios: 1,
-        numeros_por_volantario: parseIntOrNull($('#numeros_por_volantario').val()) || 100,
-        formato_impresion: 'A4',
-        numeros_por_pagina: parseIntOrNull($('#numeros_por_pagina').val()) || 10,
         numeros_bloqueados: null,
         numeros_especiales: null,
         fecha_inicio_venta: $('#fecha_inicio_venta').val(),
@@ -604,7 +550,6 @@ function validarFormularioRifa() {
     Utils.limpiarValidaciones('form_rifa');
 
     const camposObligatorios = [
-        { id: 'codigo_rifa', mensaje: 'El código de la rifa es obligatorio' },
         { id: 'nombre_rifa', mensaje: 'El nombre de la rifa es obligatorio' },
         { id: 'precio_ticket', mensaje: 'El precio del ticket es obligatorio' },
         { id: 'numero_inicial', mensaje: 'El número inicial es obligatorio' },
@@ -675,10 +620,12 @@ async function guardarRifa() {
 
     if (esEdicion) {
         payload.id = parseInt(rifaId, 10);
+        // El código se obtiene del backend en actualización, no se envía
         payload.estado = $('#estado_rifa').val();
         payload.estado_activo = payload.estado === 'CANCELADA' ? 0 : 1;
         payload.modificado_por = userInfo.nombre_completo || 'SYSTEM';
     } else {
+        payload.estado = $('#estado_rifa').val() || 'BORRADOR';
         payload.creado_por = userInfo.nombre_completo || 'SYSTEM';
         if (payload.premio_id) {
             payload.premios = [{
@@ -695,23 +642,72 @@ async function guardarRifa() {
         }
     }
 
+    // Deshabilitar botón de guardar para evitar doble clic
+    const $btnGuardar = $('#btn_guardar_rifa');
+    const originalBtnHtml = $btnGuardar.html();
+    $btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+
     try {
-        SafeUtils.showLoading(esEdicion ? 'Actualizando rifa...' : 'Registrando rifa...');
         const endpoint = esEdicion ? 'rifas/update' : 'rifas/register';
         const respuesta = await API.post(endpoint, payload);
-        SafeUtils.closeLoading();
+
+        // Restaurar botón
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
 
         if (respuesta?.ok) {
-            SafeUtils.showToast(respuesta.msj, 'success');
+            Utils.showAlert(respuesta.msj || (esEdicion ? 'Rifa actualizada correctamente' : 'Rifa registrada correctamente'), 'success');
             modalRifa.hide();
-            await cargarRifas();
+            tablaRifas.ajax.reload();
         } else {
-            SafeUtils.showToast(respuesta?.msj || 'No se pudo guardar la rifa', 'error');
+            Utils.showAlert(respuesta?.msj || 'No se pudo guardar la rifa', 'error');
         }
     } catch (error) {
-        SafeUtils.closeLoading();
-        SafeUtils.showToast('Ocurrió un problema al guardar la rifa', 'error');
-        console.error(error);
+        // Restaurar botón en caso de error
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
+        console.error('Error al guardar rifa:', error);
+        Utils.showAlert('Ocurrió un problema al guardar la rifa', 'error');
+    }
+}
+
+async function cerrarRifa(id) {
+    const rifa = rifasData.find(r => r.id == id);
+    if (!rifa) {
+        Utils.showAlert('No se encontró la información de la rifa', 'error');
+        return;
+    }
+
+    const confirmar = await Utils.showConfirm(
+        '¿Cerrar rifa?',
+        `¿Está seguro de cerrar la rifa "${rifa.nombre}"? Esta acción cambiará el estado a CERRADA.`,
+        'Sí, cerrar',
+        'Cancelar'
+    );
+
+    if (!confirmar.isConfirmed) return;
+
+    // Deshabilitar botón
+    const $btn = $(`button.btn-cerrar[data-id="${id}"]`);
+    const originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+
+    try {
+        const respuesta = await API.post('rifas/cerrar', {
+            id: id,
+            sede_id: userInfo?.sede_id,
+            modificado_por: userInfo?.nombre_completo || 'SYSTEM'
+        });
+
+        if (respuesta && respuesta.ok) {
+            Utils.showAlert(respuesta.msj || 'Rifa cerrada correctamente', 'success');
+            tablaRifas.ajax.reload();
+        } else {
+            Utils.showAlert(respuesta?.msj || 'No se pudo cerrar la rifa', 'error');
+        }
+    } catch (error) {
+        console.error('Error al cerrar rifa:', error);
+        Utils.showAlert('Ocurrió un problema al cerrar la rifa', 'error');
+    } finally {
+        $btn.prop('disabled', false).html(originalHtml);
     }
 }
 
@@ -738,7 +734,7 @@ async function eliminarRifa(id) {
 
         if (respuesta?.ok) {
             SafeUtils.showToast(respuesta.msj, 'success');
-            await cargarRifas();
+            tablaRifas.ajax.reload();
         } else {
             SafeUtils.showToast(respuesta?.msj || 'No se pudo eliminar la rifa', 'error');
         }
@@ -751,12 +747,10 @@ async function eliminarRifa(id) {
 
 async function mostrarModalPremios(rifaId) {
     try {
-        SafeUtils.showLoading('Cargando rifa...');
         const respuesta = await API.get('rifas/getById', { id: rifaId, sede_id: userInfo.sede_id });
-        SafeUtils.closeLoading();
 
         if (!(respuesta?.ok && respuesta.data)) {
-            SafeUtils.showToast(respuesta?.msj || 'No se pudo obtener la rifa', 'error');
+            Utils.showAlert(respuesta?.msj || 'No se pudo obtener la rifa', 'error');
             return;
         }
 
@@ -771,9 +765,8 @@ async function mostrarModalPremios(rifaId) {
         await cargarPremiosRifa();
         modalPremios.show();
     } catch (error) {
-        SafeUtils.closeLoading();
-        SafeUtils.showToast('Error al obtener la rifa', 'error');
         console.error(error);
+        Utils.showAlert('Error al obtener la rifa', 'error');
     }
 }
 
@@ -946,178 +939,6 @@ async function eliminarPremioRifa(id) {
     }
 }
 
-async function mostrarModalNumeros(rifaId) {
-    try {
-        SafeUtils.showLoading('Cargando rifa...');
-        const respuesta = await API.get('rifas/getById', { id: rifaId, sede_id: userInfo.sede_id });
-        SafeUtils.closeLoading();
-
-        if (!(respuesta?.ok && respuesta.data)) {
-            SafeUtils.showToast(respuesta?.msj || 'No se pudo obtener la rifa', 'error');
-            return;
-        }
-
-        rifaSeleccionada = respuesta.data;
-        $('#numeros_rifa_id_hidden').val(rifaSeleccionada.id);
-        $('#numeros_rifa_nombre').text(`${rifaSeleccionada.codigo} - ${rifaSeleccionada.nombre}`);
-        $('#numero_id_hidden').val('');
-        $('#numero_formateado_resumen').val('');
-        $('#form_asignar_numero')[0].reset();
-
-        await cargarNumerosRifa(rifaSeleccionada.id, { showFeedback: true });
-        modalNumeros.show();
-    } catch (error) {
-        SafeUtils.closeLoading();
-        SafeUtils.showToast('Error al obtener la rifa', 'error');
-        console.error(error);
-    }
-}
-
-async function cargarNumerosRifa(rifaId, options = {}) {
-    if (!rifaId) return;
-
-    const { showFeedback = false } = options;
-
-    try {
-        SafeUtils.showLoading('Cargando números...');
-        const estado = $('#filtro_estado_numero').val() || '';
-        const respuesta = await API.get('rifas/numeros/get', { rifa_id: rifaId, estado });
-
-        if (respuesta?.ok) {
-            const registros = respuesta.data || [];
-            tablaNumeros.clear().rows.add(registros).draw();
-            if (showFeedback && registros.length === 0) {
-                SafeUtils.showToast('Esta rifa aún no tiene números generados. Verifica el rango registrado.', 'info');
-            }
-        } else {
-            tablaNumeros.clear().draw();
-            SafeUtils.showToast(respuesta?.msj || 'No se pudieron obtener los números', 'warning');
-        }
-    } catch (error) {
-        SafeUtils.showToast('Error al obtener los números', 'error');
-        console.error(error);
-    } finally {
-        SafeUtils.closeLoading();
-    }
-}
-
-function seleccionarNumero(data) {
-    if (!data) return;
-    $('#numero_id_hidden').val(data.id);
-    $('#numero_formateado_resumen').val(data.numero_formateado);
-    $('#numero_estado').val(data.estado);
-    $('#numero_reservado_hasta').val(data.reservado_hasta ? formatearFechaInput(data.reservado_hasta) : '');
-    $('#numero_sesion_reserva').val(data.reservado_por_sesion || '');
-    
-    // Mostrar información del participante si existe
-    const tieneParticipante = data.nombres && data.apellidos;
-    if (tieneParticipante) {
-        $('#info_participante_existente').removeClass('d-none');
-        $('#participante_info_text').html(`
-            <div><strong>${data.nombres} ${data.apellidos}</strong></div>
-            <div class="small">${data.numero_documento || ''} ${data.email ? `| ${data.email}` : ''} ${data.telefono ? `| ${data.telefono}` : ''}</div>
-        `);
-        $('#numero_participante_nombres').val(data.nombres || '');
-        $('#numero_participante_apellidos').val(data.apellidos || '');
-        $('#numero_participante_documento').val(data.numero_documento || '');
-        $('#numero_participante_email').val(data.email || '');
-        $('#numero_participante_telefono').val(data.telefono || '');
-        $('#btn_guardar_numero').removeClass('d-none');
-    } else {
-        $('#info_participante_existente').addClass('d-none');
-        $('#participante_info_text').html('');
-        $('#numero_participante_nombres').val('');
-        $('#numero_participante_apellidos').val('');
-        $('#numero_participante_documento').val('');
-        $('#numero_participante_email').val('');
-        $('#numero_participante_telefono').val('');
-        
-        // Mostrar botón guardar para actualizar datos
-        $('#btn_guardar_numero').removeClass('d-none');
-    }
-}
-
-async function liberarNumero(data) {
-    if (!data) return;
-    $('#numero_id_hidden').val(data.id);
-    $('#numero_estado').val('DISPONIBLE');
-    $('#numero_reservado_hasta').val('');
-    $('#numero_sesion_reserva').val('');
-    await guardarEstadoNumero();
-}
-
-async function guardarEstadoNumero() {
-    const numeroId = $('#numero_id_hidden').val();
-    const rifaId = $('#numeros_rifa_id_hidden').val();
-    if (!numeroId || !rifaId) {
-        SafeUtils.showToast('Selecciona un número antes de guardar', 'warning');
-        return;
-    }
-
-    const payload = {
-        numero_id: parseInt(numeroId, 10),
-        rifa_id: parseInt(rifaId, 10),
-        estado: $('#numero_estado').val(),
-        ticket_id: null,
-        reservado_hasta: $('#numero_reservado_hasta').val() || null,
-        reservado_por_sesion: $('#numero_sesion_reserva').val()?.trim() || null,
-        modificado_por: userInfo.nombre_completo || 'SYSTEM'
-    };
-
-    try {
-        const respuesta = await API.post('rifas/numeros/update', payload);
-        if (respuesta?.ok) {
-            SafeUtils.showToast(respuesta.msj, 'success');
-            await cargarNumerosRifa(rifaId);
-            $('#numero_id_hidden').val('');
-            $('#numero_formateado_resumen').val('');
-            $('#form_asignar_numero')[0].reset();
-        } else {
-            SafeUtils.showToast(respuesta?.msj || 'No se pudo actualizar el número', 'error');
-        }
-    } catch (error) {
-        SafeUtils.showToast('Error al actualizar el número', 'error');
-        console.error(error);
-    }
-}
-
-
-function imprimirCartillas(numerosPorPagina) {
-    if (!rifaSeleccionada) {
-        SafeUtils.showToast('Selecciona primero una rifa desde el botón "Números".', 'warning');
-        return;
-    }
-
-    const inicio = parseInt(rifaSeleccionada.numero_inicial, 10);
-    const fin = parseInt(rifaSeleccionada.numero_final, 10);
-    const digitos = rifaSeleccionada.cantidad_digitos || 4;
-    const prefijo = rifaSeleccionada.prefijo_numero || '';
-    const sufijo = rifaSeleccionada.sufijo_numero || '';
-
-    const win = window.open('', '_blank');
-    win.document.write('<html><head><title>Cartillas de rifas</title>');
-    win.document.write('<style>body{font-family:Arial;} .page{page-break-after:always;margin-bottom:24px;} .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;} .cell{border:1px solid #222;padding:12px;text-align:center;font-size:18px;font-weight:bold;border-radius:6px;}</style>');
-    win.document.write('</head><body>');
-    win.document.write(`<h2>${rifaSeleccionada.nombre} - Cartillas (${numerosPorPagina} por página)</h2>`);
-
-    let contador = 0;
-    win.document.write('<div class="page"><div class="grid">');
-
-    for (let numero = inicio; numero <= fin; numero++) {
-        const formateado = `${prefijo}${numero.toString().padStart(digitos, '0')}${sufijo}`;
-        win.document.write(`<div class="cell">${formateado}</div>`);
-        contador++;
-        if (contador % numerosPorPagina === 0 && numero < fin) {
-            win.document.write('</div></div><div class="page"><div class="grid">');
-        }
-    }
-
-    win.document.write('</div></div>');
-    win.document.write('</body></html>');
-    win.document.close();
-    win.focus();
-    win.print();
-}
 
 function obtenerBadgeEstadoRifa(estado) {
     const map = {
@@ -1168,14 +989,10 @@ function formatearFechaListadoRifa(valor) {
     return valor;
 }
 
-function obtenerClaseEstadoNumero(estado) {
-    switch (estado) {
-        case 'DISPONIBLE': return 'success';
-        case 'RESERVADO': return 'warning';
-        case 'VENDIDO': return 'primary';
-        case 'BLOQUEADO': return 'danger';
-        default: return 'secondary';
-    }
+function parseIntOrNull(value) {
+    if (value === undefined || value === null || value === '') return null;
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? null : parsed;
 }
 
 function formatearFechaInput(fecha) {
@@ -1184,81 +1001,4 @@ function formatearFechaInput(fecha) {
     if (Number.isNaN(date.getTime())) return fecha;
     const pad = (n) => String(n).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function parseIntOrNull(value) {
-    if (value === undefined || value === null || value === '') return null;
-    const parsed = parseInt(value, 10);
-    return Number.isNaN(parsed) ? null : parsed;
-}
-
-async function generarNumerosRifa() {
-    const rifaId = $('#numeros_rifa_id_hidden').val();
-    if (!rifaId) {
-        SafeUtils.showToast('No hay rifa seleccionada', 'warning');
-        return;
-    }
-
-    if (!rifaSeleccionada) {
-        SafeUtils.showToast('No se pudo obtener la información de la rifa', 'error');
-        return;
-    }
-
-    // Verificar que la rifa use numeración de boletos
-    if (!rifaSeleccionada.usa_numeracion_boletos || rifaSeleccionada.usa_numeracion_boletos != 1) {
-        SafeUtils.showToast('Esta rifa no está configurada para usar numeración de boletos', 'warning');
-        return;
-    }
-
-    // Verificar que tenga rango configurado
-    if (!rifaSeleccionada.numero_inicial || !rifaSeleccionada.numero_final) {
-        SafeUtils.showToast('La rifa no tiene configurado el rango de números (inicial/final)', 'warning');
-        return;
-    }
-
-    const confirmar = await Swal.fire({
-        title: 'Generar números de boletos',
-        html: `
-            <p>Se generarán números desde <strong>${rifaSeleccionada.numero_inicial}</strong> hasta <strong>${rifaSeleccionada.numero_final}</strong></p>
-            <p class="text-muted small">Total: ${rifaSeleccionada.numero_final - rifaSeleccionada.numero_inicial + 1} números</p>
-            <p class="text-warning small">⚠️ Si ya existen números, se crearán solo los faltantes</p>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, generar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#198754'
-    });
-
-    if (!confirmar.isConfirmed) return;
-
-    try {
-        SafeUtils.showLoading('Generando números...');
-        
-        const payload = {
-            rifa_id: parseInt(rifaId, 10),
-            sede_id: userInfo.sede_id,
-            creado_por: userInfo.nombre_completo || 'SYSTEM'
-        };
-        
-        console.log('Payload enviado:', payload);
-        
-        const respuesta = await API.post('rifas/numeros/generar', payload);
-        SafeUtils.closeLoading();
-
-        console.log('Respuesta recibida:', respuesta);
-
-        if (respuesta?.ok) {
-            SafeUtils.showToast(respuesta.msj || 'Números generados correctamente', 'success');
-            await cargarNumerosRifa(rifaId, { showFeedback: false });
-        } else {
-            const mensajeError = respuesta?.msj || respuesta?.detalle || 'No se pudieron generar los números';
-            SafeUtils.showToast(mensajeError, 'error');
-            console.error('Error completo:', respuesta);
-        }
-    } catch (error) {
-        SafeUtils.closeLoading();
-        SafeUtils.showToast('Error al generar los números: ' + (error.message || error), 'error');
-        console.error('Error en catch:', error);
-    }
 }

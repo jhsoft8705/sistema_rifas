@@ -79,7 +79,7 @@ class Rifa extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL register_rifa(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @rifa_id, @mensaje)";
+            $sql = "CALL register_rifa(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @rifa_id, @mensaje)";
             $query = $conectar->prepare($sql);
 
             $this->bindRegisterParams($query, $data);
@@ -117,7 +117,7 @@ class Rifa extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL update_rifa(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
+            $sql = "CALL update_rifa(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
             $query = $conectar->prepare($sql);
 
             $this->bindUpdateParams($query, $data);
@@ -141,6 +141,42 @@ class Rifa extends Conectar
             return [
                 'ok' => false,
                 'msj' => 'Error al actualizar la rifa',
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Cerrar rifa
+     */
+    public function cerrar_rifa(int $id, int $sede_id, string $modificado_por): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL cerrar_rifa(?, ?, ?, @mensaje)";
+            $query = $conectar->prepare($sql);
+            $query->bindValue(1, $id, PDO::PARAM_INT);
+            $query->bindValue(2, $sede_id, PDO::PARAM_INT);
+            $query->bindValue(3, trim($modificado_por), PDO::PARAM_STR);
+            $query->execute();
+            $query->closeCursor();
+
+            $mensajeStmt = $conectar->query("SELECT @mensaje AS mensaje");
+            $result = $mensajeStmt->fetch(PDO::FETCH_ASSOC);
+            $mensajeStmt->closeCursor();
+
+            $mensaje = $result['mensaje'] ?? 'Error desconocido';
+            $ok = stripos($mensaje, 'correctamente') !== false;
+
+            return [
+                'ok' => $ok,
+                'msj' => $mensaje
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en cerrar_rifa: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al cerrar la rifa',
                 'detalle' => $e->getMessage()
             ];
         }
@@ -414,12 +450,32 @@ class Rifa extends Conectar
     }
 
     /**
+     * Liberar números reservados vencidos (helper interno)
+     */
+    private function liberar_numeros_vencidos(): void
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL liberar_numeros_vencidos()";
+            $query = $conectar->prepare($sql);
+            $query->execute();
+            $query->closeCursor();
+        } catch (PDOException $e) {
+            // Log pero no fallar si hay error
+            error_log("Error al liberar números vencidos: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Obtener números disponibles de una rifa
      */
     public function obtener_numeros_disponibles(int $rifa_id, ?int $limite = null, ?string $busqueda = null): array
     {
         try {
             $conectar = parent::Conexion();
+            
+            // Primero liberar números vencidos
+            $this->liberar_numeros_vencidos();
             
             $sql = "SELECT 
                         id,
@@ -481,6 +537,9 @@ class Rifa extends Conectar
             $conectar = parent::Conexion();
             $conectar->beginTransaction();
 
+            // Primero liberar números vencidos
+            $this->liberar_numeros_vencidos();
+
             $numerosReservados = [];
             $numerosNoDisponibles = [];
             $reservadoHasta = date('Y-m-d H:i:s', strtotime('+10 minutes'));
@@ -493,12 +552,15 @@ class Rifa extends Conectar
                     continue;
                 }
 
-                // Verificar si el número está disponible
+                // Verificar si el número está disponible (incluyendo reservados vencidos)
                 $checkSql = "SELECT id, numero_formateado, estado 
                             FROM numeros_rifa 
                             WHERE rifa_id = ? 
                               AND numero_entero = ? 
-                              AND estado = 'DISPONIBLE' 
+                              AND (
+                                  estado = 'DISPONIBLE' 
+                                  OR (estado = 'RESERVADO' AND ticket_id IS NULL AND (reservado_hasta IS NULL OR reservado_hasta < NOW()))
+                              )
                             LIMIT 1";
                 $checkQuery = $conectar->prepare($checkSql);
                 $checkQuery->bindValue(1, $rifa_id, PDO::PARAM_INT);
@@ -508,6 +570,21 @@ class Rifa extends Conectar
                 $checkQuery->closeCursor();
 
                 if ($numeroData) {
+                    // Si el número estaba reservado pero vencido, primero liberarlo
+                    if ($numeroData['estado'] === 'RESERVADO') {
+                        $liberarSql = "UPDATE numeros_rifa 
+                                      SET estado = 'DISPONIBLE',
+                                          reservado_hasta = NULL,
+                                          reservado_por_sesion = NULL,
+                                          fecha_reserva = NULL,
+                                          fecha_modificacion = NOW()
+                                      WHERE id = ?";
+                        $liberarQuery = $conectar->prepare($liberarSql);
+                        $liberarQuery->bindValue(1, $numeroData['id'], PDO::PARAM_INT);
+                        $liberarQuery->execute();
+                        $liberarQuery->closeCursor();
+                    }
+                    
                     // Reservar el número
                     $updateSql = "UPDATE numeros_rifa 
                                   SET estado = 'RESERVADO',
@@ -565,6 +642,56 @@ class Rifa extends Conectar
     }
 
     /**
+     * Liberar números reservados por sesión
+     */
+    public function liberar_numeros_reservados(int $rifa_id, string $sesion_id): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $conectar->beginTransaction();
+
+            // Liberar números reservados por esta sesión que no tienen ticket_id asignado
+            $sql = "UPDATE numeros_rifa 
+                    SET estado = 'DISPONIBLE',
+                        reservado_hasta = NULL,
+                        reservado_por_sesion = NULL,
+                        fecha_reserva = NULL,
+                        fecha_modificacion = NOW()
+                    WHERE rifa_id = ?
+                      AND reservado_por_sesion = ?
+                      AND estado = 'RESERVADO'
+                      AND ticket_id IS NULL";
+            
+            $query = $conectar->prepare($sql);
+            $query->bindValue(1, $rifa_id, PDO::PARAM_INT);
+            $query->bindValue(2, $sesion_id, PDO::PARAM_STR);
+            $query->execute();
+            $filasAfectadas = $query->rowCount();
+            $query->closeCursor();
+
+            $conectar->commit();
+
+            return [
+                'ok' => true,
+                'msj' => $filasAfectadas > 0 
+                    ? "$filasAfectadas número(s) liberado(s) correctamente" 
+                    : 'No había números reservados para liberar',
+                'numeros_liberados' => $filasAfectadas
+            ];
+        } catch (PDOException $e) {
+            if ($conectar->inTransaction()) {
+                $conectar->rollBack();
+            }
+            error_log("Error en liberar_numeros_reservados: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al liberar los números reservados',
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Asignar números aleatorios
      */
     public function asignar_numeros_aleatorios(int $rifa_id, int $cantidad, string $sesion_id): array
@@ -573,11 +700,17 @@ class Rifa extends Conectar
             $conectar = parent::Conexion();
             $conectar->beginTransaction();
 
-            // Obtener números disponibles aleatorios
+            // Primero liberar números vencidos
+            $this->liberar_numeros_vencidos();
+
+            // Obtener números disponibles aleatorios (incluyendo reservados vencidos)
             $sql = "SELECT id, numero_entero, numero_formateado 
                     FROM numeros_rifa 
                     WHERE rifa_id = ? 
-                      AND estado = 'DISPONIBLE' 
+                      AND (
+                          estado = 'DISPONIBLE' 
+                          OR (estado = 'RESERVADO' AND ticket_id IS NULL AND (reservado_hasta IS NULL OR reservado_hasta < NOW()))
+                      )
                     ORDER BY RAND() 
                     LIMIT ?";
             $query = $conectar->prepare($sql);
@@ -601,6 +734,21 @@ class Rifa extends Conectar
             $reservadoHasta = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
             foreach ($numerosDisponibles as $numero) {
+                // Si el número estaba reservado pero vencido, primero liberarlo
+                if (isset($numero['estado']) && $numero['estado'] === 'RESERVADO') {
+                    $liberarSql = "UPDATE numeros_rifa 
+                                  SET estado = 'DISPONIBLE',
+                                      reservado_hasta = NULL,
+                                      reservado_por_sesion = NULL,
+                                      fecha_reserva = NULL,
+                                      fecha_modificacion = NOW()
+                                  WHERE id = ?";
+                    $liberarQuery = $conectar->prepare($liberarSql);
+                    $liberarQuery->bindValue(1, $numero['id'], PDO::PARAM_INT);
+                    $liberarQuery->execute();
+                    $liberarQuery->closeCursor();
+                }
+                
                 // Reservar el número
                 $updateSql = "UPDATE numeros_rifa 
                               SET estado = 'RESERVADO',
@@ -651,7 +799,47 @@ class Rifa extends Conectar
     {
         $stmt->bindValue(1, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);
         $this->bindNullable($stmt, 2, $this->getValue($data, 'premio_id'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 3, $this->getValue($data, 'ubicacion_id'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 3, $this->nullIfEmpty($this->getValue($data, 'codigo')), PDO::PARAM_STR);
+        $stmt->bindValue(4, $this->getValue($data, 'nombre'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 5, $this->getValue($data, 'descripcion'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 6, $this->getValue($data, 'numero_intentos'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 7, $this->getValue($data, 'intento_ganador'), PDO::PARAM_INT);
+        $stmt->bindValue(8, $this->getValue($data, 'precio_ticket'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 9, $this->getValue($data, 'cantidad_maxima_tickets'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 10, $this->getValue($data, 'cantidad_maxima_por_persona'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 11, $this->getValue($data, 'usa_numeracion_boletos'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 12, $this->getValue($data, 'tipo_numeracion'), PDO::PARAM_STR);
+        $stmt->bindValue(13, $this->getValue($data, 'numero_inicial'), PDO::PARAM_INT);
+        $stmt->bindValue(14, $this->getValue($data, 'numero_final'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 15, $this->getValue($data, 'cantidad_digitos'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 16, $this->getValue($data, 'prefijo_numero'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 17, $this->getValue($data, 'sufijo_numero'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 18, $this->getValue($data, 'permitir_seleccion_numero'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 19, $this->getValue($data, 'asignacion_automatica'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 20, $this->getValue($data, 'mostrar_numeros_disponibles'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 21, $this->getValue($data, 'numeros_bloqueados'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 22, $this->getValue($data, 'numeros_especiales'), PDO::PARAM_STR);
+        $stmt->bindValue(23, $this->getValue($data, 'fecha_inicio_venta'), PDO::PARAM_STR);
+        $stmt->bindValue(24, $this->getValue($data, 'fecha_fin_venta'), PDO::PARAM_STR);
+        $stmt->bindValue(25, $this->getValue($data, 'fecha_sorteo'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 26, $this->getValue($data, 'mostrar_contador'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 27, $this->getValue($data, 'mostrar_participantes'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 28, $this->getValue($data, 'mostrar_tickets_vendidos'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 29, $this->getValue($data, 'texto_promocional'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 30, $this->getValue($data, 'reglas_participacion'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 31, $this->getValue($data, 'terminos_condiciones'), PDO::PARAM_STR);
+        $stmt->bindValue(32, $this->getValue($data, 'estado', 'BORRADOR'), PDO::PARAM_STR);
+        $stmt->bindValue(33, $this->getValue($data, 'creado_por'), PDO::PARAM_STR);
+    }
+
+    /**
+     * Helper para bindear parámetros de actualización
+     */
+    private function bindUpdateParams(PDOStatement $stmt, array $data): void
+    {
+        $stmt->bindValue(1, $this->getValue($data, 'id'), PDO::PARAM_INT);
+        $stmt->bindValue(2, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 3, $this->getValue($data, 'premio_id'), PDO::PARAM_INT);
         $stmt->bindValue(4, $this->getValue($data, 'codigo'), PDO::PARAM_STR);
         $stmt->bindValue(5, $this->getValue($data, 'nombre'), PDO::PARAM_STR);
         $this->bindNullable($stmt, 6, $this->getValue($data, 'descripcion'), PDO::PARAM_STR);
@@ -670,75 +858,22 @@ class Rifa extends Conectar
         $this->bindNullable($stmt, 19, $this->getValue($data, 'permitir_seleccion_numero'), PDO::PARAM_INT);
         $this->bindNullable($stmt, 20, $this->getValue($data, 'asignacion_automatica'), PDO::PARAM_INT);
         $this->bindNullable($stmt, 21, $this->getValue($data, 'mostrar_numeros_disponibles'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 22, $this->getValue($data, 'generar_volantarios'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 23, $this->getValue($data, 'numeros_por_volantario'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 24, $this->getValue($data, 'formato_impresion'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 25, $this->getValue($data, 'numeros_por_pagina'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 26, $this->getValue($data, 'numeros_bloqueados'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 27, $this->getValue($data, 'numeros_especiales'), PDO::PARAM_STR);
-        $stmt->bindValue(28, $this->getValue($data, 'fecha_inicio_venta'), PDO::PARAM_STR);
-        $stmt->bindValue(29, $this->getValue($data, 'fecha_fin_venta'), PDO::PARAM_STR);
-        $stmt->bindValue(30, $this->getValue($data, 'fecha_sorteo'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 31, $this->getValue($data, 'mostrar_contador'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 32, $this->getValue($data, 'mostrar_participantes'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 33, $this->getValue($data, 'mostrar_tickets_vendidos'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 34, $this->getValue($data, 'tipo_publicidad'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 35, $this->getValue($data, 'url_banner'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 36, $this->getValue($data, 'texto_promocional'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 37, $this->getValue($data, 'reglas_participacion'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 38, $this->getValue($data, 'terminos_condiciones'), PDO::PARAM_STR);
-        $stmt->bindValue(39, $this->getValue($data, 'creado_por'), PDO::PARAM_STR);
-    }
-
-    /**
-     * Helper para bindear parámetros de actualización
-     */
-    private function bindUpdateParams(PDOStatement $stmt, array $data): void
-    {
-        $stmt->bindValue(1, $this->getValue($data, 'id'), PDO::PARAM_INT);
-        $stmt->bindValue(2, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 3, $this->getValue($data, 'premio_id'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 4, $this->getValue($data, 'ubicacion_id'), PDO::PARAM_INT);
-        $stmt->bindValue(5, $this->getValue($data, 'codigo'), PDO::PARAM_STR);
-        $stmt->bindValue(6, $this->getValue($data, 'nombre'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 7, $this->getValue($data, 'descripcion'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 8, $this->getValue($data, 'numero_intentos'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 9, $this->getValue($data, 'intento_ganador'), PDO::PARAM_INT);
-        $stmt->bindValue(10, $this->getValue($data, 'precio_ticket'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 11, $this->getValue($data, 'cantidad_maxima_tickets'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 12, $this->getValue($data, 'cantidad_maxima_por_persona'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 13, $this->getValue($data, 'usa_numeracion_boletos'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 14, $this->getValue($data, 'tipo_numeracion'), PDO::PARAM_STR);
-        $stmt->bindValue(15, $this->getValue($data, 'numero_inicial'), PDO::PARAM_INT);
-        $stmt->bindValue(16, $this->getValue($data, 'numero_final'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 17, $this->getValue($data, 'cantidad_digitos'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 18, $this->getValue($data, 'prefijo_numero'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 19, $this->getValue($data, 'sufijo_numero'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 20, $this->getValue($data, 'permitir_seleccion_numero'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 21, $this->getValue($data, 'asignacion_automatica'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 22, $this->getValue($data, 'mostrar_numeros_disponibles'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 23, $this->getValue($data, 'generar_volantarios'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 24, $this->getValue($data, 'numeros_por_volantario'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 25, $this->getValue($data, 'formato_impresion'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 26, $this->getValue($data, 'numeros_por_pagina'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 27, $this->getValue($data, 'numeros_bloqueados'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 28, $this->getValue($data, 'numeros_especiales'), PDO::PARAM_STR);
-        $stmt->bindValue(29, $this->getValue($data, 'fecha_inicio_venta'), PDO::PARAM_STR);
-        $stmt->bindValue(30, $this->getValue($data, 'fecha_fin_venta'), PDO::PARAM_STR);
-        $stmt->bindValue(31, $this->getValue($data, 'fecha_sorteo'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 32, $this->getValue($data, 'fecha_sorteo_realizado'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 33, $this->getValue($data, 'mostrar_contador'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 34, $this->getValue($data, 'mostrar_participantes'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 35, $this->getValue($data, 'mostrar_tickets_vendidos'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 36, $this->getValue($data, 'tipo_publicidad'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 37, $this->getValue($data, 'url_banner'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 38, $this->getValue($data, 'texto_promocional'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 39, $this->getValue($data, 'reglas_participacion'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 40, $this->getValue($data, 'terminos_condiciones'), PDO::PARAM_STR);
-        $stmt->bindValue(41, $this->getValue($data, 'estado'), PDO::PARAM_STR);
-        $this->bindNullable($stmt, 42, $this->getValue($data, 'estado_activo'), PDO::PARAM_INT);
-        $this->bindNullable($stmt, 43, $this->getValue($data, 'regenerar_numeros'), PDO::PARAM_INT);
-        $stmt->bindValue(44, $this->getValue($data, 'modificado_por'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 22, $this->getValue($data, 'numeros_bloqueados'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 23, $this->getValue($data, 'numeros_especiales'), PDO::PARAM_STR);
+        $stmt->bindValue(24, $this->getValue($data, 'fecha_inicio_venta'), PDO::PARAM_STR);
+        $stmt->bindValue(25, $this->getValue($data, 'fecha_fin_venta'), PDO::PARAM_STR);
+        $stmt->bindValue(26, $this->getValue($data, 'fecha_sorteo'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 27, $this->getValue($data, 'fecha_sorteo_realizado'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 28, $this->getValue($data, 'mostrar_contador'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 29, $this->getValue($data, 'mostrar_participantes'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 30, $this->getValue($data, 'mostrar_tickets_vendidos'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 31, $this->getValue($data, 'texto_promocional'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 32, $this->getValue($data, 'reglas_participacion'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 33, $this->getValue($data, 'terminos_condiciones'), PDO::PARAM_STR);
+        $stmt->bindValue(34, $this->getValue($data, 'estado'), PDO::PARAM_STR);
+        $this->bindNullable($stmt, 35, $this->getValue($data, 'estado_activo'), PDO::PARAM_INT);
+        $this->bindNullable($stmt, 36, $this->getValue($data, 'regenerar_numeros'), PDO::PARAM_INT);
+        $stmt->bindValue(37, $this->getValue($data, 'modificado_por'), PDO::PARAM_STR);
     }
 
     /**
@@ -759,6 +894,17 @@ class Rifa extends Conectar
     private function getValue(array $data, string $key, $default = null)
     {
         return array_key_exists($key, $data) ? $data[$key] : $default;
+    }
+
+    /**
+     * Helper para convertir valores vacíos a null
+     */
+    private function nullIfEmpty($value)
+    {
+        if ($value === '' || $value === null) {
+            return null;
+        }
+        return $value;
     }
 
     /**

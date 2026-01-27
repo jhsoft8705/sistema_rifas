@@ -251,6 +251,80 @@ class Ticket extends Conectar
     }
 
     /**
+     * Listar ventas/compras realizadas
+     */
+    public function listar_ventas(int $sede_id, ?int $rifa_id = null, ?string $estado = null, ?string $fecha_desde = null, ?string $fecha_hasta = null, ?string $busqueda = null): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL list_ventas(?, ?, ?, ?, ?, ?)";
+            $query = $conectar->prepare($sql);
+            $query->bindValue(1, $sede_id, PDO::PARAM_INT);
+            $this->bindNullable($query, 2, $rifa_id, PDO::PARAM_INT);
+            if ($estado === null || $estado === '') {
+                $query->bindValue(3, null, PDO::PARAM_NULL);
+            } else {
+                $query->bindValue(3, $estado, PDO::PARAM_STR);
+            }
+            $this->bindNullable($query, 4, $fecha_desde, PDO::PARAM_STR);
+            $this->bindNullable($query, 5, $fecha_hasta, PDO::PARAM_STR);
+            $this->bindNullable($query, 6, $busqueda, PDO::PARAM_STR);
+            $query->execute();
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+
+            return [
+                'ok' => true,
+                'msj' => !empty($data) ? 'Ventas obtenidas correctamente' : 'No hay ventas registradas',
+                'data' => $data
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en listar_ventas: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener las ventas',
+                'data' => [],
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Obtener datos del comprobante para impresión
+     */
+    public function obtener_comprobante(int $ticket_id, int $sede_id): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL get_comprobante_ticket(?, ?)";
+            $query = $conectar->prepare($sql);
+            $query->bindValue(1, $ticket_id, PDO::PARAM_INT);
+            $query->bindValue(2, $sede_id, PDO::PARAM_INT);
+            $query->execute();
+            
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+            
+            if ($result) {
+                return [
+                    'ok' => true,
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'ok' => false,
+                    'msj' => 'No se encontró el comprobante'
+                ];
+            }
+        } catch (PDOException $e) {
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener el comprobante: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Helper para obtener valor de array con default
      */
     private function getValue(array $data, string $key, $default = null)
