@@ -651,7 +651,10 @@ BEGIN
         rp.modificado_por,
         rp.fecha_modificacion,
         pr.nombre AS premio_nombre,
-        pr.descripcion AS premio_descripcion
+        pr.descripcion AS premio_descripcion,
+        pr.imagen_principal AS premio_imagen,
+        pr.imagen_secundaria AS premio_imagen_secundaria,
+        pr.galeria_imagenes AS premio_galeria_imagenes
     FROM rifas_premios rp
     INNER JOIN premios pr ON rp.premio_id = pr.id
     WHERE rp.rifa_id = p_rifa_id

@@ -13,6 +13,7 @@ function RoutesTickets(string $url, string $method): void
         'api/tickets/create'              => ['POST'],
         'api/tickets/getAll'              => ['GET'],
         'api/tickets/getByCodigo'         => ['GET'],
+        'api/tickets/consultar'           => ['GET'],
         'api/tickets/uploadComprobante'   => ['POST'],
         'api/tickets/getComprobantes'     => ['GET'],
         'api/tickets/validarComprobante'  => ['POST'],
@@ -53,6 +54,9 @@ function RoutesTickets(string $url, string $method): void
             break;
         case 'api/tickets/getByCodigo':
             $controller->handleRequest('getByCodigo');
+            break;
+        case 'api/tickets/consultar':
+            $controller->handleRequest('consultar');
             break;
         case 'api/tickets/uploadComprobante':
             $controller->handleRequest('uploadComprobante');

@@ -37,6 +37,7 @@ DROP TABLE IF EXISTS configuracion_sede;
 DROP TABLE IF EXISTS cargos;
 DROP TABLE IF EXISTS sedes;
 DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS contactos;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -678,6 +679,26 @@ CREATE TABLE IF NOT EXISTS ganadores (
     INDEX idx_ganadores_numero (numero_id),
     INDEX idx_ganadores_publicar (publicar_web)
 ) COMMENT='Ganadores de premios en rifas';
+
+-- =====================================================
+-- Tabla de mensajes de contacto (landing Contáctanos)
+-- =====================================================
+CREATE TABLE contactos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sede_id INT NULL COMMENT 'Sede desde la que se envía (opcional)',
+    nombre VARCHAR(200) NOT NULL COMMENT 'Nombre del remitente',
+    email VARCHAR(150) NOT NULL COMMENT 'Correo del remitente',
+    telefono VARCHAR(20) NULL COMMENT 'Teléfono (opcional)',
+    asunto VARCHAR(255) NOT NULL COMMENT 'Asunto del mensaje',
+    mensaje TEXT NOT NULL COMMENT 'Contenido del mensaje',
+    ip_origen VARCHAR(45) NULL COMMENT 'IP del visitante',
+    estado TINYINT(1) DEFAULT 1 COMMENT '1=No leído, 0=Leído',
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_contactos_sede (sede_id),
+    INDEX idx_contactos_estado (estado),
+    INDEX idx_contactos_fecha (fecha_creacion)
+) COMMENT='Mensajes de contacto desde la landing';
 
 -- =====================================================
 -- 4. DATOS INICIALES

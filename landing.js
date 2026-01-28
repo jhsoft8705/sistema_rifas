@@ -15,6 +15,7 @@ const LandingRifas = {
      */
     async init() {
         await this.cargarRifasPublicas();
+        await this.cargarGanadoresPublicos();
         this.inicializarEventos();
         this.inicializarContadores();
     },
@@ -65,6 +66,62 @@ const LandingRifas = {
         setTimeout(() => {
             this.inicializarContadores();
         }, 100);
+    },
+
+    /**
+     * Cargar ganadores públicos (publicar_web = 1) para la sección Ganadores
+     */
+    async cargarGanadoresPublicos() {
+        const contenedor = document.getElementById('contenedor_ganadores');
+        if (!contenedor) return;
+        const apiBase = this.API_BASE_URL || (window.API_BASE_URL || (window.BASE_URL ? window.BASE_URL + '/api' : ''));
+        try {
+            const response = await fetch(`${apiBase}/juegos/ganadoresPublicos`);
+            const resultado = await response.json();
+            if (resultado.ok && resultado.data && resultado.data.length > 0) {
+                this.renderizarGanadores(resultado.data, contenedor);
+            } else {
+                contenedor.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="ri-trophy-line fs-1"></i><p class="mt-2 mb-0">Aún no hay ganadores publicados.</p></div>';
+            }
+        } catch (err) {
+            console.warn('Error al cargar ganadores públicos:', err);
+            contenedor.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="ri-trophy-line fs-1"></i><p class="mt-2 mb-0">No se pudieron cargar los ganadores.</p></div>';
+        }
+    },
+
+    /**
+     * Renderizar cards de ganadores en #contenedor_ganadores (foto genérica user-dummy-img.jpg)
+     */
+    renderizarGanadores(lista, contenedor) {
+        const baseImg = (typeof window !== 'undefined' && window.BASE_URL)
+            ? (String(window.BASE_URL).replace(/\/$/, '') + '/assets/images/users/user-dummy-img.jpg')
+            : 'assets/images/users/user-dummy-img.jpg';
+        contenedor.innerHTML = '';
+        lista.forEach((g, idx) => {
+            const tituloPremio = g.premio_titulo || g.premio_nombre || 'Premio';
+            const fechaStr = g.fecha_ganador ? (window.Utils && window.Utils.formatearFecha ? window.Utils.formatearFecha(g.fecha_ganador) : g.fecha_ganador) : '';
+            const esReciente = idx === 0;
+            const col = document.createElement('div');
+            col.className = 'col-lg-4';
+            col.innerHTML = `
+                <div class="card border shadow-sm mb-0 ${esReciente ? 'ribbon-box right' : ''}">
+                    ${esReciente ? '<div class="ribbon-two ribbon-two-warning"><span>Reciente</span></div>' : ''}
+                    <div class="card-body p-4 text-center">
+                        <div class="avatar-xl mx-auto mb-3">
+                            <img src="${baseImg}" alt="${this.escapeHtml((g.nombre_completo || '').toString())}" class="img-fluid rounded-circle">
+                        </div>
+                        <h5 class="mb-1">${this.escapeHtml((g.nombre_completo || 'Ganador').toString())}</h5>
+                        <p class="text-muted mb-3">${this.escapeHtml((g.rifa_nombre || '').toString())}</p>
+                        <div class="badge badge-soft-success mb-3 fs-13">
+                            <i class="ri-trophy-line me-1"></i> ${this.escapeHtml(tituloPremio)}
+                        </div>
+                        ${g.numero_ganador && g.numero_ganador !== '-' ? `<p class="text-muted small mb-2">Nº ganador: <strong>${this.escapeHtml(String(g.numero_ganador))}</strong></p>` : ''}
+                        <p class="text-muted mb-0"><i class="ri-calendar-line"></i> ${fechaStr ? 'Ganador: ' + fechaStr : ''}</p>
+                    </div>
+                </div>
+            `;
+            contenedor.appendChild(col);
+        });
     },
 
     /**
@@ -274,51 +331,106 @@ const LandingRifas = {
     },
 
     /**
-     * Abrir modal de premios
+     * Abrir modal de premios (usa #galeria_premios; datos de rifa.premios desde api/rifas/publicas)
      */
     abrirModalPremios(rifa) {
-        // Verificar si existe el modal de premios
         const modal = document.getElementById('modal_ver_premios');
-        if (modal) {
-            const modalInstance = new bootstrap.Modal(modal);
-            modalInstance.show();
-            
-            // Actualizar contenido del modal con los premios
-            const premiosContainer = modal.querySelector('.premios-container');
-            if (premiosContainer && rifa.premios && rifa.premios.length > 0) {
-                // Ordenar premios: primero por es_principal DESC, luego por orden ASC, luego por id ASC
-                const premiosOrdenados = [...rifa.premios].sort((a, b) => {
-                    if (a.es_principal !== b.es_principal) {
-                        return (b.es_principal || 0) - (a.es_principal || 0);
-                    }
-                    const ordenA = a.orden || 999;
-                    const ordenB = b.orden || 999;
-                    if (ordenA !== ordenB) {
-                        return ordenA - ordenB;
-                    }
-                    return (a.id || 0) - (b.id || 0);
-                });
-
-                let premiosHtml = '';
-                premiosOrdenados.forEach((premio, index) => {
-                    const posicion = index + 1;
-                    // Mostrar nombre del premio tal cual está registrado
-                    const nombrePremio = premio.premio_nombre || 'Premio';
-                    premiosHtml += `
-                        <div class="premio-item mb-3">
-                            <h6><span class="badge bg-warning me-2">${posicion}°</span>${this.escapeHtml(nombrePremio)}</h6>
-                            ${premio.premio_descripcion ? `<p class="text-muted"><small>${this.escapeHtml(premio.premio_descripcion.replace(/<[^>]*>/g, ''))}</small></p>` : ''}
-                        </div>
-                    `;
-                });
-                premiosContainer.innerHTML = premiosHtml;
-            }
-        } else {
+        if (!modal) {
             console.warn('Modal de premios no encontrado');
             if (window.Utils && window.Utils.showToast) {
                 window.Utils.showToast('Modal de premios no disponible', 'warning');
             }
+            return;
         }
+
+        const tituloEl = document.getElementById('modal_premios_rifa_nombre');
+        const galeria = document.getElementById('galeria_premios');
+        if (tituloEl) tituloEl.textContent = rifa.nombre || 'Premios de la Rifa';
+
+        if (!galeria) {
+            if (window.Utils && window.Utils.showToast) {
+                window.Utils.showToast('Contenedor de premios no encontrado', 'warning');
+            }
+            return;
+        }
+
+        const premios = Array.isArray(rifa.premios) ? rifa.premios : [];
+        if (premios.length === 0) {
+            galeria.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="ri-gift-line fs-1"></i><p class="mt-2 mb-0">No hay premios registrados para esta rifa.</p></div>';
+        } else {
+            const premiosOrdenados = [...premios].sort((a, b) => {
+                if ((a.es_principal || 0) !== (b.es_principal || 0)) {
+                    return (b.es_principal || 0) - (a.es_principal || 0);
+                }
+                const ordenA = a.orden != null ? a.orden : 999;
+                const ordenB = b.orden != null ? b.orden : 999;
+                if (ordenA !== ordenB) return ordenA - ordenB;
+                return (a.id || 0) - (b.id || 0);
+            });
+
+            const baseUrl = (typeof window !== 'undefined' && window.BASE_URL) ? String(window.BASE_URL).replace(/\/$/, '') : '';
+            const baseImg = baseUrl ? baseUrl + '/assets/images/giftbox.png' : 'assets/images/giftbox.png';
+            const fullUrl = (path) => {
+                if (!path || !String(path).trim()) return '';
+                return baseUrl ? baseUrl + '/' + String(path).replace(/^\//, '') : path;
+            };
+            const parseGaleriaLanding = (raw) => {
+                if (!raw) return [];
+                if (Array.isArray(raw)) return raw;
+                try {
+                    const p = JSON.parse(raw);
+                    return Array.isArray(p) ? p : [];
+                } catch (e) { return []; }
+            };
+
+            let html = '';
+            premiosOrdenados.forEach((premio, index) => {
+                const posicion = index + 1;
+                const nombre = (premio.titulo || premio.premio_nombre || 'Premio').toString();
+                const desc = (premio.descripcion || premio.premio_descripcion || '').toString();
+                const principal = (premio.premio_imagen || premio.imagen_principal || premio.imagen || '').toString();
+                const secundaria = (premio.premio_imagen_secundaria || premio.imagen_secundaria || '').toString();
+                const galeriaRaw = premio.premio_galeria_imagenes != null ? premio.premio_galeria_imagenes : (premio.galeria_imagenes != null ? premio.galeria_imagenes : '');
+                const galeriaPaths = parseGaleriaLanding(galeriaRaw);
+                const allUrls = [principal, secundaria, ...galeriaPaths].map(fullUrl).filter(Boolean);
+                if (allUrls.length === 0) allUrls.push(baseImg);
+                const urlsJsonEsc = JSON.stringify(allUrls).replace(/'/g, '&#39;');
+
+                const colClass = premiosOrdenados.length === 1 ? 'col-12' : premiosOrdenados.length === 2 ? 'col-md-6' : 'col-md-4';
+                const badgeClass = posicion === 1 ? 'bg-warning text-white' : posicion === 2 ? 'bg-secondary text-white' : 'bg-dark text-white';
+
+                let thumbsHtml = '';
+                if (allUrls.length > 1) {
+                    thumbsHtml = '<div class="d-flex flex-wrap justify-content-center gap-2 mt-2">';
+                    allUrls.forEach((url, i) => {
+                        thumbsHtml += `<img src="${url}" alt="Vista ${i + 1}" class="premio-img-vista rounded border" data-visor-index="${i}" style="width:56px;height:56px;object-fit:cover;cursor:pointer;" role="button" tabindex="0" onerror="this.onerror=null;this.src='${baseImg}'">`;
+                    });
+                    thumbsHtml += '</div>';
+                }
+
+                html += `
+                    <div class="${colClass}" data-visor-urls='${urlsJsonEsc}'>
+                        <div class="card border shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <span class="badge ${badgeClass} fs-6 px-3 py-2">${posicion}° Premio</span>
+                                </div>
+                                <h5 class="text-center mb-3">${this.escapeHtml(nombre)}</h5>
+                                <div class="text-center mb-2">
+                                    <img src="${allUrls[0]}" alt="${this.escapeHtml(nombre)}" class="premio-img-vista img-fluid rounded shadow-sm" data-visor-index="0" style="max-height: 280px; width: auto; object-fit: cover; cursor: pointer;" role="button" tabindex="0" onerror="this.onerror=null;this.src='${baseImg}'">
+                                </div>
+                                ${thumbsHtml}
+                                ${desc ? `<p class="text-muted text-center mb-0 mt-2"><small>${this.escapeHtml(desc.replace(/<[^>]*>/g, ''))}</small></p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            galeria.innerHTML = html;
+        }
+
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
     },
 
     /**
@@ -485,6 +597,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Exportar para uso global
 window.LandingRifas = LandingRifas;
+
+// Visor de imagen para premios (pantalla grande, zoom, anterior/siguiente)
+window.VisorImagenPremio = (function () {
+    var urls = [], index = 0, scale = 1;
+    var modal, imgEl, cntEl, btnPrev, btnNext, btnZoomIn, btnZoomOut, btnReset;
+    function applyZoom() {
+        if (imgEl) imgEl.style.transform = 'scale(' + scale + ')';
+    }
+    function show() {
+        if (imgEl) imgEl.src = urls[index] || '';
+        if (cntEl) cntEl.textContent = (index + 1) + ' / ' + Math.max(1, urls.length);
+        scale = 1;
+        applyZoom();
+    }
+    function open(u, i) {
+        urls = Array.isArray(u) ? u : [];
+        index = Math.max(0, Math.min(i || 0, Math.max(0, urls.length - 1)));
+        if (!modal) {
+            modal = document.getElementById('modal_visor_imagen_premio');
+            imgEl = document.getElementById('visor_imagen_img');
+            cntEl = document.getElementById('visor_imagen_contador');
+            btnPrev = document.getElementById('visor_prev');
+            btnNext = document.getElementById('visor_next');
+            btnZoomIn = document.getElementById('visor_zoom_in');
+            btnZoomOut = document.getElementById('visor_zoom_out');
+            btnReset = document.getElementById('visor_zoom_reset');
+            if (btnZoomIn) btnZoomIn.addEventListener('click', function () { scale *= 1.25; applyZoom(); });
+            if (btnZoomOut) btnZoomOut.addEventListener('click', function () { scale = Math.max(0.5, scale / 1.25); applyZoom(); });
+            if (btnReset) btnReset.addEventListener('click', function () { scale = 1; applyZoom(); });
+            if (btnPrev) btnPrev.addEventListener('click', function () { if (index > 0) { index--; show(); } });
+            if (btnNext) btnNext.addEventListener('click', function () { if (index < urls.length - 1) { index++; show(); } });
+        }
+        show();
+        if (modal && typeof bootstrap !== 'undefined') new bootstrap.Modal(modal).show();
+    }
+    return { open: open };
+})();
+document.addEventListener('click', function (e) {
+    var thumb = e.target && e.target.closest ? e.target.closest('#galeria_premios .premio-img-vista') : null;
+    if (!thumb) return;
+    var cont = thumb.closest('[data-visor-urls]');
+    if (!cont) return;
+    var raw = cont.getAttribute('data-visor-urls') || '[]';
+    var urls = [];
+    try { urls = JSON.parse(raw.replace(/&#39;/g, "'")); } catch (err) { try { urls = JSON.parse(raw); } catch (_) {} }
+    var idx = parseInt(thumb.getAttribute('data-visor-index'), 10) || 0;
+    if (window.VisorImagenPremio && window.VisorImagenPremio.open) window.VisorImagenPremio.open(urls, idx);
+});
 
 // Estilos CSS adicionales para el modal de compra
 const style = document.createElement('style');
@@ -2124,8 +2284,17 @@ document.head.appendChild(style);
         
         modalVerPremios.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
+            if (!button) return;
             const rifaNombre = button.getAttribute('data-rifa-nombre');
-            const rifaPremios = JSON.parse(button.getAttribute('data-rifa-premios'));
+            const premiosAttr = button.getAttribute('data-rifa-premios');
+            if (!premiosAttr) return;
+            let rifaPremios;
+            try {
+                rifaPremios = JSON.parse(premiosAttr);
+            } catch (e) {
+                return;
+            }
+            if (!Array.isArray(rifaPremios)) return;
 
             // Actualizar título del modal
             document.getElementById('modal_premios_rifa_nombre').textContent = rifaNombre;
@@ -2167,133 +2336,236 @@ document.head.appendChild(style);
     });
 })();
 
-// Script para Consultar Tickets
+// Script para formulario Contáctanos
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
-        const formConsultar = document.getElementById('form_consultar_tickets');
-        const resultadosDiv = document.getElementById('resultados_tickets');
-        const listaTickets = document.getElementById('lista_tickets_usuario');
-
-        formConsultar.addEventListener('submit', function(e) {
+        const form = document.getElementById('form_contacto');
+        if (!form) return;
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const documento = document.getElementById('documento_ticket').value.trim();
-            const email = document.getElementById('email_consulta').value.trim();
+            const btn = document.getElementById('btn_enviar_contacto');
+            const nombre = ((document.getElementById('contacto_nombre') || {}).value || '').trim();
+            const email = ((document.getElementById('contacto_email') || {}).value || '').trim();
+            const telefono = ((document.getElementById('contacto_telefono') || {}).value || '').trim();
+            const asunto = ((document.getElementById('contacto_asunto') || {}).value || '').trim();
+            const mensaje = ((document.getElementById('contacto_mensaje') || {}).value || '').trim();
 
-            // Limpiar errores
-            document.getElementById('documento_ticket').classList.remove('border-danger');
-            document.getElementById('email_consulta').classList.remove('border-danger');
-            document.getElementById('documento_ticket_error').style.display = 'none';
-            document.getElementById('email_consulta_error').style.display = 'none';
+            [].forEach.call(form.querySelectorAll('.is-invalid'), function(el) { el.classList.remove('is-invalid'); });
+            [].forEach.call(form.querySelectorAll('.invalid-feedback'), function(el) { el.style.display = 'none'; el.textContent = ''; });
 
-            let hayErrores = false;
-
-            // Validación
-            if (documento === '') {
-                mostrarErrorConsulta('documento_ticket', 'Por favor, ingrese su documento o código de ticket');
-                hayErrores = true;
+            if (!nombre) {
+                const el = document.getElementById('contacto_nombre');
+                const err = document.getElementById('contacto_nombre_error');
+                if (el) el.classList.add('is-invalid');
+                if (err) { err.textContent = 'El nombre es obligatorio'; err.style.display = 'block'; }
+                return;
             }
-
-            if (email === '') {
-                mostrarErrorConsulta('email_consulta', 'Por favor, ingrese su correo electrónico');
-                hayErrores = true;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                mostrarErrorConsulta('email_consulta', 'Por favor, ingrese un correo válido');
-                hayErrores = true;
+            if (!email) {
+                const el = document.getElementById('contacto_email');
+                const err = document.getElementById('contacto_email_error');
+                if (el) el.classList.add('is-invalid');
+                if (err) { err.textContent = 'El correo es obligatorio'; err.style.display = 'block'; }
+                return;
             }
-
-            if (hayErrores) return;
-
-            // Simulación de consulta (aquí harías la llamada AJAX)
-            console.log('Consultando tickets para:', { documento, email });
-
-            // Ejemplo de respuesta simulada
-            const ticketsSimulados = [
-                {
-                    rifa: 'Rifa iPhone 15 Pro Max',
-                    codigo: 'TICKET-2025-001',
-                    numeros: ['001', '023', '045', '067', '089'],
-                    estado: 'VALIDADO',
-                    fecha_compra: '2025-11-20',
-                    premio: 'iPhone 15 Pro Max 256GB'
-                }
-            ];
-
-            mostrarTickets(ticketsSimulados);
-        });
-
-        function mostrarErrorConsulta(campo, mensaje) {
-            const input = document.getElementById(campo);
-            const errorDiv = document.getElementById(campo + '_error');
-            input.classList.add('border-danger');
-            errorDiv.textContent = mensaje;
-            errorDiv.style.display = 'block';
-        }
-
-        function mostrarTickets(tickets) {
-            if (tickets.length === 0) {
-                listaTickets.innerHTML = `
-                    <div class="alert alert-warning border-0">
-                        <i class="ri-information-line me-2"></i>
-                        No se encontraron tickets con los datos proporcionados. Verifica tu información.
-                    </div>
-                `;
-                resultadosDiv.style.display = 'block';
+            if (!asunto) {
+                const el = document.getElementById('contacto_asunto');
+                const err = document.getElementById('contacto_asunto_error');
+                if (el) el.classList.add('is-invalid');
+                if (err) { err.textContent = 'El asunto es obligatorio'; err.style.display = 'block'; }
+                return;
+            }
+            if (!mensaje) {
+                const el = document.getElementById('contacto_mensaje');
+                const err = document.getElementById('contacto_mensaje_error');
+                if (el) el.classList.add('is-invalid');
+                if (err) { err.textContent = 'El mensaje es obligatorio'; err.style.display = 'block'; }
                 return;
             }
 
-            listaTickets.innerHTML = '';
+            if (btn) btn.disabled = true;
+            const apiBase = window.API_BASE_URL || (window.BASE_URL ? window.BASE_URL + '/api' : '');
+            try {
+                const res = await fetch(apiBase + '/contactos/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, email, telefono: telefono || undefined, asunto, mensaje })
+                });
+                const data = await res.json().catch(function() { return { ok: false, msj: 'Error al procesar la respuesta' }; });
+                if (data.ok) {
+                    form.reset();
+                    var mod = document.getElementById('modal_contacto_enviado');
+                    if (mod && typeof bootstrap !== 'undefined') new bootstrap.Modal(mod).show();
+                    if (window.Utils && window.Utils.showToast) window.Utils.showToast(data.msj || 'Mensaje enviado', 'success');
+                } else {
+                    if (window.Utils && window.Utils.showToast) window.Utils.showToast(data.msj || 'Error al enviar', 'error');
+                    else if (window.Utils && window.Utils.showAlert) window.Utils.showAlert(data.msj || 'Error al enviar', 'error');
+                    else alert(data.msj || 'Error al enviar el mensaje.');
+                }
+            } catch (err) {
+                if (window.Utils && window.Utils.showToast) window.Utils.showToast('Error de conexión. Intenta de nuevo.', 'error');
+                else if (window.Utils && window.Utils.showAlert) window.Utils.showAlert('Error de conexión. Intenta de nuevo.', 'error');
+                else alert('Error de conexión. Intenta de nuevo.');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        });
+    });
+})();
 
-            tickets.forEach(ticket => {
-                const estadoClass = ticket.estado === 'VALIDADO' ? 'bg-success' : 
-                                  ticket.estado === 'PENDIENTE' ? 'bg-warning' : 'bg-secondary';
-                
-                listaTickets.innerHTML += `
-                    <div class="card border mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h6 class="mb-1"><i class="ri-ticket-line text-primary"></i> ${ticket.rifa}</h6>
-                                    <p class="text-muted mb-0 small">Código: <strong>${ticket.codigo}</strong></p>
-                                    <p class="text-muted mb-0 small">Compra: ${ticket.fecha_compra}</p>
-                                </div>
-                                <span class="badge ${estadoClass} text-white">${ticket.estado}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <strong class="d-block mb-2"><i class="ri-trophy-line text-warning"></i> Premio Participando:</strong>
-                                <p class="mb-0">${ticket.premio}</p>
-                            </div>
-                            
-                            <div>
-                                <strong class="d-block mb-2"><i class="ri-hashtag text-info"></i> Tus Números de Ticket:</strong>
-                                <div class="d-flex flex-wrap gap-2">
-                                    ${ticket.numeros.map(num => `
-                                        <span class="badge bg-primary-subtle text-primary fs-6 px-3 py-2">${num}</span>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
+// Script para Consultar Tickets (Mis Tickets)
+(function() {
+    let datosTicketsConsulta = null;
 
-            resultadosDiv.style.display = 'block';
-            
-            // Scroll suave a los resultados
-            resultadosDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    function mostrarErrorConsulta(campo, mensaje) {
+        const input = document.getElementById(campo);
+        const errorDiv = document.getElementById(campo + '_error');
+        if (input) input.classList.add('border-danger');
+        if (errorDiv) { errorDiv.textContent = mensaje; errorDiv.style.display = 'block'; }
+    }
+
+    function formatearFechaLanding(fecha) {
+        if (!fecha) return '-';
+        try {
+            const d = new Date(fecha.replace(' ', 'T'));
+            return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return fecha; }
+    }
+
+    function formatearMonedaLanding(val) {
+        if (window.Utils && window.Utils.formatearMoneda) return window.Utils.formatearMoneda(val);
+        const n = parseFloat(val || 0);
+        return 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function generarTextoCompartir(tickets) {
+        const whatsapp = (document.getElementById('config_whatsapp') || {}).value || '999999999';
+        const tiktok = (document.getElementById('config_tiktok') || {}).value || 'https://www.tiktok.com/@sistemarifas';
+        let texto = 'Mis Tickets - Sistema de Rifas\n\n';
+        const total = tickets.length;
+        texto += 'Total de tickets: ' + total + '\n\n';
+        tickets.forEach((t, i) => {
+            texto += (i + 1) + '. ' + (t.rifa_nombre || '') + '\n';
+            texto += '   Código: ' + (t.codigo_ticket || '') + '\n';
+            texto += '   Números: ' + (t.numeros_comprados || '-') + '\n';
+            texto += '   Estado: ' + (t.estado || '') + '\n';
+            texto += '   Sorteo: ' + formatearFechaLanding(t.fecha_sorteo) + '\n\n';
+        });
+        texto += 'Enlace transmisión TikTok: ' + tiktok + '\n';
+        texto += 'Contacto WhatsApp: ' + whatsapp + '\n';
+        return texto;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const formConsultar = document.getElementById('form_consultar_tickets');
+        const bodyModal = document.getElementById('modal_mis_tickets_body');
+        const modal = document.getElementById('modal_mis_tickets_resultado') ? new bootstrap.Modal(document.getElementById('modal_mis_tickets_resultado')) : null;
+        const btnCopiar = document.getElementById('btn_copiar_tickets');
+        const btnCompartir = document.getElementById('btn_compartir_tickets');
+
+        if (!formConsultar) return;
+
+        formConsultar.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const inputDoc = document.getElementById('documento_ticket');
+            const q = (inputDoc && inputDoc.value) ? inputDoc.value.trim() : '';
+            const errorDiv = document.getElementById('documento_ticket_error');
+            const btnSubmit = document.getElementById('btn_consultar_tickets');
+
+            if (inputDoc) inputDoc.classList.remove('border-danger');
+            if (errorDiv) errorDiv.style.display = 'none';
+
+            if (!q) {
+                mostrarErrorConsulta('documento_ticket', 'Ingrese su número de documento, código de ticket o uno de sus números');
+                return;
+            }
+
+            if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Consultando...'; }
+            try {
+                const apiBase = window.API_BASE_URL || (window.BASE_URL ? window.BASE_URL + '/api' : '');
+                const res = await fetch(apiBase + '/tickets/consultar?q=' + encodeURIComponent(q));
+                const json = await res.json();
+                datosTicketsConsulta = (json && json.data) ? json.data : [];
+                if (bodyModal) {
+                    if (!datosTicketsConsulta.length) {
+                        bodyModal.innerHTML = '<div class="alert alert-warning border-0 mb-0"><i class="ri-information-line me-2"></i>No se encontraron tickets con esos datos. Verifica tu número de documento, código de ticket o uno de tus números.</div>';
+                    } else {
+                        const whatsapp = (document.getElementById('config_whatsapp') || {}).value || '999999999';
+                        const tiktok = (document.getElementById('config_tiktok') || {}).value || 'https://www.tiktok.com/@sistemarifas';
+                        const primera = datosTicketsConsulta[0];
+                        let html = '<div class="mb-3"><strong><i class="ri-ticket-line me-1"></i> Total de tickets:</strong> ' + datosTicketsConsulta.length + '</div>';
+                        html += '<div class="mb-3"><strong><i class="ri-calendar-line me-1"></i> Fecha de sorteo:</strong> ' + formatearFechaLanding(primera.fecha_sorteo) + '</div>';
+                        html += '<div class="mb-3"><strong><i class="ri-live-line me-1"></i> Transmisión:</strong> <a href="' + tiktok + '" target="_blank" rel="noopener">' + tiktok + '</a></div>';
+                        html += '<div class="mb-4"><strong><i class="ri-whatsapp-line me-1 text-success"></i> WhatsApp:</strong> <a href="https://wa.me/' + whatsapp.replace(/\D/g, '') + '" target="_blank">' + whatsapp + '</a></div>';
+                        html += '<hr><h6 class="mb-2"><i class="ri-list-check me-1"></i> Detalle de tickets</h6>';
+                        datosTicketsConsulta.forEach(function(t) {
+                            const numeros = (t.numeros_comprados || '').split(',').map(function(n) { return n.trim(); }).filter(Boolean);
+                            const numsHtml = numeros.length ? numeros.map(function(n) { return '<span class="badge bg-primary-subtle text-primary me-1">' + n + '</span>'; }).join('') : '-';
+                            const estClass = (t.estado === 'APROBADO' || t.estado === 'PARTICIPANDO' || t.estado === 'GANADOR') ? 'success' : (t.estado === 'PENDIENTE_PAGO' || t.estado === 'PAGO_SUBIDO' || t.estado === 'VALIDANDO') ? 'warning' : 'secondary';
+                            html += '<div class="card border mb-2"><div class="card-body py-2"><div class="d-flex justify-content-between align-items-start"><div><strong>' + (t.rifa_nombre || '') + '</strong><br><small class="text-muted">Código: ' + (t.codigo_ticket || '') + '</small><br><small>Números: ' + numsHtml + '</small></div><span class="badge bg-' + estClass + '">' + (t.estado || '') + '</span></div></div></div>';
+                        });
+                        bodyModal.innerHTML = html;
+                    }
+                }
+                if (modal) modal.show();
+            } catch (err) {
+                if (bodyModal) bodyModal.innerHTML = '<div class="alert alert-danger border-0 mb-0"><i class="ri-error-warning-line me-2"></i>Error al consultar. Intenta de nuevo.</div>';
+                if (modal) modal.show();
+                datosTicketsConsulta = [];
+            } finally {
+                if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerHTML = '<i class="ri-search-line me-1"></i> Consultar mis Tickets'; }
+            }
+        });
+
+        function fallbackCopiar(texto) {
+            const ta = document.createElement('textarea');
+            ta.value = texto;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+            if (window.Utils && window.Utils.showToast) window.Utils.showToast('Copiado al portapapeles', 'success');
+            else alert('Copiado al portapapeles');
         }
 
-        // Limpiar errores al escribir
-        document.querySelectorAll('#form_consultar_tickets input').forEach(input => {
-            input.addEventListener('input', function() {
-                this.classList.remove('border-danger');
-                const errorDiv = document.getElementById(this.id + '_error');
-                if (errorDiv) {
-                    errorDiv.style.display = 'none';
+        if (btnCopiar) {
+            btnCopiar.addEventListener('click', function() {
+                if (!datosTicketsConsulta || !datosTicketsConsulta.length) return;
+                const texto = generarTextoCompartir(datosTicketsConsulta);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(texto).then(function() {
+                        if (window.Utils && window.Utils.showToast) window.Utils.showToast('Copiado al portapapeles', 'success');
+                        else if (typeof $ !== 'undefined' && $.toast) $.toast({ heading: 'Éxito', text: 'Copiado al portapapeles', icon: 'success' });
+                        else alert('Copiado al portapapeles');
+                    }).catch(function() { fallbackCopiar(texto); });
+                } else fallbackCopiar(texto);
+            });
+        }
+
+        if (btnCompartir) {
+            btnCompartir.addEventListener('click', function() {
+                if (!datosTicketsConsulta || !datosTicketsConsulta.length) return;
+                const texto = generarTextoCompartir(datosTicketsConsulta);
+                const titulo = 'Mis Tickets - Sistema de Rifas';
+                if (navigator.share) {
+                    navigator.share({ title: titulo, text: texto }).catch(function() {
+                        fallbackCopiar(texto);
+                        if (window.Utils && window.Utils.showToast) window.Utils.showToast('Compartir no disponible; texto copiado', 'info');
+                    });
+                } else {
+                    fallbackCopiar(texto);
+                    if (window.Utils && window.Utils.showToast) window.Utils.showToast('Texto copiado. Pégalo donde quieras compartir.', 'info');
                 }
             });
-        });
+        }
+
+        const inputDoc = document.getElementById('documento_ticket');
+        if (inputDoc) {
+            inputDoc.addEventListener('input', function() {
+                this.classList.remove('border-danger');
+                const err = document.getElementById('documento_ticket_error');
+                if (err) err.style.display = 'none';
+            });
+        }
     });
 })();
 

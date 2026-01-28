@@ -44,6 +44,9 @@ class JuegoController
             case 'getNumerosGanador':
                 $this->obtener_numeros_ganador();
                 break;
+            case 'ganadoresPublicos':
+                $this->ganadores_publicos();
+                break;
             default:
                 http_response_code(400);
                 echo json_encode(['ok' => false, 'msj' => 'Acción no válida'], JSON_UNESCAPED_UNICODE);
@@ -257,6 +260,19 @@ class JuegoController
             error_log("Error en obtener_numeros_ganador: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al obtener los números ganadores'], JSON_UNESCAPED_UNICODE);
+        }
+    }
+
+    private function ganadores_publicos(): void
+    {
+        try {
+            $resultado = $this->juego->list_ganadores_publicos();
+            http_response_code($resultado['ok'] ? 200 : 404);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en ganadores_publicos: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener los ganadores públicos', 'data' => []], JSON_UNESCAPED_UNICODE);
         }
     }
 

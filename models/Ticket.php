@@ -126,6 +126,35 @@ class Ticket extends Conectar
     }
 
     /**
+     * Listar tickets para consulta en landing (por código, documento o número)
+     */
+    public function list_tickets_consulta_landing(string $busqueda): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL list_tickets_consulta_landing(?)";
+            $query = $conectar->prepare($sql);
+            $query->bindValue(1, trim($busqueda), PDO::PARAM_STR);
+            $query->execute();
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+            return [
+                'ok' => true,
+                'msj' => empty($data) ? 'No se encontraron tickets' : 'Consulta exitosa',
+                'data' => $data ?: []
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en list_tickets_consulta_landing: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al consultar tickets',
+                'data' => [],
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Registrar comprobante de pago
      */
     public function registrar_comprobante(array $data): array

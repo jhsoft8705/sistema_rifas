@@ -217,6 +217,30 @@ BEGIN
       AND g.sede_id = p_sede_id;
 END //
 
+-- 2.1. PROCEDURE PARA LISTAR GANADORES PÚBLICOS (landing, publicar_web = 1)
+DROP PROCEDURE IF EXISTS list_ganadores_publicos //
+CREATE PROCEDURE list_ganadores_publicos ()
+BEGIN
+    SELECT
+        g.id,
+        g.rifa_id,
+        g.nombre_completo,
+        g.fecha_ganador,
+        pr.nombre AS premio_nombre,
+        pr.codigo AS premio_codigo,
+        rp.titulo AS premio_titulo,
+        r.nombre AS rifa_nombre,
+        r.codigo AS rifa_codigo,
+        COALESCE(nr.numero_formateado, '-') AS numero_ganador
+    FROM ganadores g
+    INNER JOIN premios pr ON g.premio_id = pr.id
+    INNER JOIN rifas_premios rp ON g.rifa_premio_id = rp.id
+    INNER JOIN rifas r ON g.rifa_id = r.id
+    LEFT JOIN numeros_rifa nr ON g.numero_id = nr.id
+    WHERE g.publicar_web = 1
+    ORDER BY g.fecha_ganador DESC;
+END //
+
 -- 3. PROCEDURE PARA VERIFICAR SI UN PREMIO YA TIENE GANADOR
 DROP PROCEDURE IF EXISTS check_premio_ganador //
 CREATE PROCEDURE check_premio_ganador (

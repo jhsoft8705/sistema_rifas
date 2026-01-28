@@ -858,5 +858,47 @@ BEGIN
     SELECT v_numeros_liberados AS numeros_liberados;
 END //
 
+-- ==========================================================
+-- LISTAR TICKETS PARA CONSULTA LANDING (por código, documento o número)
+-- ==========================================================
+DROP PROCEDURE IF EXISTS list_tickets_consulta_landing //
+CREATE PROCEDURE list_tickets_consulta_landing (
+    IN p_busqueda VARCHAR(100)
+)
+BEGIN
+    SELECT DISTINCT
+        t.id,
+        t.codigo_ticket,
+        t.rifa_id,
+        r.codigo AS rifa_codigo,
+        r.nombre AS rifa_nombre,
+        r.fecha_sorteo,
+        t.estado,
+        t.precio_pagado,
+        t.fecha_creacion,
+        p.nombres,
+        p.apellidos,
+        p.numero_documento,
+        p.tipo_documento,
+        p.telefono,
+        p.email,
+        s.nombre AS sede_nombre,
+        (SELECT GROUP_CONCAT(nr2.numero_formateado ORDER BY nr2.numero_entero SEPARATOR ', ')
+         FROM numeros_rifa nr2 WHERE nr2.ticket_id = t.id) AS numeros_comprados
+    FROM tickets t
+    INNER JOIN rifas r ON t.rifa_id = r.id
+    INNER JOIN sedes s ON t.sede_id = s.id
+    INNER JOIN personas p ON t.persona_id = p.id
+    WHERE TRIM(p_busqueda) <> ''
+      AND (t.codigo_ticket = TRIM(p_busqueda)
+       OR p.numero_documento = TRIM(p_busqueda)
+       OR EXISTS (
+           SELECT 1 FROM numeros_rifa nr
+           WHERE nr.ticket_id = t.id
+             AND (nr.numero_formateado = TRIM(p_busqueda) OR CAST(nr.numero_entero AS CHAR) = TRIM(p_busqueda))
+       ))
+    ORDER BY t.fecha_creacion DESC;
+END //
+
 DELIMITER ;
 

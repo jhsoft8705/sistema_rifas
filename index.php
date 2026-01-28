@@ -40,8 +40,8 @@ require_once __DIR__ . "/config/Enrutamiento.php";
         <nav class="navbar navbar-expand-lg navbar-landing fixed-top" id="navbar">
             <div class="container-fluid px-4">
                 <a class="navbar-brand" href="index.html">
-                    <img src="assets/images/logo-dark.png" class="card-logo card-logo-dark" alt="logo dark" height="17">
-                    <img src="assets/images/logo-light.png" class="card-logo card-logo-light" alt="logo light" height="17">
+                    <img src="assets/images/logos/logo.png" class="card-logo card-logo-dark" alt="logo dark" height="35">
+                    <img src="assets/images/logos/logo.png" class="card-logo card-logo-light" alt="logo light" height="35">
                 </a>
                 <button class="navbar-toggler py-0 fs-20 text-body" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <i class="mdi mdi-menu"></i>
@@ -559,74 +559,8 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                 </div>
                 <!-- end row -->
 
-                <div class="row gy-4">
-                    <div class="col-lg-4">
-                        <div class="card border shadow-sm mb-0">
-                            <div class="card-body p-4 text-center">
-                                <div class="avatar-xl mx-auto mb-3">
-                                    <img src="assets/images/users/avatar-2.jpg" alt="" class="img-fluid rounded-circle">
-                                </div>
-                                <h5 class="mb-1">María González</h5>
-                                <p class="text-muted mb-3">Ciudad de México</p>
-                                <div class="badge badge-soft-success mb-3 fs-13">
-                                    <i class="ri-trophy-line me-1"></i> iPhone 15 Pro Max
-                                </div>
-                                <p class="text-muted mb-3"><i class="ri-calendar-line"></i> Ganador: 15 Oct 2025</p>
-                                <div class="avatar-sm mx-auto mb-2">
-                                    <div class="avatar-title bg-soft-success text-success fs-1 rounded">
-                                        <i class="ri-smartphone-line"></i>
-                                    </div>
-                                </div>
-                                <p class="text-muted small mb-0"><i class="ri-double-quotes-l"></i> No podía creer cuando me avisaron que había ganado. ¡El proceso fue super transparente! <i class="ri-double-quotes-r"></i></p>
-                            </div>
-                        </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-4">
-                        <div class="card border shadow-sm mb-0 ribbon-box right">
-                            <div class="ribbon-two ribbon-two-warning"><span>Reciente</span></div>
-                            <div class="card-body p-4 text-center">
-                                <div class="avatar-xl mx-auto mb-3">
-                                    <img src="assets/images/users/avatar-10.jpg" alt="" class="img-fluid rounded-circle">
-                                </div>
-                                <h5 class="mb-1">Carlos Ramírez</h5>
-                                <p class="text-muted mb-3">Guadalajara, MX</p>
-                                <div class="badge badge-soft-danger mb-3 fs-13">
-                                    <i class="ri-trophy-line me-1"></i> Automóvil 2025
-                                </div>
-                                <p class="text-muted mb-3"><i class="ri-calendar-line"></i> Ganador: 28 Oct 2025</p>
-                                <div class="avatar-sm mx-auto mb-2">
-                                    <div class="avatar-title bg-soft-danger text-danger fs-1 rounded">
-                                        <i class="ri-car-line"></i>
-                                    </div>
-                                </div>
-                                <p class="text-muted small mb-0"><i class="ri-double-quotes-l"></i> ¡Increíble! Nunca pensé ganar un auto. El sistema es muy confiable y serio. <i class="ri-double-quotes-r"></i></p>
-                            </div>
-                        </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-4">
-                        <div class="card border shadow-sm mb-0">
-                            <div class="card-body p-4 text-center">
-                                <div class="avatar-xl mx-auto mb-3">
-                                    <img src="assets/images/users/avatar-3.jpg" alt="" class="img-fluid rounded-circle">
-                                </div>
-                                <h5 class="mb-1">Ana Martínez</h5>
-                                <p class="text-muted mb-3">Monterrey, MX</p>
-                                <div class="badge badge-soft-warning mb-3 fs-13">
-                                    <i class="ri-trophy-line me-1"></i> Viaje a Europa
-                                </div>
-                                <p class="text-muted mb-3"><i class="ri-calendar-line"></i> Ganador: 5 Nov 2025</p>
-                                <div class="avatar-sm mx-auto mb-2">
-                                    <div class="avatar-title bg-soft-warning text-warning fs-1 rounded">
-                                        <i class="ri-flight-takeoff-line"></i>
-                                    </div>
-                                </div>
-                                <p class="text-muted small mb-0"><i class="ri-double-quotes-l"></i> Mi familia y yo viajaremos a Europa gracias a esta rifa. ¡Totalmente recomendado! <i class="ri-double-quotes-r"></i></p>
-                            </div>
-                        </div>
-                    </div>
-                    <!--end col-->
+                <div class="row gy-4" id="contenedor_ganadores">
+                    <!-- Se rellena por JS desde api/juegos/ganadoresPublicos; foto genérica: user-dummy-img.jpg -->
                 </div>
                 <!--end row-->
             </div>
@@ -829,40 +763,52 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                     <!-- end col -->
                     <div class="col-lg-8">
                         <div>
-                            <form>
+                            <form id="form_contacto" novalidate>
                                 <div class="row">
                                     <div class="col-lg-6">
                                         <div class="mb-4">
-                                            <label for="name" class="form-label fs-13">Nombre</label>
-                                            <input name="name" id="name" type="text" class="form-control bg-light border-light" placeholder="Tu nombre*">
+                                            <label for="contacto_nombre" class="form-label fs-13">Nombre <span class="text-danger">*</span></label>
+                                            <input name="nombre" id="contacto_nombre" type="text" class="form-control bg-light border-light" placeholder="Tu nombre" required maxlength="200">
+                                            <div class="invalid-feedback" id="contacto_nombre_error"></div>
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
                                         <div class="mb-4">
-                                            <label for="email" class="form-label fs-13">Correo</label>
-                                            <input name="email" id="email" type="email" class="form-control bg-light border-light" placeholder="Tu correo*">
+                                            <label for="contacto_email" class="form-label fs-13">Correo <span class="text-danger">*</span></label>
+                                            <input name="email" id="contacto_email" type="email" class="form-control bg-light border-light" placeholder="Tu correo" required maxlength="150">
+                                            <div class="invalid-feedback" id="contacto_email_error"></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-lg-12">
+                                    <div class="col-lg-6">
                                         <div class="mb-4">
-                                            <label for="subject" class="form-label fs-13">Asunto</label>
-                                            <input type="text" class="form-control bg-light border-light" id="subject" name="subject" placeholder="Asunto" />
+                                            <label for="contacto_telefono" class="form-label fs-13">Teléfono</label>
+                                            <input name="telefono" id="contacto_telefono" type="text" class="form-control bg-light border-light" placeholder="Teléfono (opcional)" maxlength="20">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="mb-4">
+                                            <label for="contacto_asunto" class="form-label fs-13">Asunto <span class="text-danger">*</span></label>
+                                            <input name="asunto" id="contacto_asunto" type="text" class="form-control bg-light border-light" placeholder="Asunto del mensaje" required maxlength="255">
+                                            <div class="invalid-feedback" id="contacto_asunto_error"></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-12">
                                         <div class="mb-3">
-                                            <label for="comments" class="form-label fs-13">Mensaje</label>
-                                            <textarea name="comments" id="comments" rows="5" class="form-control bg-light border-light" placeholder="Tu mensaje..."></textarea>
+                                            <label for="contacto_mensaje" class="form-label fs-13">Mensaje <span class="text-danger">*</span></label>
+                                            <textarea name="mensaje" id="contacto_mensaje" rows="5" class="form-control bg-light border-light" placeholder="Tu mensaje..." required></textarea>
+                                            <div class="invalid-feedback" id="contacto_mensaje_error"></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-12 text-end">
-                                        <button type="submit" class="btn btn-primary">Enviar Mensaje <i class="ri-send-plane-fill align-middle ms-1"></i></button>
+                                        <button type="submit" class="btn btn-primary" id="btn_enviar_contacto">
+                                            Enviar Mensaje <i class="ri-send-plane-fill align-middle ms-1"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </form>
@@ -893,45 +839,28 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                         <div class="card border shadow-none">
                             <div class="card-body p-4">
                                 <form id="form_consultar_tickets">
-                                    <div class="row">
-                                        <div class="col-md-6">
+                                    <div class="row justify-content-center">
+                                        <div class="col-md-8">
                                             <div class="mb-4">
                                                 <label for="documento_ticket" class="form-label fs-13">
-                                                    <i class="ri-file-text-line me-1"></i> Número de Documento o Código de Ticket
+                                                    <i class="ri-file-text-line me-1"></i> Número de documento, código de ticket o uno de tus números
                                                 </label>
                                                 <input type="text" class="form-control bg-light border-light" id="documento_ticket" name="documento_ticket"
-                                                    placeholder="Ej: 12345678 o TICKET-2025-001">
+                                                    placeholder="Ej: 12345678, TICKET-2025-001 o R005-26">
                                                 <div class="text-danger small mt-1" id="documento_ticket_error" style="display: none;"></div>
-                                                <small class="text-muted">Puedes buscar por tu DNI, pasaporte o código de ticket</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-4">
-                                                <label for="email_consulta" class="form-label fs-13">
-                                                    <i class="ri-mail-line me-1"></i> Correo Electrónico
-                                                </label>
-                                                <input type="email" class="form-control bg-light border-light" id="email_consulta" name="email_consulta"
-                                                    placeholder="correo@ejemplo.com">
-                                                <div class="text-danger small mt-1" id="email_consulta_error" style="display: none;"></div>
-                                                <small class="text-muted">El correo con el que realizaste la compra</small>
+                                                <small class="text-muted">Ingresa tu DNI, código de ticket o uno de los números que compraste</small>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="text-center">
-                                        <button type="submit" class="btn btn-primary btn-lg">
-                                            <i class="ri-search-line me-1"></i> Consultar Tickets
+                                        <button type="submit" class="btn btn-primary btn-lg" id="btn_consultar_tickets">
+                                            <i class="ri-search-line me-1"></i> Consultar mis Tickets
                                         </button>
                                     </div>
                                 </form>
-
-                                <!-- Resultados de la consulta -->
-                                <div id="resultados_tickets" class="mt-4" style="display: none;">
-                                    <hr>
-                                    <h5 class="mb-3"><i class="ri-ticket-line text-success"></i> Tus Tickets</h5>
-                                    <div id="lista_tickets_usuario">
-                                        <!-- Se llenará dinámicamente -->
-                                    </div>
-                                </div>
+                                <!-- Enlaces de contacto y transmisión (configurables) -->
+                                <input type="hidden" id="config_whatsapp" value="999999999">
+                                <input type="hidden" id="config_tiktok" value="https://www.tiktok.com/@sistemarifas">
                             </div>
                         </div>
                     </div>

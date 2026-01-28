@@ -29,6 +29,9 @@ class TicketController
             case 'getByCodigo':
                 $this->obtener_ticket_por_codigo();
                 break;
+            case 'consultar':
+                $this->consultar_tickets_landing();
+                break;
             case 'uploadComprobante':
                 $this->subir_comprobante();
                 break;
@@ -203,6 +206,28 @@ class TicketController
             error_log("Error en obtener_ticket_por_codigo: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al obtener el ticket']);
+        }
+    }
+
+    /**
+     * Consultar tickets para landing (por código, documento o número)
+     */
+    private function consultar_tickets_landing(): void
+    {
+        try {
+            $q = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
+            if ($q === '') {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'Ingrese número de documento, código de ticket o uno de sus números', 'data' => []]);
+                return;
+            }
+            $resultado = $this->ticket->list_tickets_consulta_landing($q);
+            http_response_code(200);
+            echo json_encode($resultado);
+        } catch (Exception $e) {
+            error_log("Error en consultar_tickets_landing: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al consultar tickets', 'data' => []]);
         }
     }
 

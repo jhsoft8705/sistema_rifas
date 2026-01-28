@@ -13,6 +13,10 @@ require_once(__DIR__ . "/routes_rifas.php");
 require_once(__DIR__ . "/routes_tickets.php");
 require_once(__DIR__ . "/routes_personas.php");
 require_once(__DIR__ . "/routes_juegos.php");
+require_once(__DIR__ . "/routes_contactos.php");
+require_once(__DIR__ . "/routes_organizacion.php");
+require_once(__DIR__ . "/routes_usuarios.php");
+require_once(__DIR__ . "/routes_reportes.php");
 
 function Routes(): void
 {
@@ -41,7 +45,10 @@ function Routes(): void
         'api/rifas/numeros/aleatorio',
         'api/tickets/create',
         'api/tickets/getByCodigo',
-        'api/tickets/uploadComprobante'
+        'api/tickets/consultar',
+        'api/tickets/uploadComprobante',
+        'api/juegos/ganadoresPublicos',
+        'api/contactos/register'
     ];
 
     // Si NO es una ruta pública, verificar autenticación
@@ -83,6 +90,22 @@ function Routes(): void
 
         case strpos($url, 'api/juegos') === 0:
             RoutesJuegos($url, $method);
+            break;
+
+        case strpos($url, 'api/contactos') === 0:
+            RoutesContactos($url, $method);
+            break;
+
+        case strpos($url, 'api/organizacion') === 0:
+            RoutesOrganizacion($url, $method);
+            break;
+
+        case strpos($url, 'api/usuarios') === 0:
+            RoutesUsuarios($url, $method);
+            break;
+
+        case strpos($url, 'api/reporte') === 0:
+            RoutesReportes($url, $method);
             break;
  
         default:

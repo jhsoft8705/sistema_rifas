@@ -268,6 +268,35 @@ class Juego extends Conectar
     }
 
     /**
+     * Listar ganadores públicos (publicar_web = 1) para el landing
+     */
+    public function list_ganadores_publicos(): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL list_ganadores_publicos()";
+            $query = $conectar->prepare($sql);
+            $query->execute();
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+
+            return [
+                'ok' => true,
+                'msj' => !empty($data) ? 'Ganadores públicos obtenidos correctamente' : 'No hay ganadores publicados',
+                'data' => $data
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en list_ganadores_publicos: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener los ganadores públicos',
+                'data' => [],
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Verificar si rifa está completa (todos los premios tienen ganador)
      */
     public function verificar_rifa_completa(int $rifa_id, int $sede_id): array

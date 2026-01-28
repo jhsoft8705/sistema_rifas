@@ -17,7 +17,8 @@ function RoutesJuegos(string $url, string $method): void
         'api/juegos/getInfoJuego'   => ['GET'],
         'api/juegos/registrarGanador' => ['POST'],
         'api/juegos/verificarRifaCompleta' => ['GET'],
-        'api/juegos/getNumerosGanador' => ['GET']
+        'api/juegos/getNumerosGanador' => ['GET'],
+        'api/juegos/ganadoresPublicos' => ['GET']
     ];
 
     if (!array_key_exists($url, $routes)) {
@@ -68,6 +69,9 @@ function RoutesJuegos(string $url, string $method): void
             break;
         case 'api/juegos/getNumerosGanador':
             $controller->handleRequest('getNumerosGanador');
+            break;
+        case 'api/juegos/ganadoresPublicos':
+            $controller->handleRequest('ganadoresPublicos');
             break;
     }
 }

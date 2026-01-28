@@ -796,3 +796,91 @@
         </div>
         <!-- end modal ver premios -->
 
+        <!-- Modal visor de imagen (zoom, pantalla grande, prev/next) -->
+        <div class="modal fade" id="modal_visor_imagen_premio" tabindex="-1" aria-labelledby="modal_visor_imagen_label" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header border-secondary py-2">
+                        <h5 class="modal-title text-white" id="modal_visor_imagen_label">
+                            <i class="ri-image-line me-2"></i> Vista previa
+                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-white-50 small" id="visor_imagen_contador">1 / 1</span>
+                            <button type="button" class="btn btn-sm btn-outline-light" id="visor_zoom_out" title="Reducir">
+                                <i class="ri-subtract-line"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-light" id="visor_zoom_in" title="Aumentar">
+                                <i class="ri-add-line"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-light" id="visor_zoom_reset" title="Tamaño normal">100%</button>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                    </div>
+                    <div class="modal-body d-flex align-items-center justify-content-center overflow-auto p-2" id="visor_imagen_contenedor">
+                        <img id="visor_imagen_img" src="" alt="Vista previa" class="img-fluid" style="max-width: none; transition: transform 0.2s ease;">
+                    </div>
+                    <div class="modal-footer border-secondary py-2 justify-content-between">
+                        <button type="button" class="btn btn-outline-light btn-sm" id="visor_prev" title="Anterior">
+                            <i class="ri-arrow-left-s-line me-1"></i> Anterior
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm" id="visor_next" title="Siguiente">
+                            Siguiente <i class="ri-arrow-right-s-line ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end modal visor imagen -->
+
+        <!-- Modal resultado consulta Mis Tickets -->
+        <div class="modal fade" id="modal_mis_tickets_resultado" tabindex="-1" aria-labelledby="modal_mis_tickets_resultado_label" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-success-subtle">
+                        <h5 class="modal-title" id="modal_mis_tickets_resultado_label">
+                            <i class="ri-ticket-line me-2"></i> Tus Tickets
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modal_mis_tickets_body">
+                        <!-- Se llena con JS -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" id="btn_copiar_tickets">
+                            <i class="ri-file-copy-line me-1"></i> Copiar
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="btn_compartir_tickets">
+                            <i class="ri-share-line me-1"></i> Compartir
+                        </button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i> Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end modal mis tickets resultado -->
+
+        <!-- Modal mensaje de contacto enviado -->
+        <div class="modal fade" id="modal_contacto_enviado" tabindex="-1" aria-labelledby="modal_contacto_enviado_label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success-subtle border-success">
+                        <h5 class="modal-title text-success" id="modal_contacto_enviado_label">
+                            <i class="ri-checkbox-circle-line me-2"></i> Mensaje enviado
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <p class="mb-0">Gracias por contactarnos. Hemos recibido tu mensaje y te responderemos a la brevedad posible.</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i> Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end modal contacto enviado -->
+

@@ -8,19 +8,19 @@ $base_url = Enrutamiento::dominio();
         <!-- Dark Logo-->
         <a href="<?= $base_url ?>/views/dashboard" class="logo logo-dark">
             <span class="logo-sm">
-                <img src="<?= $base_url ?>/assets/images/logo-mini.png" alt="" height="22">
+                <img src="<?= $base_url ?>/assets/images/logos/logo.png" alt="" height="22">
             </span>
-            <span class="logo-lg">
-                <img src="<?= $base_url ?>/assets/images/logo.png" alt="" height="17">
+             <span class="logo-lg">
+                <img src="<?= $base_url ?>/assets/images/logos/logo.png" alt="" height="17">
             </span>
         </a>
         <!-- Light Logo-->
         <a href="<?= $base_url ?>/views/dashboard" class="logo logo-light">
             <span class="logo-sm">
-                <img src="<?= $base_url ?>/assets/images/logo-mini.png" alt="" height="22">
+                <img src="<?= $base_url ?>/assets/images/logos/logo.png" alt="" height="22">
             </span>
             <span class="logo-lg">
-                <img src="<?= $base_url ?>/assets/images/logo.png" alt="" height="58">
+                <img src="<?= $base_url ?>/assets/images/logos/logo.png" alt="" height="58">
             </span>
         </a>
         <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
@@ -81,6 +81,12 @@ $base_url = Enrutamiento::dominio();
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarOrganizacion">
                         <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="admin-organizacion" class="nav-link" data-key="t-organizacion">Organización</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-usuarios" class="nav-link" data-key="t-usuarios">Usuarios</a>
+                            </li>
                             <li class="nav-item">
                                 <a href="gerencias" class="nav-link" data-key="t-gerencias">Gerencias</a>
                             </li>
@@ -201,21 +207,16 @@ $base_url = Enrutamiento::dominio();
 
      
 
-                <!-- AUSENTISMO -->
+                <!-- REPORTES -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarAusentismo" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidebarAusentismo">
-                        <i class="ri-calendar-check-line"></i> <span data-key="t-ausentismo">Ausentismo</span>
+                    <a class="nav-link menu-link" href="#sidebarReportes" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarReportes">
+                        <i class="ri-file-chart-line"></i> <span data-key="t-reportes">Reportes</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarAusentismo">
+                    <div class="collapse menu-dropdown" id="sidebarReportes">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="tipos-ausentismo" class="nav-link" data-key="t-tipos-ausentismo">Tipos de
-                                    Ausentismo</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="motivos-ausentismo" class="nav-link" data-key="t-motivos-ausentismo">Motivos de
-                                    Ausentismo</a>
+                                <a href="admin-reporte-recaudacion" class="nav-link" data-key="t-reporte-recaudacion">Reporte Recaudación</a>
                             </li>
                         </ul>
                     </div>
