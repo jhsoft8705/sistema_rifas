@@ -5,18 +5,15 @@ require_once __DIR__ . "/config/Enrutamiento.php";
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none">
 
 <head>
-
     <meta charset="utf-8" />
     <title>Sistema de Rifas - Participa y Gana</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Sistema profesional de rifas y sorteos. Participa y gana increíbles premios." name="description" />
     <meta content="Sistema de Rifas" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="assets/images/favicon.ico">
-
+    <link rel="shortcut icon" href="assets/images/logos/logo.ico">
     <!--Swiper slider css-->
     <link href="assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
-
     <!-- Layout config Js -->
     <script src="assets/js/layout.js"></script>
     <!-- Bootstrap Css -->
@@ -27,7 +24,9 @@ require_once __DIR__ . "/config/Enrutamiento.php";
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
-    
+    <!-- Landing Rifas Theme CSS -->
+    <link href="assets/css/landing-rifas.css" rel="stylesheet" type="text/css" />
+
  <!-- SweetAlert2 CSS --> 
 <link href="assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css">
 
@@ -39,7 +38,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
     <div class="layout-wrapper landing">
         <nav class="navbar navbar-expand-lg navbar-landing fixed-top" id="navbar">
             <div class="container-fluid px-4">
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="">
                     <img src="assets/images/logos/logo.png" class="card-logo card-logo-dark" alt="logo dark" height="35">
                     <img src="assets/images/logos/logo.png" class="card-logo card-logo-light" alt="logo light" height="35">
                 </a>
@@ -76,7 +75,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                     </ul>
 
                     <div class="">
-                        <a href="admin-login" class="btn btn-primary"><i class="ri-admin-line me-1"></i> Panel Administrador</a>
+                        <a href="admin-login" class="btn btn-primary"><i class="ri-admin-line me-1"></i>LogIn</a>
                     </div>
                 </div>
 
@@ -579,7 +578,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
 
                             <div class="">
                                 <a href="#contact" class="btn btn-primary btn-label rounded-pill"><i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Contáctanos</a>
-                                <a href="https://wa.me/" target="_blank" class="btn btn-success btn-label rounded-pill"><i class="ri-whatsapp-line label-icon align-middle rounded-pill fs-16 me-2"></i> WhatsApp</a>
+                                <a href="https://wa.me/" target="_blank" class="btn btn-success btn-whatsapp btn-label rounded-pill"><i class="ri-whatsapp-line label-icon align-middle rounded-pill fs-16 me-2"></i> WhatsApp</a>
                             </div>
                         </div>
                     </div>
@@ -657,7 +656,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                     <div class="col-lg-6">
                         <div class="d-flex align-items-center mb-2">
                             <div class="flex-shrink-0 me-1">
-                                <i class="ri-shield-keyhole-line fs-24 align-middle text-success me-1"></i>
+                                <i class="ri-shield-keyhole-line fs-24 align-middle text-primary me-1"></i>
                             </div>
                             <div class="flex-grow-1">
                                 <h5 class="mb-0 fw-semibold">Sorteos y Premios</h5>
@@ -853,7 +852,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                                         </div>
                                     </div>
                                     <div class="text-center">
-                                        <button type="submit" class="btn btn-primary btn-lg" id="btn_consultar_tickets">
+                                        <button type="submit" class="btn btn-primary" id="btn_consultar_tickets">
                                             <i class="ri-search-line me-1"></i> Consultar mis Tickets
                                         </button>
                                     </div>
@@ -999,12 +998,9 @@ require_once __DIR__ . "/config/Enrutamiento.php";
 
     </div>
     <!-- end layout wrapper -->
-
-
     <!-- JAVASCRIPT -->
     <!-- jQuery (debe cargarse primero) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
     <!-- Bootstrap JS -->
     <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="assets/libs/simplebar/simplebar.min.js"></script>
@@ -1012,13 +1008,10 @@ require_once __DIR__ . "/config/Enrutamiento.php";
     <script src="assets/libs/feather-icons/feather.min.js"></script>
     <script src="assets/js/pages/plugins/lord-icon-2.1.0.js"></script>
     <script src="assets/js/plugins.js"></script>
-
     <!--Swiper slider js-->
     <script src="assets/libs/swiper/swiper-bundle.min.js"></script>
-
     <!-- landing init -->
     <script src="assets/js/pages/landing.init.js"></script>
- 
     <!-- Configuración de rutas y API para Landing -->
     <script>
         // Configurar rutas base desde PHP Enrutamiento
@@ -1028,11 +1021,9 @@ require_once __DIR__ . "/config/Enrutamiento.php";
         console.log('BASE_URL:', window.BASE_URL);
         console.log('API_BASE_URL:', window.API_BASE_URL);
     </script>
-
     <!-- SweetAlert2 (debe cargarse antes de Utils.js) -->
     <script src="assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/js/pages/sweetalerts.init.js"></script>
-    
     <!-- jQuery Toast Plugin (necesario para Utils.js) -->
     <script src="node_modules/jquery-toast-plugin/dist/jquery.toast.min.js" onerror="console.warn('jQuery Toast no se pudo cargar desde node_modules')"></script>
     <!-- Fallback: Si no existe en node_modules, usar CDN -->
@@ -1061,10 +1052,8 @@ require_once __DIR__ . "/config/Enrutamiento.php";
             }
         })();
     </script>
-
     <!-- Utils.js - Utilidades globales (requiere jQuery y SweetAlert2) -->
     <script src="<?= Enrutamiento::dominio() ?>/helpers/Utils.js"></script> 
-    
     <!-- Landing.js - Gestión dinámica de rifas (requiere Utils.js) -->
     <script src="<?= Enrutamiento::dominio() ?>/landing.js"></script>
 </body>

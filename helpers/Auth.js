@@ -129,7 +129,8 @@ const Auth = {
             empleado_id: usuario.empleado_id,
             moneda: usuario.moneda ?? null,
             simbolo_moneda: usuario.simbolo_moneda ?? 'S/.',
-            codigo_moneda: usuario.codigo_moneda ?? 'PEN'
+            codigo_moneda: usuario.codigo_moneda ?? 'PEN',
+            permisos: usuario.permisos ?? []
         };
     }
 };
@@ -210,6 +211,43 @@ const API = {
             return data;
         } catch (error) {
             console.error('Error en POST:', error);
+            return { ok: false, msj: 'Error de conexión' };
+        }
+    },
+
+    /**
+     * PUT con autenticación
+     */
+    async put(endpoint, body = {}) {
+        const token = Auth.getToken();
+        
+        if (!token) {
+            console.error('No hay token');
+            Auth.logout();
+            return null;
+        }
+
+        try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/${endpoint}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(body)
+            });
+
+            const data = await response.json();
+
+            if (response.status === 401) {
+                console.error('Token inválido');
+                Auth.logout();
+                return null;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error en PUT:', error);
             return { ok: false, msj: 'Error de conexión' };
         }
     },

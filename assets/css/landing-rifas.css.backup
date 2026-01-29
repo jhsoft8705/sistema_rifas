@@ -1,0 +1,19 @@
+/**
+ * Landing Rifas - Tema de Colores Rojo, Dorado y Negro
+ * ARCHIVO DE BACKUP - Para restaurar estilos anteriores si es necesario
+ * 
+ * INSTRUCCIONES PARA DESACTIVAR:
+ * 1. Abrir index.php
+ * 2. Buscar la línea que dice: <link href="assets/css/landing-rifas.css" rel="stylesheet" type="text/css" />
+ * 3. Comentar esa línea agregando <!-- antes y --> después, así:
+ *    <!-- <link href="assets/css/landing-rifas.css" rel="stylesheet" type="text/css" /> -->
+ * 4. Guardar el archivo
+ * 5. Recargar la página
+ * 
+ * INSTRUCCIONES PARA REACTIVAR:
+ * 1. Abrir index.php
+ * 2. Buscar la línea comentada
+ * 3. Quitar los <!-- y --> para descomentarla
+ * 4. Guardar el archivo
+ * 5. Recargar la página
+ */

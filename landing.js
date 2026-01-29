@@ -249,24 +249,24 @@ const LandingRifas = {
     generarContadorRegresivo(fechaSorteo, rifaId) {
         const fechaISO = fechaSorteo.replace(' ', 'T');
         return `
-            <div class="card bg-warning-subtle border-0 mb-3">
+            <div class="card bg-warning-subtle border-0 mb-3 countdown-card-rifa">
                 <div class="card-body p-2">
                     <div class="d-flex justify-content-center gap-2 countdown-rifa" data-fecha="${fechaISO}" data-rifa-id="${rifaId}">
                         <div class="text-center">
                             <div class="fw-bold text-warning countdown-days">00</div>
                             <small class="text-muted" style="font-size: 0.7rem;">días</small>
                         </div>
-                        <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
+                        <div class="text-center px-1"><div class="fw-bold text-warning countdown-separator">:</div></div>
                         <div class="text-center">
                             <div class="fw-bold text-warning countdown-hours">00</div>
                             <small class="text-muted" style="font-size: 0.7rem;">hrs</small>
                         </div>
-                        <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
+                        <div class="text-center px-1"><div class="fw-bold text-warning countdown-separator">:</div></div>
                         <div class="text-center">
                             <div class="fw-bold text-warning countdown-minutes">00</div>
                             <small class="text-muted" style="font-size: 0.7rem;">min</small>
                         </div>
-                        <div class="text-center px-1"><div class="fw-bold text-warning">:</div></div>
+                        <div class="text-center px-1"><div class="fw-bold text-warning countdown-separator">:</div></div>
                         <div class="text-center">
                             <div class="fw-bold text-warning countdown-seconds">00</div>
                             <small class="text-muted" style="font-size: 0.7rem;">seg</small>

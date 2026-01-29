@@ -58,6 +58,19 @@ class Auth extends Conectar
             $query->closeCursor();
             
             if ($data && $data['resultado'] == 1) {
+                // Cargar permisos del usuario
+                $permisos = [];
+                try {
+                    require_once(__DIR__ . '/Permiso.php');
+                    $permisoModel = new Permiso();
+                    $permisosResult = $permisoModel->get_permisos_usuario($data['usuario_id'], $data['sede_id']);
+                    if ($permisosResult['ok']) {
+                        $permisos = $permisosResult['data'];
+                    }
+                } catch (Exception $e) {
+                    error_log("Error al cargar permisos en login: " . $e->getMessage());
+                }
+
                 return [
                     'ok' => true,
                     'msj' => $data['mensaje'],
@@ -71,7 +84,8 @@ class Auth extends Conectar
                         'nombre_completo' => $data['nombre_completo'],
                         'rol_id' => $data['rol_id'],
                         'rol_nombre' => $data['rol_nombre'],
-                        'debe_cambiar_password' => $data['debe_cambiar_password']
+                        'debe_cambiar_password' => $data['debe_cambiar_password'],
+                        'permisos' => $permisos
                     ]
                 ];
             } else {

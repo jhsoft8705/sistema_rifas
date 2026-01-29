@@ -1,18 +1,18 @@
 <?php
 /**
- * Modelo Rol
- * Manejo de operaciones CRUD para roles
+ * Modelo Permiso
+ * Manejo de operaciones CRUD para permisos
  */
-class Rol extends Conectar
+class Permiso extends Conectar
 {
     /**
-     * Listar roles por sede (activos) - Para combos
+     * Listar permisos por sede
      */
-    public function listar_por_sede(int $sede_id): array
+    public function listar_permisos(int $sede_id): array
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL list_roles(?)";
+            $sql = "CALL list_permisos(?)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $sede_id, PDO::PARAM_INT);
             $query->execute();
@@ -21,14 +21,14 @@ class Rol extends Conectar
 
             return [
                 'ok' => true,
-                'msj' => !empty($data) ? 'Roles obtenidos' : 'No hay roles',
+                'msj' => !empty($data) ? 'Permisos obtenidos' : 'No hay permisos',
                 'data' => $data
             ];
         } catch (PDOException $e) {
-            error_log("Error en Rol::listar_por_sede: " . $e->getMessage());
+            error_log("Error en Permiso::listar_permisos: " . $e->getMessage());
             return [
                 'ok' => false,
-                'msj' => 'Error al listar roles',
+                'msj' => 'Error al listar permisos',
                 'data' => [],
                 'detalle' => $e->getMessage()
             ];
@@ -36,64 +36,15 @@ class Rol extends Conectar
     }
 
     /**
-     * Listar roles completo (con estadísticas)
+     * Obtener permiso por ID
      */
-    public function listar_completo(int $sede_id): array
+    public function get_by_id(int $permiso_id, int $sede_id): array
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL list_roles_completo(?)";
+            $sql = "SELECT * FROM permisos WHERE id = ? AND sede_id = ?";
             $query = $conectar->prepare($sql);
-            $query->bindValue(1, $sede_id, PDO::PARAM_INT);
-            $query->execute();
-            
-            // Obtener solo el primer conjunto de resultados
-            $data = $query->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Cerrar el cursor y limpiar cualquier resultado adicional
-            $query->closeCursor();
-            
-            // Si hay múltiples result sets, descartarlos
-            while ($query->nextRowset()) {
-                $query->closeCursor();
-            }
-
-            // Eliminar duplicados basados en el ID
-            $uniqueData = [];
-            $seenIds = [];
-            foreach ($data as $row) {
-                if (!isset($seenIds[$row['id']])) {
-                    $seenIds[$row['id']] = true;
-                    $uniqueData[] = $row;
-                }
-            }
-
-            return [
-                'ok' => true,
-                'msj' => !empty($uniqueData) ? 'Roles obtenidos' : 'No hay roles',
-                'data' => $uniqueData
-            ];
-        } catch (PDOException $e) {
-            error_log("Error en Rol::listar_completo: " . $e->getMessage());
-            return [
-                'ok' => false,
-                'msj' => 'Error al listar roles',
-                'data' => [],
-                'detalle' => $e->getMessage()
-            ];
-        }
-    }
-
-    /**
-     * Obtener rol por ID
-     */
-    public function get_by_id(int $rol_id, int $sede_id): array
-    {
-        try {
-            $conectar = parent::Conexion();
-            $sql = "CALL get_rol_by_id(?, ?)";
-            $query = $conectar->prepare($sql);
-            $query->bindValue(1, $rol_id, PDO::PARAM_INT);
+            $query->bindValue(1, $permiso_id, PDO::PARAM_INT);
             $query->bindValue(2, $sede_id, PDO::PARAM_INT);
             $query->execute();
             $data = $query->fetch(PDO::FETCH_ASSOC);
@@ -101,14 +52,14 @@ class Rol extends Conectar
 
             return [
                 'ok' => !empty($data),
-                'msj' => !empty($data) ? 'Rol obtenido' : 'Rol no encontrado',
+                'msj' => !empty($data) ? 'Permiso obtenido' : 'Permiso no encontrado',
                 'data' => $data ?: null
             ];
         } catch (PDOException $e) {
-            error_log("Error en Rol::get_by_id: " . $e->getMessage());
+            error_log("Error en Permiso::get_by_id: " . $e->getMessage());
             return [
                 'ok' => false,
-                'msj' => 'Error al obtener el rol',
+                'msj' => 'Error al obtener el permiso',
                 'data' => null,
                 'detalle' => $e->getMessage()
             ];
@@ -116,25 +67,26 @@ class Rol extends Conectar
     }
 
     /**
-     * Registrar nuevo rol
+     * Registrar nuevo permiso
      */
     public function registrar(array $data): array
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL register_rol(?, ?, ?, ?, ?, @rol_id, @mensaje)";
+            $sql = "CALL register_permiso(?, ?, ?, ?, ?, ?, @permiso_id, @mensaje)";
             $query = $conectar->prepare($sql);
             
             $query->bindValue(1, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);
             $query->bindValue(2, trim($this->getValue($data, 'nombre')), PDO::PARAM_STR);
             $this->bindNullable($query, 3, trim($this->getValue($data, 'descripcion', '')), PDO::PARAM_STR);
-            $query->bindValue(4, $this->getValue($data, 'nivel_acceso', 1), PDO::PARAM_INT);
-            $query->bindValue(5, trim($this->getValue($data, 'creado_por')), PDO::PARAM_STR);
+            $query->bindValue(4, trim($this->getValue($data, 'modulo')), PDO::PARAM_STR);
+            $query->bindValue(5, trim($this->getValue($data, 'accion')), PDO::PARAM_STR);
+            $query->bindValue(6, trim($this->getValue($data, 'creado_por')), PDO::PARAM_STR);
             
             $query->execute();
             $query->closeCursor();
 
-            $mensajeStmt = $conectar->query("SELECT @rol_id AS rol_id, @mensaje AS mensaje");
+            $mensajeStmt = $conectar->query("SELECT @permiso_id AS permiso_id, @mensaje AS mensaje");
             $result = $mensajeStmt->fetch(PDO::FETCH_ASSOC);
             $mensajeStmt->closeCursor();
 
@@ -144,36 +96,37 @@ class Rol extends Conectar
             return [
                 'ok' => $ok,
                 'msj' => $mensaje,
-                'rol_id' => $result['rol_id'] ?? null
+                'permiso_id' => $result['permiso_id'] ?? null
             ];
         } catch (PDOException $e) {
-            error_log("Error en Rol::registrar: " . $e->getMessage());
+            error_log("Error en Permiso::registrar: " . $e->getMessage());
             return [
                 'ok' => false,
-                'msj' => 'Error al registrar el rol',
+                'msj' => 'Error al registrar el permiso',
                 'detalle' => $e->getMessage()
             ];
         }
     }
 
     /**
-     * Actualizar rol
+     * Actualizar permiso
      */
     public function actualizar(array $data): array
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL update_rol(?, ?, ?, ?, ?, ?, ?, @mensaje)";
+            $sql = "CALL update_permiso(?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
             $query = $conectar->prepare($sql);
             
             $query->bindValue(1, $this->getValue($data, 'id'), PDO::PARAM_INT);
             $query->bindValue(2, $this->getValue($data, 'sede_id'), PDO::PARAM_INT);
             $query->bindValue(3, trim($this->getValue($data, 'nombre')), PDO::PARAM_STR);
             $this->bindNullable($query, 4, trim($this->getValue($data, 'descripcion', '')), PDO::PARAM_STR);
-            $query->bindValue(5, $this->getValue($data, 'nivel_acceso', 1), PDO::PARAM_INT);
+            $query->bindValue(5, trim($this->getValue($data, 'modulo')), PDO::PARAM_STR);
+            $query->bindValue(6, trim($this->getValue($data, 'accion')), PDO::PARAM_STR);
             $estado = isset($data['estado']) && $data['estado'] !== '' ? (int) $data['estado'] : 1;
-            $query->bindValue(6, $estado, PDO::PARAM_INT);
-            $query->bindValue(7, trim($this->getValue($data, 'modificado_por')), PDO::PARAM_STR);
+            $query->bindValue(7, $estado, PDO::PARAM_INT);
+            $query->bindValue(8, trim($this->getValue($data, 'modificado_por')), PDO::PARAM_STR);
             
             $query->execute();
             $query->closeCursor();
@@ -190,25 +143,25 @@ class Rol extends Conectar
                 'msj' => $mensaje
             ];
         } catch (PDOException $e) {
-            error_log("Error en Rol::actualizar: " . $e->getMessage());
+            error_log("Error en Permiso::actualizar: " . $e->getMessage());
             return [
                 'ok' => false,
-                'msj' => 'Error al actualizar el rol',
+                'msj' => 'Error al actualizar el permiso',
                 'detalle' => $e->getMessage()
             ];
         }
     }
 
     /**
-     * Obtener permisos de un rol
+     * Obtener permisos de un usuario
      */
-    public function get_permisos_rol(int $rol_id, int $sede_id): array
+    public function get_permisos_usuario(int $usuario_id, int $sede_id): array
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL get_permisos_rol(?, ?)";
+            $sql = "CALL get_permisos_usuario(?, ?)";
             $query = $conectar->prepare($sql);
-            $query->bindValue(1, $rol_id, PDO::PARAM_INT);
+            $query->bindValue(1, $usuario_id, PDO::PARAM_INT);
             $query->bindValue(2, $sede_id, PDO::PARAM_INT);
             $query->execute();
             $data = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -220,10 +173,10 @@ class Rol extends Conectar
                 'data' => $data ?: []
             ];
         } catch (PDOException $e) {
-            error_log("Error en Rol::get_permisos_rol: " . $e->getMessage());
+            error_log("Error en Permiso::get_permisos_usuario: " . $e->getMessage());
             return [
                 'ok' => false,
-                'msj' => 'Error al obtener permisos del rol',
+                'msj' => 'Error al obtener permisos del usuario',
                 'data' => [],
                 'detalle' => $e->getMessage()
             ];
@@ -231,44 +184,28 @@ class Rol extends Conectar
     }
 
     /**
-     * Asignar permisos a un rol
+     * Verificar si usuario tiene un permiso específico
      */
-    public function asignar_permisos(int $rol_id, int $sede_id, array $permisos_ids, string $asignado_por): array
+    public function verificar_permiso(int $usuario_id, int $sede_id, string $permiso_nombre): bool
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL asignar_permisos_rol(?, ?, ?, ?, @mensaje)";
+            $sql = "CALL verificar_permiso_usuario(?, ?, ?, @tiene_permiso)";
             $query = $conectar->prepare($sql);
-            
-            // Convertir array a string separado por comas
-            $permisos_str = implode(',', array_map('intval', $permisos_ids));
-            
-            $query->bindValue(1, $rol_id, PDO::PARAM_INT);
+            $query->bindValue(1, $usuario_id, PDO::PARAM_INT);
             $query->bindValue(2, $sede_id, PDO::PARAM_INT);
-            $query->bindValue(3, $permisos_str, PDO::PARAM_STR);
-            $query->bindValue(4, trim($asignado_por), PDO::PARAM_STR);
-            
+            $query->bindValue(3, $permiso_nombre, PDO::PARAM_STR);
             $query->execute();
             $query->closeCursor();
 
-            $mensajeStmt = $conectar->query("SELECT @mensaje AS mensaje");
-            $result = $mensajeStmt->fetch(PDO::FETCH_ASSOC);
-            $mensajeStmt->closeCursor();
+            $resultStmt = $conectar->query("SELECT @tiene_permiso AS tiene_permiso");
+            $result = $resultStmt->fetch(PDO::FETCH_ASSOC);
+            $resultStmt->closeCursor();
 
-            $mensaje = $result['mensaje'] ?? 'Error desconocido';
-            $ok = stripos($mensaje, 'correctamente') !== false;
-
-            return [
-                'ok' => $ok,
-                'msj' => $mensaje
-            ];
+            return (int)($result['tiene_permiso'] ?? 0) === 1;
         } catch (PDOException $e) {
-            error_log("Error en Rol::asignar_permisos: " . $e->getMessage());
-            return [
-                'ok' => false,
-                'msj' => 'Error al asignar permisos al rol',
-                'detalle' => $e->getMessage()
-            ];
+            error_log("Error en Permiso::verificar_permiso: " . $e->getMessage());
+            return false;
         }
     }
 

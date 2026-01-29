@@ -38,8 +38,8 @@ $base_url = Enrutamiento::dominio();
                 <li class="menu-title"><span data-key="t-menu">Menu</span></li>
 
                 <!-- dashboard -->
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="dashboard">
+                <li class="nav-item" data-permiso="DASHBOARD_VER">
+                    <a class="nav-link menu-link" href="admin-dashboard">
                         <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboard">dashboard</span>
                     </a>
                 </li>
@@ -74,58 +74,49 @@ $base_url = Enrutamiento::dominio();
                 </li>-->
 
                 <!-- ORGANIZACIÓN Y ESTRUCTURA-->
-                <li class="nav-item">
+                <li class="nav-item" data-permiso="ORGANIZACION_VER">
                     <a class="nav-link menu-link" href="#sidebarOrganizacion" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarOrganizacion">
                         <i class="ri-building-line"></i> <span data-key="t-organizacion">Organización</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarOrganizacion">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="ORGANIZACION_VER">
                                 <a href="admin-organizacion" class="nav-link" data-key="t-organizacion">Organización</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="USUARIOS_VER">
                                 <a href="admin-usuarios" class="nav-link" data-key="t-usuarios">Usuarios</a>
                             </li>
-                            <li class="nav-item">
-                                <a href="gerencias" class="nav-link" data-key="t-gerencias">Gerencias</a>
+                            <li class="nav-item" data-permiso="ROLES_VER">
+                                <a href="admin-roles" class="nav-link" data-key="t-roles">Roles</a>
                             </li>
-                            <li class="nav-item">
-                                <a href="cargos" class="nav-link" data-key="t-cargos">Cargos</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="horarios" class="nav-link" data-key="t-horarios">Horarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="turnos" class="nav-link" data-key="t-turnos">Turnos Laborables</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="periodos" class="nav-link" data-key="t-periodos">Períodos de Asistencia</a>
+                            <li class="nav-item" data-permiso="PERMISOS_VER">
+                                <a href="admin-permisos" class="nav-link" data-key="t-permisos">Permisos</a>
                             </li>
                         </ul>
                     </div>
                 </li>
            <!-- MAESTROS Y CATÁLOGOS -->
-           <li class="nav-item">
+           <li class="nav-item" data-permiso="PREMIOS_VER">
                     <a class="nav-link menu-link" href="#sidebarMaestros" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarMaestros">
                         <i class="ri-book-open-line"></i> <span data-key="t-maestros">Gestión de premios</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarMaestros">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="CATEGORIAS_VER">
                                 <a href="admin-categorias" class="nav-link" data-key="t-tipos-doc">categorias</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="PREMIOS_VER">
                                 <a href="admin-premios" class="nav-link" data-key="t-estado-civil">Premios</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="RIFAS_VER">
                                 <a href="admin-rifas" class="nav-link" data-key="t-estado-civil">Rifas</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="TICKETS_VER">
                                 <a href="admin-tickets" class="nav-link" data-key="t-tickets">Tickets</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="PERSONAS_VER">
                                 <a href="admin-personas" class="nav-link" data-key="t-personas">Personas</a>
                             </li>
                        
@@ -208,14 +199,14 @@ $base_url = Enrutamiento::dominio();
      
 
                 <!-- REPORTES -->
-                <li class="nav-item">
+                <li class="nav-item" data-permiso="REPORTES_VER">
                     <a class="nav-link menu-link" href="#sidebarReportes" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarReportes">
                         <i class="ri-file-chart-line"></i> <span data-key="t-reportes">Reportes</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarReportes">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
+                            <li class="nav-item" data-permiso="REPORTES_VER">
                                 <a href="admin-reporte-recaudacion" class="nav-link" data-key="t-reporte-recaudacion">Reporte Recaudación</a>
                             </li>
                         </ul>
@@ -1132,3 +1123,121 @@ $base_url = Enrutamiento::dominio();
 
     <div class="sidebar-background"></div>
 </div>
+
+<script>
+/**
+ * Script para ocultar elementos del menú según permisos del usuario
+ * Se ejecuta cuando el DOM está listo y después de que Permisos.js esté cargado
+ */
+(function() {
+    let intentos = 0;
+    const maxIntentos = 50; // 5 segundos máximo
+    
+    function filtrarMenuPorPermisos() {
+        // Verificar que Auth y Permisos estén disponibles
+        if (typeof Auth === 'undefined' || typeof Permisos === 'undefined') {
+            intentos++;
+            if (intentos < maxIntentos) {
+                setTimeout(filtrarMenuPorPermisos, 100);
+            } else {
+                console.warn('Permisos.js o Auth.js no están disponibles después de varios intentos');
+            }
+            return;
+        }
+
+        // Verificar que el usuario esté autenticado
+        if (!Auth.isAuthenticated()) {
+            console.log('Usuario no autenticado, no se filtra el menú');
+            return;
+        }
+
+        // Obtener información del usuario
+        const userInfo = Auth.getUserInfo();
+        const usuario = Auth.getUsuario();
+        
+        console.log('Información del usuario:', {
+            userInfo: userInfo,
+            usuario: usuario,
+            permisos: usuario ? usuario.permisos : null
+        });
+
+        // Verificar si es SUPERADMIN - si lo es, mostrar todo
+        const esSuperAdmin = Permisos.esSuperAdmin();
+        const rolNombre = (userInfo && userInfo.rol_nombre) ? userInfo.rol_nombre.toUpperCase().trim() : '';
+        
+        console.log('Rol del usuario:', rolNombre, 'Es SUPERADMIN:', esSuperAdmin);
+        
+        if (esSuperAdmin || rolNombre === 'SUPERADMIN') {
+            console.log('Usuario es SUPERADMIN - mostrando todo el menú');
+            // Asegurarse de que todos los elementos estén visibles
+            document.querySelectorAll('[data-permiso]').forEach(function(el) {
+                el.style.display = '';
+            });
+            return; // No ocultar nada si es SUPERADMIN
+        }
+
+        // Obtener permisos del usuario
+        const permisosUsuario = Permisos.getNombresPermisos();
+        console.log('Permisos del usuario:', permisosUsuario);
+
+        // Obtener todos los elementos con atributo data-permiso
+        const elementosMenu = document.querySelectorAll('[data-permiso]');
+        console.log(`Encontrados ${elementosMenu.length} elementos del menú con atributo data-permiso`);
+        
+        let elementosOcultos = 0;
+        elementosMenu.forEach(function(elemento) {
+            const permisoRequerido = elemento.getAttribute('data-permiso');
+            
+            if (!permisoRequerido) {
+                return; // Continuar si no hay permiso requerido
+            }
+
+            // Verificar si el usuario tiene el permiso
+            const tienePermiso = Permisos.tienePermiso(permisoRequerido);
+            
+            if (!tienePermiso) {
+                elemento.style.display = 'none';
+                elementosOcultos++;
+                console.log(`Ocultando elemento que requiere permiso: ${permisoRequerido}`);
+            } else {
+                // Asegurarse de que el elemento esté visible si tiene el permiso
+                elemento.style.display = '';
+            }
+        });
+
+        console.log(`Elementos ocultos: ${elementosOcultos} de ${elementosMenu.length}`);
+
+        // Ocultar menús padre si todos sus hijos están ocultos
+        const menusPadre = document.querySelectorAll('.menu-dropdown');
+        menusPadre.forEach(function(menu) {
+            const itemsVisibles = menu.querySelectorAll('.nav-item:not([style*="display: none"])');
+            if (itemsVisibles.length === 0) {
+                const padre = menu.closest('.nav-item');
+                if (padre) {
+                    // Verificar si el padre mismo tiene un permiso
+                    const permisoPadre = padre.getAttribute('data-permiso');
+                    if (!permisoPadre || !Permisos.tienePermiso(permisoPadre)) {
+                        padre.style.display = 'none';
+                        console.log('Ocultando menú padre sin elementos visibles');
+                    }
+                }
+            }
+        });
+    }
+
+    // Ejecutar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(filtrarMenuPorPermisos, 200);
+        });
+    } else {
+        // Si el DOM ya está listo, ejecutar después de un delay
+        setTimeout(filtrarMenuPorPermisos, 200);
+    }
+
+    // También ejecutar después de que la página esté completamente cargada
+    window.addEventListener('load', function() {
+        setTimeout(filtrarMenuPorPermisos, 300);
+    });
+})();
+</script>

@@ -17,6 +17,10 @@ require_once(__DIR__ . "/routes_contactos.php");
 require_once(__DIR__ . "/routes_organizacion.php");
 require_once(__DIR__ . "/routes_usuarios.php");
 require_once(__DIR__ . "/routes_reportes.php");
+require_once(__DIR__ . "/routes_dashboard.php");
+require_once(__DIR__ . "/routes_perfil.php");
+require_once(__DIR__ . "/routes_roles.php");
+require_once(__DIR__ . "/routes_permisos.php");
 
 function Routes(): void
 {
@@ -106,6 +110,22 @@ function Routes(): void
 
         case strpos($url, 'api/reporte') === 0:
             RoutesReportes($url, $method);
+            break;
+
+        case strpos($url, 'api/dashboard') === 0:
+            RoutesDashboard($url, $method);
+            break;
+
+        case strpos($url, 'api/perfil') === 0:
+            RoutesPerfil($url, $method);
+            break;
+
+        case strpos($url, 'api/roles') === 0:
+            RoutesRoles($url, $method);
+            break;
+
+        case strpos($url, 'api/permisos') === 0:
+            RoutesPermisos($url, $method);
             break;
  
         default:

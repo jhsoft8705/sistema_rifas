@@ -103,7 +103,7 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                         <div class="dropdown-divider"></div>
                         
                         <!-- Perfil -->
-                        <a class="dropdown-item" href="<?= Enrutamiento::dominio()?>/views/perfil">
+                        <a class="dropdown-item" href="<?= Enrutamiento::dominio()?>/perfil">
                             <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> 
                             <span class="align-middle">Mi Perfil</span>
                         </a>

@@ -1,0 +1,490 @@
+/**
+ * Landing Rifas - Tema de Colores Rojo, Dorado y Negro
+ * Colores temáticos para rifas y premios
+ */
+
+:root {
+    /* Colores principales del tema */
+    --color-rojo: #DC143C;        /* Rojo carmesí */
+    --color-rojo-oscuro: #B22222; /* Rojo oscuro */
+    --color-rojo-claro: #FF6B6B;  /* Rojo claro */
+    --color-dorado: #FFD700;      /* Dorado */
+    --color-dorado-oscuro: #DAA520; /* Dorado oscuro */
+    --color-dorado-claro: #FFE55C; /* Dorado claro */
+    --color-negro: #000000;       /* Negro */
+    --color-gris-oscuro: #1a1a1a; /* Gris muy oscuro */
+    --color-gris-claro: #f5f5f5;   /* Gris claro */
+}
+
+/* ===== NAVBAR ===== */
+.navbar-landing {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(220, 20, 60, 0.1);
+}
+
+.navbar-landing .navbar-brand img {
+    filter: none;
+}
+
+.navbar-landing .nav-link {
+    color: var(--color-gris-oscuro) !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* Hover: cambiar color del texto a rojo (sobrescribir cualquier estilo verde) */
+.navbar-landing .nav-link:hover,
+.navbar-landing .navbar-nav .nav-item .nav-link:hover,
+.navbar-landing .navbar-nav .nav-item .nav-link:focus {
+    color: var(--color-rojo) !important;
+}
+
+/* Estado activo: texto rojo con indicador visual */
+.navbar-landing .nav-link.active,
+.navbar-landing .navbar-nav .nav-link.active {
+    color: var(--color-rojo) !important;
+    font-weight: 600;
+    position: relative;
+}
+
+.navbar-landing .nav-link.active::after,
+.navbar-landing .navbar-nav .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-rojo);
+    border-radius: 2px;
+}
+
+.navbar-landing .btn-primary {
+    box-shadow: 0 2px 8px rgba(220, 20, 60, 0.25);
+}
+
+/* ===== BOTONES PRINCIPALES ===== */
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-rojo) 0%, var(--color-rojo-oscuro) 100%) !important;
+    border-color: var(--color-rojo-oscuro) !important;
+    color: white !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-rojo-oscuro) 0%, var(--color-rojo) 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 20, 60, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--color-dorado) 0%, var(--color-dorado-oscuro) 100%) !important;
+    border-color: var(--color-dorado-oscuro) !important;
+    color: var(--color-negro) !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, var(--color-dorado-oscuro) 0%, var(--color-dorado) 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+    color: var(--color-negro) !important;
+}
+
+/* Botón de WhatsApp - Verde específico */
+.btn-success .ri-whatsapp-line,
+a.btn-success .ri-whatsapp-line,
+.btn-success.btn-whatsapp .ri-whatsapp-line,
+a.btn-success.btn-whatsapp .ri-whatsapp-line,
+.btn-success.btn-whatsapp i,
+a.btn-success.btn-whatsapp i {
+    color: white !important;
+}
+
+.btn-success.btn-whatsapp,
+a.btn-success.btn-whatsapp {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%) !important;
+    border-color: #128C7E !important;
+    color: white !important;
+}
+
+.btn-success.btn-whatsapp:hover,
+a.btn-success.btn-whatsapp:hover,
+.btn-success.btn-whatsapp:focus,
+a.btn-success.btn-whatsapp:focus {
+    background: linear-gradient(135deg, #128C7E 0%, #25D366 100%) !important;
+    color: white !important;
+    border-color: #128C7E !important;
+}
+
+.btn-success.btn-whatsapp:hover .ri-whatsapp-line,
+a.btn-success.btn-whatsapp:hover .ri-whatsapp-line,
+.btn-success.btn-whatsapp:hover i,
+a.btn-success.btn-whatsapp:hover i {
+    color: white !important;
+}
+
+/* Icono de WhatsApp en footer y otros lugares */
+.ri-whatsapp-line {
+    color: #25D366 !important;
+}
+
+.btn-outline-primary {
+    border-color: var(--color-rojo) !important;
+    color: var(--color-rojo) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-rojo) !important;
+    border-color: var(--color-rojo) !important;
+    color: white !important;
+}
+
+/* ===== TÍTULOS Y TEXTOS ===== */
+.text-primary {
+    color: var(--color-rojo) !important;
+}
+
+.text-success {
+    color: var(--color-dorado-oscuro) !important;
+}
+
+.text-warning {
+    color: var(--color-dorado) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-negro);
+}
+
+h1 .text-success,
+h2 .text-success,
+h3 .text-success {
+    color: var(--color-dorado-oscuro) !important;
+}
+
+/* ===== HERO SECTION ===== */
+.hero-section {
+    background: linear-gradient(135deg, var(--color-gris-claro) 0%, #ffffff 100%);
+    position: relative;
+}
+
+.hero-section .bg-overlay {
+    background: linear-gradient(135deg, rgba(220, 20, 60, 0.05) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+/* Contador regresivo principal */
+#countdown-hero .bg-primary-subtle {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+}
+
+#countdown-hero .text-primary {
+    color: var(--color-rojo) !important;
+}
+
+.card.border-success {
+    border-color: var(--color-dorado) !important;
+}
+
+.card.border-success .text-success {
+    color: var(--color-dorado-oscuro) !important;
+}
+
+/* ===== CARDS DE RIFAS ===== */
+.card.ribbon-box {
+    border: 2px solid rgba(220, 20, 60, 0.2);
+    transition: all 0.3s ease;
+}
+
+.card.ribbon-box:hover {
+    border-color: var(--color-rojo);
+    box-shadow: 0 8px 25px rgba(220, 20, 60, 0.2);
+    transform: translateY(-5px);
+}
+
+.ribbon-success {
+    background-color: var(--color-dorado) !important;
+    color: var(--color-negro) !important;
+}
+
+.ribbon-success::before {
+    border-color: var(--color-dorado-oscuro) transparent transparent var(--color-dorado-oscuro) !important;
+}
+
+/* Avatar con icono de ticket */
+.avatar-title.bg-primary {
+    background: linear-gradient(135deg, var(--color-rojo) 0%, var(--color-rojo-oscuro) 100%) !important;
+}
+
+/* Progress bar */
+.progress-bar.bg-success {
+    background: linear-gradient(90deg, var(--color-dorado) 0%, var(--color-dorado-oscuro) 100%) !important;
+}
+
+/* ===== BADGES ===== */
+.badge.bg-success {
+    background-color: var(--color-dorado) !important;
+    color: var(--color-negro) !important;
+}
+
+.badge.bg-primary {
+    background-color: var(--color-rojo) !important;
+    color: white !important;
+}
+
+.badge.bg-info-subtle {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+    color: var(--color-rojo) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--color-dorado) !important;
+    color: var(--color-negro) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--color-gris-oscuro) !important;
+    color: white !important;
+}
+
+/* ===== SECCIONES ===== */
+.bg-primary {
+    background: linear-gradient(135deg, var(--color-rojo) 0%, var(--color-rojo-oscuro) 100%) !important;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, var(--color-dorado) 0%, var(--color-dorado-oscuro) 100%) !important;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, var(--color-rojo) 0%, var(--color-dorado) 100%) !important;
+}
+
+/* ===== ICONOS ===== */
+.text-success i,
+.text-primary i {
+    color: inherit;
+}
+
+/* ===== FOOTER ===== */
+.custom-footer {
+    background: linear-gradient(135deg, var(--color-negro) 0%, var(--color-gris-oscuro) 100%) !important;
+}
+
+.custom-footer .text-white {
+    color: white !important;
+}
+
+.custom-footer .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.custom-footer a {
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.3s ease;
+}
+
+.custom-footer a:hover {
+    color: var(--color-dorado) !important;
+}
+
+/* ===== MODAL DE COMPRA ===== */
+.modal-header.bg-success-subtle {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    border-bottom: 2px solid var(--color-dorado);
+}
+
+.modal-header.bg-primary-subtle {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+    border-bottom: 2px solid var(--color-rojo);
+}
+
+/* Nav pills en modal */
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, var(--color-rojo) 0%, var(--color-rojo-oscuro) 100%) !important;
+    color: white !important;
+}
+
+.nav-pills .nav-link {
+    color: var(--color-rojo);
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: rgba(220, 20, 60, 0.1);
+    color: var(--color-rojo-oscuro);
+}
+
+/* Iconos en los tabs del modal - Fondo blanco e icono rojo cuando está activo */
+.nav-pills .nav-link.active i,
+.nav-pills .nav-link.active .bg-soft-primary {
+    background-color: white !important;
+    color: var(--color-rojo) !important;
+}
+
+/* Iconos en los tabs del modal - Fondo rojo claro e icono rojo cuando NO está activo */
+.nav-pills .nav-link:not(.active) i,
+.nav-pills .nav-link:not(.active) .bg-soft-primary {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+    color: var(--color-rojo) !important;
+}
+
+/* Asegurar que el texto del tab activo sea blanco */
+.nav-pills .nav-link.active span {
+    color: white !important;
+}
+
+/* Cards en modal */
+.card.border-success {
+    border-color: var(--color-dorado) !important;
+}
+
+.card.bg-light {
+    background-color: rgba(255, 215, 0, 0.05) !important;
+}
+
+/* Avatar en modal */
+.avatar-title.bg-primary-subtle {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+    color: var(--color-rojo) !important;
+}
+
+.avatar-title.bg-success-subtle {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    color: var(--color-dorado-oscuro) !important;
+}
+
+/* ===== ALERTS ===== */
+.alert-success {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    border-color: var(--color-dorado) !important;
+    color: var(--color-dorado-oscuro) !important;
+}
+
+.alert-info {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+    border-color: var(--color-rojo) !important;
+    color: var(--color-rojo) !important;
+}
+
+.alert-warning {
+    background-color: rgba(255, 215, 0, 0.15) !important;
+    border-color: var(--color-dorado) !important;
+    color: var(--color-dorado-oscuro) !important;
+}
+
+/* ===== CONTADORES REGRESIVOS ===== */
+/* Contador en cards de rifas - Rojo */
+.countdown-rifa .text-warning,
+.countdown-rifa .fw-bold.text-warning,
+.countdown-rifa .countdown-days,
+.countdown-rifa .countdown-hours,
+.countdown-rifa .countdown-minutes,
+.countdown-rifa .countdown-seconds,
+.countdown-rifa .countdown-separator {
+    color: var(--color-rojo) !important;
+}
+
+/* Fondo del contador en cards de rifas */
+.countdown-card-rifa,
+.countdown-card-rifa.bg-warning-subtle {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+    border-color: rgba(220, 20, 60, 0.2) !important;
+}
+
+/* Otros contadores (mantener dorado si es necesario) */
+.card.bg-warning-subtle:not(.countdown-card-rifa) {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    border-color: var(--color-dorado) !important;
+}
+
+/* ===== LINKS ===== */
+a.text-primary {
+    color: var(--color-rojo) !important;
+}
+
+a.text-primary:hover {
+    color: var(--color-rojo-oscuro) !important;
+}
+
+/* ===== TABLAS ===== */
+.table-active {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+}
+
+/* ===== INPUTS Y FORMULARIOS ===== */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-rojo) !important;
+    box-shadow: 0 0 0 0.25rem rgba(220, 20, 60, 0.25) !important;
+}
+
+/* ===== BOTONES DE ACCIÓN SECUNDARIOS ===== */
+.btn-light:hover {
+    background-color: rgba(220, 20, 60, 0.1) !important;
+    border-color: var(--color-rojo) !important;
+    color: var(--color-rojo) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--color-gris-oscuro) !important;
+    border-color: var(--color-gris-oscuro) !important;
+    color: white !important;
+}
+
+/* ===== ESTADÍSTICAS ===== */
+.counter-value.text-success {
+    color: var(--color-dorado-oscuro) !important;
+}
+
+/* ===== ICONOS ESPECÍFICOS ===== */
+/* Icono de contacto en FAQs - usar color primario en lugar de success */
+.ri-shield-keyhole-line.text-success {
+    color: var(--color-rojo) !important;
+}
+
+/* Icono de WhatsApp siempre verde */
+i.ri-whatsapp-line,
+.ri-whatsapp-line {
+    color: #25D366 !important;
+}
+
+/* ===== SOBRESCRIBIR ESTILOS DE APP.MIN.CSS PARA NAVBAR ===== */
+/* Asegurar que el estado activo siempre sea rojo, no verde */
+.navbar-landing .navbar-nav .nav-item .nav-link.active,
+.navbar-landing .navbar-nav .nav-item .nav-link.active:hover,
+.navbar-landing .navbar-nav .nav-item .nav-link.active:focus {
+    color: var(--color-rojo) !important;
+}
+
+/* Sobrescribir cualquier estilo que pueda estar aplicando verde */
+.navbar-landing .navbar-nav .nav-item .nav-link.active.text-success,
+.navbar-landing .navbar-nav .nav-item .nav-link.active[class*="success"],
+.navbar-landing .navbar-nav .nav-item .nav-link:hover.text-success {
+    color: var(--color-rojo) !important;
+}
+
+/* Asegurar que el hover nunca sea verde, siempre rojo */
+.navbar-landing .navbar-nav .nav-item .nav-link:hover:not(.active) {
+    color: var(--color-rojo) !important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .btn-primary,
+    .btn-success {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .navbar-landing .nav-link.active::after,
+    .navbar-landing .navbar-nav .nav-link.active::after {
+        bottom: -3px;
+    }
+}

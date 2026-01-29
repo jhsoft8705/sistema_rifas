@@ -11,7 +11,7 @@ $base_url = Enrutamiento::dominio();
     <meta charset="utf-8" />
     <title>Sig In | Rifas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="Sistema de planillas" name="description" />
+    <meta content="Sistema profesional de gestión de rifas y sorteos" name="description" />
     <meta content="Themesbrand" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="assets/images/favicon.ico">
@@ -50,8 +50,8 @@ $base_url = Enrutamiento::dominio();
                                         <div class="bg-overlay"></div>
                                         <div class="position-relative h-100 d-flex flex-column">
                                             <div class="mb-4">
-                                                <a href="index.html" class="d-block">
-                                                    <img src="assets/images/logo.png" alt="" height="60">
+                                                <a href="admin-login" class="d-block">
+                                                    <img src="assets/images/9d2b0233-c9e7-448a-b617-8a096bb41049.png" alt="" height="250">
                                                 </a>
                                             </div>
                                             <div class="mt-auto">
@@ -72,19 +72,19 @@ $base_url = Enrutamiento::dominio();
                                                     </div>
                                                     <div class="carousel-inner text-center text-white-50 pb-5">
                                                         <div class="carousel-item active">
-                                                            <p class="fs-15 fst-italic">"Nuestro sistema de asistencia y
-                                                                planillas facilita la gestión del personal de manera
-                                                                rápida y segura."</p>
+                                                            <p class="fs-15 fst-italic">"Gestiona tus rifas y sorteos de manera
+                                                                profesional, rápida y segura. Crea premios, organiza rifas y
+                                                                realiza sorteos transparentes."</p>
                                                         </div>
                                                         <div class="carousel-item">
-                                                            <p class="fs-15 fst-italic">"Con CAFED promovemos la
-                                                                transparencia y eficiencia en la administración
-                                                                educativa."</p>
+                                                            <p class="fs-15 fst-italic">"Sistema completo para la gestión de rifas:
+                                                                desde la creación de premios hasta el sorteo final con total
+                                                                transparencia y control."</p>
                                                         </div>
                                                         <div class="carousel-item">
-                                                            <p class="fs-15 fst-italic">"Tecnología al servicio de la
-                                                                educación: control, organización y resultados en tiempo
-                                                                real."</p>
+                                                            <p class="fs-15 fst-italic">"Tecnología al servicio de tus rifas: control
+                                                                de tickets, gestión de premios, sorteos en vivo y seguimiento
+                                                                de ganadores en tiempo real."</p>
                                                         </div>
                                                     </div>
 
@@ -194,9 +194,8 @@ $base_url = Enrutamiento::dominio();
                     <div class="col-lg-12">
                         <div class="text-center">
                             <p class="mb-0">&copy;
-                                <script>document.write(new Date().getFullYear())</script> CAFED - Comité de
-                                Administración del Fondo Educativo del Callao.
-                                </i>
+                                <script>document.write(new Date().getFullYear())</script> Sistema de Gestión de Rifas - 
+                                Todos los derechos reservados.
                             </p>
                         </div>
                     </div>

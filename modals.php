@@ -539,11 +539,11 @@
                                                                         </tr>
                                                                         <tr>
                                                                             <td class="text-muted">Precio por Ticket:</td>
-                                                                            <td class="text-end" id="resumen_precio">S/ 0.00</td>
+                                                                            <td class="text-end" id="resumen_precio">0.00</td>
                                                                         </tr>
                                                                         <tr class="border-top">
                                                                             <td class="fw-semibold fs-15">Total a Pagar:</td>
-                                                                            <td class="text-end fw-bold text-success fs-18" id="resumen_total">S/ 0.00</td>
+                                                                            <td class="text-end fw-bold text-success fs-18" id="resumen_total">0.00</td>
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -610,7 +610,7 @@
                                                     <tbody>
                                                         <tr>
                                                             <td class="text-muted">Precio por Ticket:</td>
-                                                            <td class="text-end fw-semibold">S/ <span id="precio_ticket">0.00</span></td>
+                                                            <td class="text-end fw-semibold"><span id="precio_ticket">0.00</span></td>
                                                         </tr>
                                                         <tr>
                                                             <td class="text-muted">Cantidad:</td>
@@ -628,7 +628,7 @@
                                                             <th class="fs-15">Total:</th>
                                                             <th class="text-end">
                                                                 <span class="fw-semibold text-success fs-18">
-                                                                    S/ <span id="total_pagar">0.00</span>
+                                                                    <span id="total_pagar">0.00</span>
                                                                 </span>
                                                             </th>
                                                         </tr>
