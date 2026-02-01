@@ -252,6 +252,43 @@ class Premio extends Conectar
     }
 
     /**
+     * Listar premios destacados (para landing page pública)
+     */
+    public function listar_premios_destacados(?int $sede_id = null, ?int $limite = 6): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL list_premios_destacados(?, ?)";
+            $query = $conectar->prepare($sql);
+            
+            // Si no se proporciona sede_id, usar 1 por defecto (o la primera sede)
+            if ($sede_id === null) {
+                $sede_id = 1; // Por defecto sede 1
+            }
+            
+            $query->bindValue(1, $sede_id, PDO::PARAM_INT);
+            $this->bindNullable($query, 2, $limite, PDO::PARAM_INT);
+            $query->execute();
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+
+            return [
+                'ok' => true,
+                'msj' => !empty($data) ? 'Premios destacados obtenidos correctamente' : 'No hay premios destacados',
+                'data' => $data
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en listar_premios_destacados: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener los premios destacados',
+                'data' => [],
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Helper para bindear valores opcionales
      */
     private function bindNullable(PDOStatement $statement, int $position, $value, int $type): void

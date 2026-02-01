@@ -121,11 +121,13 @@ function inicializarTablas() {
                 data: null,
                 className: 'text-center',
                 orderable: false,
-                width: '280px',
+                width: '340px',
                 render: (_, __, row) => {
                     const esCerrada = row.estado === 'CERRADA' || row.estado === 'FINALIZADA';
+                    const baseUrl = window.BASE_URL || '';
+                    const urlPublicidad = `${baseUrl}/admin-rifas-publicidad?rifa_id=${row.id}`;
                     return `
-                    <div class="d-flex gap-2 justify-content-center">
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
                         ${!esCerrada ? `
                         <button class="btn btn-sm btn-primary btn-editar" data-id="${row.id}" title="Editar" style="min-width: 80px;">
                             <i class="ri-edit-2-line me-1"></i>Editar
@@ -134,6 +136,9 @@ function inicializarTablas() {
                         <button class="btn btn-sm btn-outline-primary btn-premios" data-id="${row.id}" title="Premios" style="min-width: 80px;">
                             <i class="ri-gift-line me-1"></i>Premios
                         </button>
+                        <a href="${urlPublicidad}" class="btn btn-sm btn-outline-info btn-publicidad" title="Imprimir en publicidad" style="min-width: 80px;">
+                            <i class="ri-megaphone-line me-1"></i>Publicidad
+                        </a>
                         ${!esCerrada ? `
                         <button class="btn btn-sm btn-outline-warning btn-cerrar" data-id="${row.id}" title="Cerrar Rifa" style="min-width: 80px;">
                             <i class="ri-lock-line me-1"></i>Cerrar
@@ -451,9 +456,10 @@ async function abrirModalRifa(detalle = null) {
         $('#texto_promocional').val(detalle.texto_promocional || '');
         $('#reglas_participacion').val(detalle.reglas_participacion || '');
         $('#terminos_rifa').val(detalle.terminos_condiciones || '');
-        $('#mostrar_contador').val(detalle.mostrar_contador || 1);
-        $('#mostrar_participantes').val(detalle.mostrar_participantes || 1);
-        $('#mostrar_tickets_vendidos').val(detalle.mostrar_tickets_vendidos || 1);
+        // Valores 0 y 1: no usar || porque 0 es falsy y se reemplazaría por 1
+        $('#mostrar_contador').val(detalle.mostrar_contador !== undefined && detalle.mostrar_contador !== null ? String(detalle.mostrar_contador) : '1');
+        $('#mostrar_participantes').val(detalle.mostrar_participantes !== undefined && detalle.mostrar_participantes !== null ? String(detalle.mostrar_participantes) : '1');
+        $('#mostrar_tickets_vendidos').val(detalle.mostrar_tickets_vendidos !== undefined && detalle.mostrar_tickets_vendidos !== null ? String(detalle.mostrar_tickets_vendidos) : '1');
         $('#permitir_seleccion_numero').prop('checked', detalle.permitir_seleccion_numero == 1);
         $('#asignacion_automatica').prop('checked', detalle.asignacion_automatica == 1);
         setFechaCampo('fecha_inicio_venta', formatearFechaInput(detalle.fecha_inicio_venta));

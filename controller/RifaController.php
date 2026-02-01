@@ -56,6 +56,9 @@ class RifaController
             case 'getPublicas':
                 $this->listar_rifas_publicas();
                 break;
+            case 'proximoSorteo':
+                $this->get_proximo_sorteo();
+                break;
             case 'generarNumeros':
                 $this->generar_numeros_rifa();
                 break;
@@ -521,6 +524,23 @@ class RifaController
             error_log("Error en listar_rifas_publicas: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al obtener las rifas públicas']);
+        }
+    }
+
+    /**
+     * Próximo sorteo (ligero, para hero landing - carga rápida)
+     */
+    private function get_proximo_sorteo(): void
+    {
+        try {
+            $sede_id = isset($_GET['sede_id']) ? (int) $_GET['sede_id'] : null;
+            $resultado = $this->rifa->get_proximo_sorteo($sede_id);
+            http_response_code($resultado['ok'] ? 200 : 404);
+            echo json_encode($resultado);
+        } catch (Exception $e) {
+            error_log("Error en get_proximo_sorteo: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener próximo sorteo', 'data' => null]);
         }
     }
 

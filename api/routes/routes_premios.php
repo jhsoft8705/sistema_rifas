@@ -12,6 +12,7 @@ function RoutesPremios(string $url, string $method): void
     $routes = [
         'api/premios/getAll'   => ['GET'],
         'api/premios/getById'  => ['GET'],
+        'api/premios/destacados' => ['GET'], // Ruta pública para premios destacados
         'api/premios/register' => ['POST'],
         'api/premios/update'   => ['PUT', 'POST'],
         'api/premios/delete'   => ['DELETE', 'POST']
@@ -47,6 +48,9 @@ function RoutesPremios(string $url, string $method): void
             break;
         case 'api/premios/getById':
             $controller->handleRequest('getById');
+            break;
+        case 'api/premios/destacados':
+            $controller->handleRequest('destacados');
             break;
         case 'api/premios/register':
             $controller->handleRequest('register');

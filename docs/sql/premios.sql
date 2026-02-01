@@ -344,6 +344,68 @@ proc: BEGIN
     SET p_mensaje = 'Premio eliminado correctamente.';
 END //
 
+-- 6. PROCEDURE PARA OBTENER PREMIOS DESTACADOS (Para landing page)
+DROP PROCEDURE IF EXISTS list_premios_destacados //
+CREATE PROCEDURE list_premios_destacados (
+    IN p_sede_id INT,
+    IN p_limite INT
+)
+BEGIN
+    DECLARE v_limite INT DEFAULT 6;
+    
+    -- Si p_limite es NULL o menor a 1, usar el valor por defecto
+    IF p_limite IS NULL OR p_limite < 1 THEN
+        SET v_limite = 6;
+    ELSE
+        SET v_limite = p_limite;
+    END IF;
+    
+    SELECT
+        p.id,
+        p.sede_id,
+        s.nombre AS sede_nombre,
+        p.categoria_id,
+        cp.nombre AS categoria_nombre,
+        p.codigo,
+        p.nombre,
+        p.descripcion,
+        p.valor_estimado,
+        p.imagen_principal,
+        p.imagen_secundaria,
+        p.galeria_imagenes,
+        p.video_url,
+        p.marca,
+        p.modelo,
+        p.color,
+        p.especificaciones,
+        p.terminos_condiciones,
+        p.restricciones,
+        p.es_destacado,
+        p.orden_visualizacion,
+        p.estado,
+        -- Verificar si tiene rifas activas asociadas
+        CASE 
+            WHEN EXISTS (
+                SELECT 1 FROM rifas_premios rp
+                INNER JOIN rifas r ON rp.rifa_id = r.id
+                WHERE rp.premio_id = p.id
+                  AND r.sede_id = p.sede_id
+                  AND r.estado IN ('PUBLICADA', 'EN_VENTA')
+                  AND r.estado_activo = 1
+                  AND rp.estado = 1
+            ) THEN 1
+            ELSE 0
+        END AS tiene_rifas_activas
+    FROM premios p
+    INNER JOIN sedes s ON p.sede_id = s.id
+    LEFT JOIN categorias_premios cp ON p.categoria_id = cp.id
+    WHERE p.sede_id = p_sede_id
+      AND p.es_destacado = 1
+      AND p.estado = 1
+    ORDER BY p.orden_visualizacion ASC, p.fecha_creacion DESC
+    LIMIT v_limite;
+END //
+
 DELIMITER ;
 
 

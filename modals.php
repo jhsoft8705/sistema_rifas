@@ -341,15 +341,15 @@
                                                                         </div>
                                                                     </div>
                                                                     <h6 class="mb-3">Yape</h6>
-                                                                    <img src="assets/images/qr/yape-qr.png" alt="QR Yape" 
+                                                                    <img src="assets/images/landing/qr_dale.png" alt="QR Yape" 
                                                                          class="img-fluid rounded border mb-2" 
-                                                                         style="max-width: 120px; height: auto;"
+                                                                         style="max-width: 140px; height: auto;"
                                                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                                                     <div class="alert alert-secondary border-0 p-2" style="display: none;">
                                                                         <small><i class="ri-qr-code-line"></i> QR no disponible</small>
                                                                     </div>
                                                                     <p class="mb-1 small text-muted">
-                                                                        Número: <strong class="text-dark">519 873 862</strong>
+                                                                        Número: <strong class="text-dark">51 987 386 463</strong>
                                                                     </p>
                                                                     <small class="text-success">
                                                                         <i class="ri-qr-scan-line"></i> Escanea el QR o usa el número
@@ -368,15 +368,15 @@
                                                                         </div>
                                                                     </div>
                                                                     <h6 class="mb-3">Plin</h6>
-                                                                    <img src="assets/images/qr/plin-qr.png" alt="QR Plin" 
+                                                                    <img src="assets/images/landing/qr_plim.png" alt="QR Plin" 
                                                                          class="img-fluid rounded border mb-2" 
-                                                                         style="max-width: 120px; height: auto;"
+                                                                         style="max-width: 140px; height: auto;"
                                                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                                                     <div class="alert alert-secondary border-0 p-2" style="display: none;">
                                                                         <small><i class="ri-qr-code-line"></i> QR no disponible</small>
                                                                     </div>
                                                                     <p class="mb-1 small text-muted">
-                                                                        Número: <strong class="text-dark">987 555 555</strong>
+                                                                        Número: <strong class="text-dark">51 905 573 536</strong>
                                                                     </p>
                                                                     <small class="text-info">
                                                                         <i class="ri-qr-scan-line"></i> Escanea el QR o usa el número
@@ -386,7 +386,7 @@
                                                         </div>
                                                         
                                                         <!-- Interbank -->
-                                                        <div class="col-lg-6 col-sm-6">
+                                                        <div hidden class="col-lg-6 col-sm-6">
                                                             <div class="card border shadow-none h-100">
                                                                 <div class="card-body p-3">
                                                                     <div class="d-flex align-items-center mb-3">
@@ -408,7 +408,7 @@
                                                         </div>
                                                         
                                                         <!-- BCP -->
-                                                        <div class="col-lg-6 col-sm-6">
+                                                        <div hidden class="col-lg-6 col-sm-6">
                                                             <div class="card border shadow-none h-100">
                                                                 <div class="card-body p-3">
                                                                     <div class="d-flex align-items-center mb-3">

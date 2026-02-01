@@ -6,7 +6,7 @@ $base_url = Enrutamiento::dominio();
     <!-- LOGO -->
     <div class="navbar-brand-box">
         <!-- Dark Logo-->
-        <a href="<?= $base_url ?>/views/dashboard" class="logo logo-dark">
+        <a href="<?= $base_url ?>/admin-rifas" class="logo logo-dark">
             <span class="logo-sm">
                 <img src="<?= $base_url ?>/assets/images/logos/logo.png" alt="" height="22">
             </span>
@@ -15,7 +15,7 @@ $base_url = Enrutamiento::dominio();
             </span>
         </a>
         <!-- Light Logo-->
-        <a href="<?= $base_url ?>/views/dashboard" class="logo logo-light">
+        <a href="<?= $base_url ?>/admin-rifas" class="logo logo-light">
             <span class="logo-sm">
                 <img src="<?= $base_url ?>/assets/images/logos/logo.png" alt="" height="22">
             </span>

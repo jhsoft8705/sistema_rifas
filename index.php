@@ -26,6 +26,23 @@ require_once __DIR__ . "/config/Enrutamiento.php";
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <!-- Landing Rifas Theme CSS -->
     <link href="assets/css/landing-rifas.css" rel="stylesheet" type="text/css" />
+    <style>
+        /* Premios destacados: ribbon "Destacado" 3px más abajo y fondo pegado a la esquina del card */
+        #contenedor_premios_destacados .ribbon-box { overflow: visible; }
+        #contenedor_premios_destacados .ribbon-box .card-body { overflow: visible; }
+        #contenedor_premios_destacados .ribbon-premio-destacado {
+            top: 8px !important;
+            left: -1px !important;
+            background: linear-gradient(135deg, var(--color-dorado, #FFD700) 0%, var(--color-dorado-oscuro, #DAA520) 100%) !important;
+            color: #000 !important;
+            font-weight: 600;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 2px 3px 8px rgba(0,0,0,0.2);
+        }
+        /* Vista previa (modal visor): fondo oscuro pegado al contenido */
+        #modal_visor_imagen_premio .modal-content.bg-dark { background: #1a1a1a !important; }
+        #modal_visor_imagen_premio .modal-body { background: #0d0d0d; min-height: 60vh; }
+    </style>
 
  <!-- SweetAlert2 CSS --> 
 <link href="assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css">
@@ -98,11 +115,11 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                                 <a href="#como-participar" class="btn btn-success btn-lg"><i class="ri-question-line align-middle me-1"></i> ¿Cómo Participar?</a>
                             </div>
 
-                            <!-- Contador Regresivo Principal -->
-                            <div class="mt-5">
+                            <!-- Contador Regresivo Principal (próximo sorteo = rifa con fecha más cercana) -->
+                            <div class="mt-5" id="hero-countdown-section">
                                 <div class="card border border-success shadow-lg mx-auto" style="max-width: 600px;">
                                     <div class="card-body text-center py-2">
-                                        <h5 class="text-success mb-3"><i class="ri-time-line"></i> Próximo Sorteo: <strong>Rifa iPhone 15 Pro Max</strong></h5>
+                                        <h5 class="text-success mb-3"><i class="ri-time-line"></i> Próximo Sorteo: <strong id="hero-sorteo-nombre">Cargando...</strong></h5>
                                         <div id="countdown-hero" class="d-flex justify-content-center gap-3 mb-3">
                                             <div class="text-center">
                                                 <div class="bg-primary-subtle rounded p-3" style="min-width: 80px;">
@@ -129,7 +146,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="mb-0 text-muted"><i class="ri-calendar-event-line"></i> Sorteo: 31 de Diciembre 2025</p>
+                                        <p class="mb-0 text-muted"><i class="ri-calendar-event-line"></i> <span id="hero-sorteo-fecha">Sorteo: --</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -145,25 +162,25 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                             <div class="carousel slide carousel-fade" data-bs-ride="carousel">
                                 <div class="carousel-inner shadow-lg p-2 bg-white rounded">
                                     <div class="carousel-item active" data-bs-interval="2000">
-                                        <img src="assets/images/demos/default.png" class="d-block w-100" alt="...">
+                                        <img src="assets/images/landing/img-home.jpg" class="d-block w-100" alt="...">
                                     </div>
                                     <div class="carousel-item" data-bs-interval="2000">
-                                        <img src="assets/images/demos/saas.png" class="d-block w-100" alt="...">
+                                        <img src="assets/images/landing/img-home.jpg" class="d-block w-100" alt="...">
                                     </div>
                                     <div class="carousel-item" data-bs-interval="2000">
-                                        <img src="assets/images/demos/material.png" class="d-block w-100" alt="...">
+                                        <img src="assets/images/landing/img-home.jpg" class="d-block w-100" alt="...">
+                                    </div>
+                                     <div class="carousel-item" data-bs-interval="2000">
+                                        <img src="assets/images/landing/img-home.jpg" class="d-block w-100" alt="...">
                                     </div>
                                     <div class="carousel-item" data-bs-interval="2000">
-                                        <img src="assets/images/demos/minimal.png" class="d-block w-100" alt="...">
+                                        <img src="assets/images/landing/img-home.jpg" class="d-block w-100" alt="...">
                                     </div>
                                     <div class="carousel-item" data-bs-interval="2000">
-                                        <img src="assets/images/demos/creative.png" class="d-block w-100" alt="...">
+                                        <img src="assets/images/landing/img-home.jpg" class="d-block w-100" alt="...">
                                     </div>
                                     <div class="carousel-item" data-bs-interval="2000">
-                                        <img src="assets/images/demos/modern.png" class="d-block w-100" alt="...">
-                                    </div>
-                                    <div class="carousel-item" data-bs-interval="2000">
-                                        <img src="assets/images/demos/interactive.png" class="d-block w-100" alt="...">
+                                        <img src="assets/images/landing/img-home.jpg" class="d-block w-100" alt="...">
                                     </div>
                                 </div>
                             </div>
@@ -269,7 +286,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
 
         <?php require_once __DIR__ . '/modals.php'; ?>
 
-        <!-- start premios -->
+        <!-- start premios destacados -->
         <section class="section bg-light py-5" id="premios">
             <div class="container">
                 <div class="row justify-content-center mb-5">
@@ -281,51 +298,30 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                     </div>
                 </div>
 
-                <div class="row align-items-center gy-4">
-                    <div class="col-lg-6 col-sm-7 mx-auto">
-                        <div>
-                            <img src="assets/images/landing/features/img-1.png" alt="" class="img-fluid mx-auto">
+                <div class="row g-4" id="contenedor_premios_destacados">
+                    <!-- Los premios destacados se cargarán dinámicamente desde la API -->
+                    <div class="col-12">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando premios destacados...</span>
+                            </div>
+                            <p class="text-muted mt-2">Cargando premios destacados...</p>
                         </div>
                     </div>
-                    <div class="col-lg-6">
-                        <div class="text-muted">
-                            <div class="avatar-sm icon-effect mb-4">
-                                <div class="avatar-title bg-transparent rounded-circle text-success h1">
-                                    <i class="ri-gift-2-line fs-36"></i>
-                                </div>
-                            </div>
-                            <h3 class="mb-3 fs-20">Premios de Alta Calidad</h3>
-                            <p class="mb-4 ff-secondary fs-16">Todos nuestros premios son originales y nuevos. Trabajamos con las mejores marcas para garantizar tu satisfacción.</p>
-
-                            <div class="row pt-3">
-                                <div class="col-4">
-                                    <div class="text-center">
-                                        <h4><i class="ri-smartphone-line text-success"></i></h4>
-                                        <p>Electrónica</p>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="text-center">
-                                        <h4><i class="ri-car-line text-primary"></i></h4>
-                                        <p>Vehículos</p>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="text-center">
-                                        <h4><i class="ri-flight-takeoff-line text-warning"></i></h4>
-                                        <p>Viajes</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- end col -->
                 </div>
                 <!-- end row -->
+                
+                <div class="row mt-4">
+                    <div class="col-lg-12">
+                        <div class="text-center">
+                            <a href="#rifas" class="btn btn-primary btn-lg"><i class="ri-ticket-2-line me-1"></i> Ver Todas las Rifas Activas</a>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- end container -->
         </section>
-        <!-- end premios -->
+        <!-- end premios destacados -->
 
         <!-- start cta -->
         <section class="py-5 bg-success position-relative">
@@ -444,7 +440,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                     <!-- end col -->
                     <div class="col-lg-6 col-sm-7 col-10 ms-auto order-1 order-lg-2">
                         <div>
-                            <img src="assets/images/landing/features/img-2.png" alt="" class="img-fluid">
+                            <img src="assets/images/landing/como-participar.png" alt="" class="img-fluid">
                         </div>
                     </div>
                 </div>
@@ -453,7 +449,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                 <div class="row align-items-center mt-5 pt-lg-5 gy-4">
                     <div class="col-lg-6 col-sm-7 col-10 mx-auto">
                         <div>
-                            <img src="assets/images/landing/features/img-3.png" alt="" class="img-fluid">
+                             <img src="assets/images/landing/img-security-removebg-preview.png" alt="Seguridad" class="img-fluid" style="max-height: 450px;">
                         </div>
                     </div>
                     <div class="col-lg-6">
@@ -578,7 +574,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
 
                             <div class="">
                                 <a href="#contact" class="btn btn-primary btn-label rounded-pill"><i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Contáctanos</a>
-                                <a href="https://wa.me/" target="_blank" class="btn btn-success btn-whatsapp btn-label rounded-pill"><i class="ri-whatsapp-line label-icon align-middle rounded-pill fs-16 me-2"></i> WhatsApp</a>
+                                <a href="https://wa.me/51948226323" target="_blank" rel="noopener" class="btn btn-success btn-whatsapp btn-label rounded-pill"><i class="ri-whatsapp-line label-icon align-middle rounded-pill fs-16 me-2"></i> WhatsApp</a>
                             </div>
                         </div>
                     </div>
@@ -747,15 +743,15 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                         <div>
                             <div class="mt-4">
                                 <h5 class="fs-13 text-muted text-uppercase">Correo Electrónico:</h5>
-                                <div class="ff-secondary fw-semibold">info@sistemrifas.com</div>
+                                <div class="ff-secondary fw-semibold"><a href="mailto:jhsoftperu@gmail.com" class="text-body">jhsoftperu@gmail.com</a></div>
                             </div>
                             <div class="mt-4">
                                 <h5 class="fs-13 text-muted text-uppercase">WhatsApp:</h5>
-                                <div class="ff-secondary fw-semibold">+52 1 55 1234 5678</div>
+                                <div class="ff-secondary fw-semibold"><a href="https://wa.me/51948226323" target="_blank" rel="noopener" class="text-body">+51 948 226 323</a></div>
                             </div>
                             <div class="mt-4">
                                 <h5 class="fs-13 text-muted text-uppercase">Horario de Atención:</h5>
-                                <div class="ff-secondary fw-semibold">Lunes a Domingo 9:00am a 9:00pm</div>
+                                <div class="ff-secondary fw-semibold">8am a 10pm horas</div>
                             </div>
                         </div>
                     </div>
@@ -858,7 +854,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                                     </div>
                                 </form>
                                 <!-- Enlaces de contacto y transmisión (configurables) -->
-                                <input type="hidden" id="config_whatsapp" value="999999999">
+                                <input type="hidden" id="config_whatsapp" value="51948226323">
                                 <input type="hidden" id="config_tiktok" value="https://www.tiktok.com/@sistemarifas">
                             </div>
                         </div>
@@ -982,7 +978,7 @@ require_once __DIR__ . "/config/Enrutamiento.php";
                                     </a>
                                 </li>
                                 <li class="list-inline-item">
-                                    <a href="https://wa.me/5215512345678" target="_blank" class="avatar-xs d-block" title="Contáctanos por WhatsApp">
+                                    <a href="https://wa.me/51948226323" target="_blank" rel="noopener" class="avatar-xs d-block" title="Contáctanos por WhatsApp">
                                         <div class="avatar-title rounded-circle">
                                             <i class="ri-whatsapp-line"></i>
                                         </div>

@@ -25,6 +25,7 @@ $routes = [
     'admin-premios' => $base_path . '/views/premios/index.php',
     'admin-rifas' => $base_path . '/views/rifas/index.php',
     'rifas-ventas' => $base_path . '/views/rifas/ventas/index.php',
+    'admin-rifas-publicidad' => $base_path . '/views/rifas/publicidad/index.php',
     'admin-categorias' => $base_path . '/views/categorias/index.php',
     'admin-organizacion' => $base_path . '/views/organizacion/index.php',
     'admin-usuarios' => $base_path . '/views/usuarios/index.php',

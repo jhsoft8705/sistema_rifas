@@ -952,6 +952,40 @@ class Rifa extends Conectar
     }
 
     /**
+     * Obtener próximo sorteo (una sola rifa, ligero - para hero landing)
+     */
+    public function get_proximo_sorteo(?int $sede_id = null): array
+    {
+        try {
+            $conectar = parent::Conexion();
+            $sql = "CALL get_proximo_sorteo(?)";
+            $query = $conectar->prepare($sql);
+            if ($sede_id === null) {
+                $query->bindValue(1, null, PDO::PARAM_NULL);
+            } else {
+                $query->bindValue(1, $sede_id, PDO::PARAM_INT);
+            }
+            $query->execute();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+            $query->closeCursor();
+
+            return [
+                'ok' => true,
+                'msj' => $data ? 'Próximo sorteo obtenido' : 'No hay próximo sorteo',
+                'data' => $data ?: null
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en get_proximo_sorteo: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener próximo sorteo',
+                'data' => null,
+                'detalle' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Generar números de boletos para una rifa
      */
     public function generar_numeros_rifa(int $rifa_id, int $sede_id, string $creado_por): array

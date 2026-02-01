@@ -42,6 +42,7 @@ function Routes(): void
         'api/auth/login',
         'api/auth/verificar',
         'api/rifas/publicas',
+        'api/rifas/proximoSorteo',
         'api/rifas/getById',
         'api/rifas/numeros/get',
         'api/rifas/numeros/disponibles',
@@ -52,7 +53,8 @@ function Routes(): void
         'api/tickets/consultar',
         'api/tickets/uploadComprobante',
         'api/juegos/ganadoresPublicos',
-        'api/contactos/register'
+        'api/contactos/register',
+        'api/premios/destacados' // Ruta pública para premios destacados
     ];
 
     // Si NO es una ruta pública, verificar autenticación

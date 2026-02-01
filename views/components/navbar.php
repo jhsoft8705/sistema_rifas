@@ -7,7 +7,7 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
             <div class="d-flex">
                 <!-- LOGO -->
                 <div class="navbar-brand-box horizontal-logo">
-                    <a href="<?= Enrutamiento::dominio()?>/dashboard" class="logo logo-dark">
+                    <a href="<?= Enrutamiento::dominio()?>/admin-rifas" class="logo logo-dark">
                         <span class="logo-sm">
                             <img src="<?= Enrutamiento::dominio()?>/assets/images/logos/logo.png" alt="" height="22">
                         </span>
@@ -16,7 +16,7 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                         </span>
                     </a>
 
-                    <a href="<?= Enrutamiento::dominio()?>/dashboard" class="logo logo-light">
+                    <a href="<?= Enrutamiento::dominio()?>/admin-rifas" class="logo logo-light">
                         <span class="logo-sm">
                             <img src="<?= Enrutamiento::dominio()?>/assets/images/logos/logo.png" alt="" height="22">
                         </span>

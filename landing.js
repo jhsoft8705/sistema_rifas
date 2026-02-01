@@ -11,13 +11,188 @@ const LandingRifas = {
     numerosSeleccionados: [],
 
     /**
-     * Inicializar landing page
+     * Inicializar landing page.
+     * Primero se carga el próximo sorteo (hero) para que la sección principal sea rápida;
+     * luego premios, rifas y ganadores en paralelo o secuencia.
      */
     async init() {
-        await this.cargarRifasPublicas();
+        await this.cargarProximoSorteo();
+        await Promise.all([
+            this.cargarPremiosDestacados(),
+            this.cargarRifasPublicas()
+        ]);
         await this.cargarGanadoresPublicos();
         this.inicializarEventos();
         this.inicializarContadores();
+    },
+
+    /**
+     * Cargar solo el próximo sorteo (ligero) y actualizar hero. Se ejecuta primero para carga rápida.
+     */
+    async cargarProximoSorteo() {
+        const nombreEl = document.getElementById('hero-sorteo-nombre');
+        const fechaEl = document.getElementById('hero-sorteo-fecha');
+        if (!nombreEl || !fechaEl) return;
+
+        try {
+            const sede_id = 1;
+            const response = await fetch(`${this.API_BASE_URL}/rifas/proximoSorteo?sede_id=${sede_id}`);
+            const resultado = await response.json();
+
+            if (resultado.ok && resultado.data) {
+                this.actualizarHeroProximoSorteoWithData(resultado.data);
+            } else {
+                this.actualizarHeroProximoSorteoWithData(null);
+            }
+        } catch (error) {
+            console.warn('Error al cargar próximo sorteo:', error);
+            this.actualizarHeroProximoSorteoWithData(null);
+        }
+    },
+
+    /**
+     * Actualizar hero con datos del próximo sorteo (objeto o null).
+     */
+    actualizarHeroProximoSorteoWithData(proximo) {
+        const nombreEl = document.getElementById('hero-sorteo-nombre');
+        const fechaEl = document.getElementById('hero-sorteo-fecha');
+        if (!nombreEl || !fechaEl) return;
+
+        if (!proximo) {
+            nombreEl.textContent = 'Próximamente';
+            fechaEl.textContent = 'No hay sorteos programados por el momento.';
+            window.heroCountdownFecha = null;
+            return;
+        }
+
+        const nombre = proximo.descripcion || proximo.nombre || 'Próximo sorteo';
+        const fechaSorteo = this.formatearFecha(proximo.fecha_sorteo);
+
+        nombreEl.textContent = this.escapeHtml(nombre);
+        fechaEl.textContent = 'Sorteo: ' + fechaSorteo;
+
+        const fechaObj = new Date(String(proximo.fecha_sorteo).replace(' ', 'T'));
+        window.heroCountdownFecha = !isNaN(fechaObj.getTime()) ? fechaObj.getTime() : null;
+    },
+
+    /**
+     * Cargar premios destacados desde la API
+     */
+    async cargarPremiosDestacados() {
+        const contenedor = document.getElementById('contenedor_premios_destacados');
+        if (!contenedor) {
+            console.warn('Contenedor de premios destacados no encontrado');
+            return;
+        }
+
+        try {
+            const sede_id = 1; // Por defecto sede 1, se puede hacer dinámico después
+            const limite = 6; // Mostrar máximo 6 premios destacados
+            
+            console.log('Cargando premios destacados desde:', `${this.API_BASE_URL}/premios/destacados?sede_id=${sede_id}&limite=${limite}`);
+            const response = await fetch(`${this.API_BASE_URL}/premios/destacados?sede_id=${sede_id}&limite=${limite}`);
+            const resultado = await response.json();
+
+            console.log('Respuesta de premios destacados:', resultado);
+
+            if (resultado.ok && resultado.data && resultado.data.length > 0) {
+                this.renderizarPremiosDestacados(resultado.data, contenedor);
+            } else {
+                console.warn('No hay premios destacados disponibles:', resultado.msj);
+                contenedor.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="ri-gift-line fs-1"></i><p class="mt-2 mb-0">Próximamente habrá premios destacados disponibles.</p></div>';
+            }
+        } catch (error) {
+            console.error('Error al cargar premios destacados:', error);
+            contenedor.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="ri-gift-line fs-1"></i><p class="mt-2 mb-0">No se pudieron cargar los premios destacados.</p></div>';
+        }
+    },
+
+    /**
+     * Renderizar premios destacados
+     */
+    renderizarPremiosDestacados(premios, contenedor) {
+        contenedor.innerHTML = '';
+
+        premios.forEach((premio) => {
+            const card = this.crearCardPremioDestacado(premio);
+            contenedor.appendChild(card);
+        });
+    },
+
+    /**
+     * Crear card HTML para un premio destacado
+     */
+    crearCardPremioDestacado(premio) {
+        const div = document.createElement('div');
+        div.className = 'col-lg-4 col-md-6';
+        
+        const baseUrl = window.BASE_URL || '';
+        const imagenUrl = premio.imagen_principal 
+            ? (premio.imagen_principal.startsWith('http') ? premio.imagen_principal : `${baseUrl}/${premio.imagen_principal}`)
+            : `${baseUrl}/assets/images/premios/default.jpg`;
+        
+        const valorFormateado = window.Utils ? window.Utils.formatearMoneda(premio.valor_estimado || 0) : this.formatearMoneda(premio.valor_estimado || 0);
+        const tieneRifasActivas = premio.tiene_rifas_activas == 1;
+        const urlsJson = JSON.stringify([imagenUrl]).replace(/"/g, '&quot;');
+
+        div.innerHTML = `
+            <div class="card border shadow-sm h-100 ${premio.es_destacado == 1 ? 'ribbon-box' : ''}">
+                <div class="card-body p-4 position-relative">
+                    ${premio.es_destacado == 1 ? '<div class="ribbon ribbon-success ribbon-shape ribbon-premio-destacado">Destacado</div>' : ''}
+                    
+                    <!-- Imagen del Premio (clic abre vista previa) -->
+                    <div class="text-center mb-3">
+                        <div class="avatar-xl mx-auto position-relative premio-destacado-img-vista" 
+                             data-visor-url="${urlsJson}" 
+                             role="button" 
+                             tabindex="0"
+                             title="Ver imagen en grande"
+                             style="cursor: pointer;">
+                            <img src="${imagenUrl}" 
+                                 alt="${this.escapeHtml(premio.nombre)}" 
+                                 class="img-fluid rounded"
+                                 style="max-height: 200px; object-fit: cover; width: 100%; pointer-events: none;"
+                                 onerror="this.src='${baseUrl}/assets/images/premios/default.jpg'">
+                        </div>
+                    </div>
+                    
+                    <!-- Información del Premio -->
+                    <h5 class="text-center mb-2">${this.escapeHtml(premio.nombre)}</h5>
+                    ${premio.categoria_nombre ? `<p class="text-muted text-center mb-2"><small><i class="ri-price-tag-3-line"></i> ${this.escapeHtml(premio.categoria_nombre)}</small></p>` : ''}
+                    
+                    ${premio.descripcion ? `<p class="text-muted text-center mb-3 small">${this.escapeHtml(premio.descripcion.substring(0, 100))}${premio.descripcion.length > 100 ? '...' : ''}</p>` : ''}
+                    
+                    ${premio.marca || premio.modelo ? `
+                        <div class="text-center mb-3">
+                            ${premio.marca ? `<span class="badge bg-primary-subtle text-primary me-1">${this.escapeHtml(premio.marca)}</span>` : ''}
+                            ${premio.modelo ? `<span class="badge bg-info-subtle text-info">${this.escapeHtml(premio.modelo)}</span>` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="text-center mb-3">
+                        <p class="text-muted mb-1">Valor Estimado</p>
+                        <h4 class="mb-0 text-success">${valorFormateado}</h4>
+                    </div>
+                    
+                    <!-- Botón de Acción -->
+                    <div class="d-grid gap-2 mt-4">
+                        ${tieneRifasActivas ? `
+                            <a href="#rifas" class="btn btn-success w-100 btn-comprar-premio" 
+                               data-premio-id="${premio.id}"
+                               data-premio-nombre="${this.escapeHtml(premio.nombre)}">
+                                <i class="ri-shopping-cart-line me-1"></i> Comprar Tickets
+                            </a>
+                        ` : `
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="ri-time-line me-1"></i> Próximamente
+                            </button>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        return div;
     },
 
     /**
@@ -66,6 +241,39 @@ const LandingRifas = {
         setTimeout(() => {
             this.inicializarContadores();
         }, 100);
+    },
+
+    /**
+     * Actualizar sección "Próximo Sorteo" del hero con la rifa de fecha más cercana.
+     * La API devuelve rifas ordenadas por fecha_sorteo ASC, así que la primera es la próxima.
+     */
+    actualizarHeroProximoSorteo() {
+        const nombreEl = document.getElementById('hero-sorteo-nombre');
+        const fechaEl = document.getElementById('hero-sorteo-fecha');
+        const sectionEl = document.getElementById('hero-countdown-section');
+        if (!nombreEl || !fechaEl || !sectionEl) return;
+
+        if (!this.rifas || this.rifas.length === 0) {
+            nombreEl.textContent = 'Próximamente';
+            fechaEl.textContent = 'No hay sorteos programados por el momento.';
+            window.heroCountdownFecha = null;
+            return;
+        }
+
+        // La primera rifa es la de fecha de sorteo más cercana (API ordena por fecha_sorteo ASC)
+        const proximaRifa = this.rifas[0];
+        const nombre = proximaRifa.descripcion || proximaRifa.nombre || 'Próximo sorteo';
+        const fechaSorteo = this.formatearFecha(proximaRifa.fecha_sorteo);
+
+        nombreEl.textContent = this.escapeHtml(nombre);
+        fechaEl.textContent = 'Sorteo: ' + fechaSorteo;
+
+        const fechaObj = new Date(String(proximaRifa.fecha_sorteo).replace(' ', 'T'));
+        if (!isNaN(fechaObj.getTime())) {
+            window.heroCountdownFecha = fechaObj.getTime();
+        } else {
+            window.heroCountdownFecha = null;
+        }
     },
 
     /**
@@ -154,23 +362,27 @@ const LandingRifas = {
                     ${premiosHtml}
                     
                     <div class="row text-center mb-3">
-                        <div class="col-6">
+                        <div class="${rifa.mostrar_tickets_vendidos == 1 ? 'col-6' : 'col-12'}">
                             <p class="text-muted mb-1">Precio ticket</p>
                             <h5 class="mb-0 text-success">${precioFormateado}</h5>
                         </div>
+                        ${rifa.mostrar_tickets_vendidos == 1 ? `
                         <div class="col-6">
                             <p class="text-muted mb-1">Tickets disponibles</p>
                             <h5 class="mb-0 text-primary">${rifa.numeros_disponibles || 0}/${rifa.total_numeros || 0}</h5>
                         </div>
+                        ` : ''}
                     </div>
                     <p class="text-muted text-center mb-2"><i class="ri-calendar-line"></i> Sorteo: ${fechaSorteo}</p>
                     
                     ${rifa.mostrar_contador == 1 ? this.generarContadorRegresivo(rifa.fecha_sorteo, rifa.id) : ''}
                     
+                    ${rifa.mostrar_tickets_vendidos == 1 ? `
                     <div class="progress mb-3" style="height: 6px;">
                         <div class="progress-bar bg-success" role="progressbar" style="width: ${porcentajeVendido}%" 
                              aria-valuenow="${porcentajeVendido}" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
+                    ` : ''}
                     <div class="d-grid gap-2">
                         <button class="btn btn-success w-100 btn-comprar-ticket" 
                                 data-rifa-id="${rifa.id}"
@@ -298,6 +510,25 @@ const LandingRifas = {
                 const rifa = this.rifas.find(r => r.id == rifaId);
                 if (rifa) {
                     this.abrirModalPremios(rifa);
+                }
+            }
+
+            // Evento para botones de premios destacados (redirigen a #rifas)
+            if (e.target.closest('.btn-comprar-premio')) {
+                const btn = e.target.closest('.btn-comprar-premio');
+                const premioNombre = btn.dataset.premioNombre || 'este premio';
+                
+                // Scroll suave a la sección de rifas
+                const rifasSection = document.getElementById('rifas');
+                if (rifasSection) {
+                    rifasSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // Opcional: mostrar mensaje informativo
+                    if (window.Utils && window.Utils.showToast) {
+                        setTimeout(() => {
+                            window.Utils.showToast(`Busca rifas con el premio: ${premioNombre}`, 'info', 3000);
+                        }, 500);
+                    }
                 }
             }
         });
@@ -635,6 +866,19 @@ window.VisorImagenPremio = (function () {
     return { open: open };
 })();
 document.addEventListener('click', function (e) {
+    // Premios destacados: clic en la imagen abre vista previa
+    var dest = e.target && e.target.closest ? e.target.closest('#contenedor_premios_destacados .premio-destacado-img-vista') : null;
+    if (dest) {
+        var raw = dest.getAttribute('data-visor-url') || '[]';
+        try {
+            var urlsDest = typeof raw === 'string' ? JSON.parse(raw.replace(/&quot;/g, '"')) : raw;
+            if (Array.isArray(urlsDest) && urlsDest.length && window.VisorImagenPremio && window.VisorImagenPremio.open) {
+                window.VisorImagenPremio.open(urlsDest, 0);
+            }
+        } catch (err) { console.warn('Visor premio destacado:', err); }
+        return;
+    }
+    // Galería modal Ver premios: clic en miniatura abre vista previa
     var thumb = e.target && e.target.closest ? e.target.closest('#galeria_premios .premio-img-vista') : null;
     if (!thumb) return;
     var cont = thumb.closest('[data-visor-urls]');
@@ -644,6 +888,20 @@ document.addEventListener('click', function (e) {
     try { urls = JSON.parse(raw.replace(/&#39;/g, "'")); } catch (err) { try { urls = JSON.parse(raw); } catch (_) {} }
     var idx = parseInt(thumb.getAttribute('data-visor-index'), 10) || 0;
     if (window.VisorImagenPremio && window.VisorImagenPremio.open) window.VisorImagenPremio.open(urls, idx);
+});
+// Enter en imagen destacada también abre vista previa
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    var dest = e.target && e.target.closest ? e.target.closest('#contenedor_premios_destacados .premio-destacado-img-vista') : null;
+    if (!dest) return;
+    var raw = dest.getAttribute('data-visor-url') || '[]';
+    try {
+        var urlsDest = typeof raw === 'string' ? JSON.parse(raw.replace(/&quot;/g, '"')) : raw;
+        if (Array.isArray(urlsDest) && urlsDest.length && window.VisorImagenPremio && window.VisorImagenPremio.open) {
+            e.preventDefault();
+            window.VisorImagenPremio.open(urlsDest, 0);
+        }
+    } catch (err) {}
 });
 
 // Estilos CSS adicionales para el modal de compra
@@ -755,19 +1013,29 @@ document.head.appendChild(style);
 
     // Inicializar todos los contadores
     document.addEventListener('DOMContentLoaded', function() {
-        // Contador del Hero
+        // Contador del Hero: usa window.heroCountdownFecha (lo establece LandingRifas al cargar rifas)
         const heroCountdown = {
             days: document.getElementById('hero-days'),
             hours: document.getElementById('hero-hours'),
             minutes: document.getElementById('hero-minutes'),
-            seconds: document.getElementById('hero-seconds'),
-            fecha: new Date('2025-12-31T20:00:00').getTime()
+            seconds: document.getElementById('hero-seconds')
         };
 
-        // Actualizar contador del hero
+        // Actualizar contador del hero (fecha dinámica desde landing)
         function actualizarHeroCountdown() {
+            const fechaObjetivo = window.heroCountdownFecha;
+            if (!heroCountdown.days || !heroCountdown.hours || !heroCountdown.minutes || !heroCountdown.seconds) return;
+
+            if (!fechaObjetivo || typeof fechaObjetivo !== 'number') {
+                heroCountdown.days.textContent = '00';
+                heroCountdown.hours.textContent = '00';
+                heroCountdown.minutes.textContent = '00';
+                heroCountdown.seconds.textContent = '00';
+                return;
+            }
+
             const ahora = new Date().getTime();
-            const distancia = heroCountdown.fecha - ahora;
+            const distancia = fechaObjetivo - ahora;
 
             if (distancia < 0) {
                 heroCountdown.days.textContent = '00';

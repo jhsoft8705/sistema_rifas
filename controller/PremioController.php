@@ -30,6 +30,9 @@ class PremioController
             case 'getById':
                 $this->obtener_premio_por_id();
                 break;
+            case 'destacados':
+                $this->listar_premios_destacados();
+                break;
             case 'register':
                 $this->registrar_premio();
                 break;
@@ -89,6 +92,27 @@ class PremioController
             error_log("Error en obtener_premio_por_id: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al obtener el premio']);
+        }
+    }
+
+    /**
+     * Listar premios destacados (público, no requiere autenticación)
+     */
+    private function listar_premios_destacados(): void
+    {
+        try {
+            // sede_id es opcional, por defecto 1
+            $sede_id = isset($_GET['sede_id']) ? (int) $_GET['sede_id'] : 1;
+            $limite = isset($_GET['limite']) ? (int) $_GET['limite'] : 6;
+
+            $resultado = $this->premio->listar_premios_destacados($sede_id, $limite);
+
+            http_response_code($resultado['ok'] ? 200 : 404);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en listar_premios_destacados: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener los premios destacados']);
         }
     }
 

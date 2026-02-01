@@ -113,8 +113,32 @@ BEGIN
     WHERE r.estado IN ('PUBLICADA', 'EN_VENTA')
       AND r.estado_activo = 1
       AND (p_sede_id IS NULL OR r.sede_id = p_sede_id)
-      AND r.fecha_sorteo >= NOW()
+      AND r.fecha_inicio_venta <= NOW()
+      AND r.fecha_fin_venta >= NOW()
     ORDER BY r.fecha_sorteo ASC, r.fecha_creacion DESC;
+END //
+
+-- ==========================================================
+-- 1.2. OBTENER PRÓXIMO SORTEO (UNA SOLA RIFA, LIGERO - PARA HERO LANDING)
+-- ==========================================================
+DROP PROCEDURE IF EXISTS get_proximo_sorteo //
+CREATE PROCEDURE get_proximo_sorteo (
+    IN p_sede_id INT
+)
+BEGIN
+    SELECT
+        r.id,
+        r.nombre,
+        r.descripcion,
+        r.fecha_sorteo
+    FROM rifas r
+    WHERE r.estado IN ('PUBLICADA', 'EN_VENTA')
+      AND r.estado_activo = 1
+      AND (p_sede_id IS NULL OR r.sede_id = p_sede_id)
+      AND r.fecha_inicio_venta <= NOW()
+      AND r.fecha_fin_venta >= NOW()
+    ORDER BY r.fecha_sorteo ASC
+    LIMIT 1;
 END //
 
 -- ==========================================================
