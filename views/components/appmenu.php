@@ -1127,117 +1127,61 @@ $base_url = Enrutamiento::dominio();
 <script>
 /**
  * Script para ocultar elementos del menú según permisos del usuario
- * Se ejecuta cuando el DOM está listo y después de que Permisos.js esté cargado
+ * Se ejecuta UNA sola vez cuando el DOM está listo
  */
 (function() {
+    let ejecutado = false;
     let intentos = 0;
-    const maxIntentos = 50; // 5 segundos máximo
+    const maxIntentos = 30;
     
     function filtrarMenuPorPermisos() {
-        // Verificar que Auth y Permisos estén disponibles
+        if (ejecutado) return;
+        
         if (typeof Auth === 'undefined' || typeof Permisos === 'undefined') {
             intentos++;
             if (intentos < maxIntentos) {
-                setTimeout(filtrarMenuPorPermisos, 100);
-            } else {
-                console.warn('Permisos.js o Auth.js no están disponibles después de varios intentos');
+                setTimeout(filtrarMenuPorPermisos, 50);
             }
             return;
         }
 
-        // Verificar que el usuario esté autenticado
-        if (!Auth.isAuthenticated()) {
-            console.log('Usuario no autenticado, no se filtra el menú');
-            return;
-        }
+        if (!Auth.isAuthenticated()) return;
 
-        // Obtener información del usuario
+        ejecutado = true;
         const userInfo = Auth.getUserInfo();
-        const usuario = Auth.getUsuario();
-        
-        console.log('Información del usuario:', {
-            userInfo: userInfo,
-            usuario: usuario,
-            permisos: usuario ? usuario.permisos : null
-        });
-
-        // Verificar si es SUPERADMIN - si lo es, mostrar todo
-        const esSuperAdmin = Permisos.esSuperAdmin();
         const rolNombre = (userInfo && userInfo.rol_nombre) ? userInfo.rol_nombre.toUpperCase().trim() : '';
+        const esSuperAdmin = rolNombre === 'SUPERADMIN' || Permisos.esSuperAdmin();
         
-        console.log('Rol del usuario:', rolNombre, 'Es SUPERADMIN:', esSuperAdmin);
-        
-        if (esSuperAdmin || rolNombre === 'SUPERADMIN') {
-            console.log('Usuario es SUPERADMIN - mostrando todo el menú');
-            // Asegurarse de que todos los elementos estén visibles
-            document.querySelectorAll('[data-permiso]').forEach(function(el) {
-                el.style.display = '';
-            });
-            return; // No ocultar nada si es SUPERADMIN
+        if (esSuperAdmin) {
+            document.querySelectorAll('[data-permiso]').forEach(function(el) { el.style.display = ''; });
+            return;
         }
 
-        // Obtener permisos del usuario
         const permisosUsuario = Permisos.getNombresPermisos();
-        console.log('Permisos del usuario:', permisosUsuario);
-
-        // Obtener todos los elementos con atributo data-permiso
-        const elementosMenu = document.querySelectorAll('[data-permiso]');
-        console.log(`Encontrados ${elementosMenu.length} elementos del menú con atributo data-permiso`);
-        
-        let elementosOcultos = 0;
-        elementosMenu.forEach(function(elemento) {
+        document.querySelectorAll('[data-permiso]').forEach(function(elemento) {
             const permisoRequerido = elemento.getAttribute('data-permiso');
-            
-            if (!permisoRequerido) {
-                return; // Continuar si no hay permiso requerido
-            }
-
-            // Verificar si el usuario tiene el permiso
-            const tienePermiso = Permisos.tienePermiso(permisoRequerido);
-            
-            if (!tienePermiso) {
-                elemento.style.display = 'none';
-                elementosOcultos++;
-                console.log(`Ocultando elemento que requiere permiso: ${permisoRequerido}`);
-            } else {
-                // Asegurarse de que el elemento esté visible si tiene el permiso
-                elemento.style.display = '';
-            }
+            if (!permisoRequerido) return;
+            elemento.style.display = permisosUsuario.includes(permisoRequerido) ? '' : 'none';
         });
 
-        console.log(`Elementos ocultos: ${elementosOcultos} de ${elementosMenu.length}`);
-
-        // Ocultar menús padre si todos sus hijos están ocultos
-        const menusPadre = document.querySelectorAll('.menu-dropdown');
-        menusPadre.forEach(function(menu) {
+        document.querySelectorAll('.menu-dropdown').forEach(function(menu) {
             const itemsVisibles = menu.querySelectorAll('.nav-item:not([style*="display: none"])');
             if (itemsVisibles.length === 0) {
                 const padre = menu.closest('.nav-item');
                 if (padre) {
-                    // Verificar si el padre mismo tiene un permiso
                     const permisoPadre = padre.getAttribute('data-permiso');
-                    if (!permisoPadre || !Permisos.tienePermiso(permisoPadre)) {
+                    if (!permisoPadre || !permisosUsuario.includes(permisoPadre)) {
                         padre.style.display = 'none';
-                        console.log('Ocultando menú padre sin elementos visibles');
                     }
                 }
             }
         });
     }
 
-    // Ejecutar cuando el DOM esté listo
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(filtrarMenuPorPermisos, 200);
-        });
+        document.addEventListener('DOMContentLoaded', filtrarMenuPorPermisos);
     } else {
-        // Si el DOM ya está listo, ejecutar después de un delay
-        setTimeout(filtrarMenuPorPermisos, 200);
+        filtrarMenuPorPermisos();
     }
-
-    // También ejecutar después de que la página esté completamente cargada
-    window.addEventListener('load', function() {
-        setTimeout(filtrarMenuPorPermisos, 300);
-    });
 })();
 </script>

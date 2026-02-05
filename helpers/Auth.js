@@ -31,7 +31,14 @@ const Auth = {
                 })
             });
 
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Respuesta no JSON en login:', text.substring(0, 100));
+                return { ok: false, msj: 'El servidor devolvió una respuesta inválida' };
+            }
 
             if (data.ok) {
                 // Guardar en localStorage
@@ -163,7 +170,14 @@ const API = {
                 }
             });
 
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Respuesta no JSON en GET:', endpoint, text.substring(0, 100));
+                return { ok: false, msj: 'El servidor devolvió una respuesta inválida' };
+            }
 
             if (response.status === 401) {
                 console.error('Token inválido');
@@ -200,7 +214,14 @@ const API = {
                 body: JSON.stringify(body)
             });
 
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Respuesta no JSON en POST:', endpoint, text.substring(0, 100));
+                return { ok: false, msj: 'El servidor devolvió una respuesta inválida' };
+            }
 
             if (response.status === 401) {
                 console.error('Token inválido');
@@ -237,7 +258,14 @@ const API = {
                 body: JSON.stringify(body)
             });
 
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Respuesta no JSON en PUT:', endpoint, text.substring(0, 100));
+                return { ok: false, msj: 'El servidor devolvió una respuesta inválida' };
+            }
 
             if (response.status === 401) {
                 console.error('Token inválido');
@@ -273,7 +301,14 @@ const API = {
                 body: formData
             });
 
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Respuesta no JSON en POST multipart:', endpoint, text.substring(0, 100));
+                return { ok: false, msj: 'El servidor devolvió una respuesta inválida' };
+            }
 
             if (response.status === 401) {
                 console.error('Token inválido');

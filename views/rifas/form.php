@@ -164,12 +164,22 @@
                             </div>
                         </div>
                         <div class="col-12 d-none" id="contenedor_regenerar_numeros">
+                            <div class="alert alert-soft-info d-flex align-items-start gap-2 mb-2" id="info_cambio_numeros" style="display: none;">
+                                <i class="ri-information-line fs-4"></i>
+                                <div>
+                                    <strong>Cambio en numeración detectado:</strong>
+                                    <span id="texto_cambio_numeros"></span>
+                                </div>
+                            </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="regenerar_numeros" name="regenerar_numeros">
                                 <label class="form-check-label" for="regenerar_numeros">
-                                    Regenerar números automáticamente con la nueva configuración
+                                    <strong>Regenerar completamente</strong> (elimina todos los números y crea nuevos - solo si NO hay tickets vendidos)
                                 </label>
                             </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ri-lightbulb-line"></i> Si solo cambias el rango (ej: de 1-20 a 1-30), los números nuevos se agregarán automáticamente sin necesidad de marcar esta opción.
+                            </small>
                         </div>
                     </div>
                 </div>

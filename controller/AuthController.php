@@ -51,7 +51,14 @@ class AuthController
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 http_response_code(400);
-                echo json_encode(['ok' => false, 'msj' => 'JSON inválido']);
+                echo json_encode(['ok' => false, 'msj' => 'JSON inválido', 'data' => null]);
+                return;
+            }
+
+            // Validar que se enviaron datos
+            if (!is_array($input)) {
+                http_response_code(400);
+                echo json_encode(['ok' => false, 'msj' => 'Usuario y contraseña son obligatorios', 'data' => null]);
                 return;
             }
 
@@ -60,7 +67,11 @@ class AuthController
             
             if (!$validation['ok']) {
                 http_response_code(400);
-                echo json_encode($validation);
+                $msj = 'Usuario y contraseña son obligatorios';
+                if (isset($validation['campo'])) {
+                    $msj = $validation['campo'] === 'username' ? 'El usuario es obligatorio' : 'La contraseña es obligatoria';
+                }
+                echo json_encode(['ok' => false, 'msj' => $msj, 'data' => null]);
                 return;
             }
 

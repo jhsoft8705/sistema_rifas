@@ -9,7 +9,7 @@ let userInfo = null;
 let modalUsuario;
 let rolesData = [];
 
-$(document).ready(async function () {
+$(document).ready(function () {
     if (!Auth.requireAuth()) {
         return;
     }
@@ -19,18 +19,50 @@ $(document).ready(async function () {
 
     inicializarTablaUsuarios();
     inicializarEventosUsuarios();
-
-    await Promise.all([cargarUsuarios(), cargarRoles()]);
 });
 
 function inicializarTablaUsuarios() {
     tablaUsuarios = $('#tabla_usuarios').DataTable({
-        processing: false,
+        processing: true,
         serverSide: false,
-        data: [],
+        ajax: {
+            url: window.API_BASE_URL + '/usuarios/getAll',
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + Auth.getToken(),
+                'Content-Type': 'application/json'
+            },
+            data: function (d) {
+                d.sede_id = userInfo?.sede_id || '';
+                const estado = $('#filtro_estado_usuarios').val();
+                if (estado !== '') {
+                    d.estado = estado;
+                }
+                return d;
+            },
+            dataSrc: function (json) {
+                if (json && json.ok) {
+                    usuariosData = json.data || [];
+                    return usuariosData;
+                } else {
+                    usuariosData = [];
+                    return [];
+                }
+            },
+            error: function (xhr, error, thrown) {
+                console.error('Error al cargar usuarios:', error);
+                usuariosData = [];
+                if (xhr.status === 401) {
+                    Auth.logout();
+                } else {
+                    Utils.showAlert('Error de conexión al cargar los usuarios', 'error');
+                }
+            }
+        },
         language: Utils.getDataTableLanguageES(),
         lengthChange: false,
         dom: 'frtip',
+        autoWidth: false,
         columns: [
             {
                 data: null,
@@ -41,10 +73,10 @@ function inicializarTablaUsuarios() {
                     const deshabilitarBaja = row.estado === 0 ? 'disabled' : '';
                     return `
                     <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-primary btn-editar-usuario" data-id="${row.id}" title="Editar">
+                        <button class="btn btn-sm btn-primary btn-editar btn-action-table" data-id="${row.id}" title="Editar">
                             <i class="ri-edit-2-line"></i>
                         </button>
-                        <button class="btn btn-sm btn-warning btn-baja-usuario" data-id="${row.id}" ${deshabilitarBaja} title="Dar de baja">
+                        <button class="btn btn-sm btn-warning btn-baja btn-action-table" data-id="${row.id}" ${deshabilitarBaja} title="Dar de baja">
                             <i class="ri-user-unfollow-line"></i>
                         </button>
                     </div>
@@ -75,41 +107,63 @@ function inicializarTablaUsuarios() {
             },
             {
                 data: 'fecha_creacion',
-                render: (fecha) => Utils.formatearFecha(fecha?.split(' ')[0] ?? '')
+                render: (fecha) => Utils.formatearFecha(fecha)
             }
         ]
     });
 }
 
 function inicializarEventosUsuarios() {
-    $('#btn_nuevo_usuario').on('click', () => abrirModalUsuario());
+    // Botón nuevo usuario - abrir modal primero
+    $('#btn_nuevo_usuario').on('click', function () {
+        abrirModalUsuario();
+    });
 
-    $('#btn_filtrar_usuarios').on('click', () => cargarUsuarios());
-    $('#btn_recargar_usuarios').on('click', () => {
+    // Cargar roles cuando el modal esté completamente abierto (solo para nuevo registro)
+    $('#modal_usuario').on('shown.bs.modal', function () {
+        // Solo cargar si es nuevo registro (no tiene usuario_id)
+        if (!$('#usuario_id').val()) {
+            cargarRolesSelect();
+        }
+    });
+
+    // Botones de filtro
+    $('#btn_filtrar_usuarios').on('click', function () {
+        tablaUsuarios.ajax.reload();
+    });
+
+    $('#btn_recargar_usuarios').on('click', function () {
         $('#filtro_estado_usuarios').val('');
-        cargarUsuarios();
+        tablaUsuarios.ajax.reload();
     });
 
-    $('#tabla_usuarios tbody').on('click', '.btn-editar-usuario', async function () {
+    // Eventos de tabla
+    $('#tabla_usuarios tbody').on('click', '.btn-editar', function () {
         const id = $(this).data('id');
-        await editarUsuario(id);
+        editarUsuario(id);
     });
 
-    $('#tabla_usuarios tbody').on('click', '.btn-baja-usuario', function () {
+    $('#tabla_usuarios tbody').on('click', '.btn-baja', function () {
         const id = $(this).data('id');
         darDeBajaUsuario(id);
     });
 
+    // Submit del formulario
     $('#form_usuario').on('submit', async function (event) {
         event.preventDefault();
         await guardarUsuario();
     });
 
+    // Validación
     $('#form_usuario').on('input change', 'input, select, textarea', function () {
-        if (!this.id) return;
+        if (!this.id) {
+            return;
+        }
         if ($(this).hasClass('is-invalid')) {
             const value = $(this).val();
-            const tieneValor = (value !== null && value !== undefined && String(value).trim() !== '');
+            const tieneValor = Array.isArray(value)
+                ? value.length > 0
+                : (value !== null && value !== undefined && String(value).trim() !== '');
             if (tieneValor) {
                 $(this).removeClass('is-invalid');
                 const errorId = `${this.id}_error`;
@@ -121,48 +175,60 @@ function inicializarEventosUsuarios() {
     });
 }
 
-async function cargarUsuarios() {
+async function cargarRolesSelect() {
     if (!userInfo) return;
 
+    const $select = $('#usuario_rol_id');
+    if (!$select.length) return;
+
+    const valorSeleccionado = $select.val();
+
+    $select.prop('disabled', true);
+    $select.html('<option value="">Cargando roles...</option>');
+
     try {
-        Utils.showLoading('Cargando usuarios...');
-
-        const sedeId = userInfo.sede_id;
-        const estado = $('#filtro_estado_usuarios').val();
-        const params = { sede_id: sedeId };
-        if (estado !== '') params.estado = estado;
-
-        const respuesta = await API.get('usuarios/getAll', params);
-        Utils.closeLoading();
+        const respuesta = await API.get('usuarios/getRoles', {
+            sede_id: userInfo.sede_id
+        });
 
         if (respuesta && respuesta.ok) {
-            usuariosData = respuesta.data || [];
-            tablaUsuarios.clear().rows.add(usuariosData).draw();
+            rolesData = respuesta.data || [];
+            if (rolesData.length) {
+                const opciones = ['<option value="">Seleccione rol...</option>'].concat(
+                    rolesData.map(rol => {
+                        const texto = rol.descripcion ? `${rol.nombre} - ${rol.descripcion}` : rol.nombre;
+                        return `<option value="${rol.id}">${texto}</option>`;
+                    })
+                );
+                $select.html(opciones.join(''));
+            } else {
+                rolesData = [];
+                $select.html('<option value="">Sin roles registrados</option>');
+            }
         } else {
-            usuariosData = [];
-            tablaUsuarios.clear().draw();
-            Utils.showToast(respuesta?.msj || 'No se pudo obtener usuarios', 'warning');
+            rolesData = [];
+            $select.html('<option value="">No se pudieron cargar roles</option>');
+            if (respuesta?.msj) {
+                Utils.showAlert(respuesta.msj, 'warning');
+            }
         }
     } catch (error) {
-        Utils.closeLoading();
-        console.error('Error al cargar usuarios:', error);
-        usuariosData = [];
-        tablaUsuarios.clear().draw();
-        Utils.showToast('Error de conexión al cargar usuarios', 'error');
+        console.error('Error al cargar roles:', error);
+        rolesData = [];
+        $select.html('<option value="">Error al cargar roles</option>');
+        Utils.showAlert('Ocurrió un problema al cargar los roles', 'error');
+    } finally {
+        if (valorSeleccionado) {
+            $select.val(valorSeleccionado);
+        }
+        $select.prop('disabled', false);
     }
 }
 
 function abrirModalUsuario(usuario = null) {
     limpiarFormularioUsuario();
+
     $('#usuario_sede_id').val(userInfo?.sede_id || '');
-    // Asegurar que el select de roles tenga opciones (por si se abrió antes de cargarRoles)
-    if ($('#usuario_rol_id option').length <= 1 && rolesData.length) {
-        const $sel = $('#usuario_rol_id');
-        $sel.find('option:not(:first)').remove();
-        rolesData.forEach(r => {
-            $sel.append(`<option value="${r.id}">${r.nombre}${r.descripcion ? ' - ' + r.descripcion : ''}</option>`);
-        });
-    }
 
     if (usuario) {
         $('#modal_usuario_title').text('Editar Usuario');
@@ -187,38 +253,103 @@ function abrirModalUsuario(usuario = null) {
         $('#cont_usuario_estado').hide();
     }
 
+    // Abrir modal primero - el select se cargará cuando el modal esté completamente abierto
     modalUsuario.show();
 }
 
 async function editarUsuario(id) {
-    try {
-        Utils.showLoading('Cargando usuario...');
-        const respuesta = await API.get('usuarios/getById', {
-            id: id,
-            sede_id: userInfo?.sede_id
-        });
-        Utils.closeLoading();
+    // Deshabilitar botón mientras carga
+    const $btn = $(`button.btn-editar[data-id="${id}"]`);
+    const originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
 
-        if (respuesta && respuesta.ok && respuesta.data) {
-            abrirModalUsuario(respuesta.data);
-        } else {
-            Utils.showToast(respuesta?.msj || 'No se pudo obtener el usuario', 'error');
+    try {
+        // Precargar datos y roles en paralelo antes de abrir el modal
+        const [respuestaUsuario, respuestaRoles] = await Promise.all([
+            API.get('usuarios/getById', {
+                id: id,
+                sede_id: userInfo?.sede_id
+            }),
+            API.get('usuarios/getRoles', {
+                sede_id: userInfo.sede_id
+            })
+        ]);
+
+        // Restaurar botón
+        $btn.prop('disabled', false).html(originalHtml);
+
+        if (!respuestaUsuario || !respuestaUsuario.ok || !respuestaUsuario.data) {
+            Utils.showAlert(respuestaUsuario?.msj || 'No se pudo obtener el usuario', 'error');
+            return;
         }
+
+        // Cargar roles en el select
+        if (respuestaRoles && respuestaRoles.ok) {
+            rolesData = respuestaRoles.data || [];
+            const $select = $('#usuario_rol_id');
+            if (rolesData.length) {
+                const opciones = ['<option value="">Seleccione rol...</option>'].concat(
+                    rolesData.map(rol => {
+                        const texto = rol.descripcion ? `${rol.nombre} - ${rol.descripcion}` : rol.nombre;
+                        return `<option value="${rol.id}">${texto}</option>`;
+                    })
+                );
+                $select.html(opciones.join(''));
+            } else {
+                $select.html('<option value="">Sin roles registrados</option>');
+            }
+        }
+
+        // Llenar formulario con los datos
+        const usuario = respuestaUsuario.data;
+        limpiarFormularioUsuario();
+        
+        $('#modal_usuario_title').text('Editar Usuario');
+        $('#usuario_id').val(usuario.id);
+        $('#usuario_username').val(usuario.username || '');
+        $('#usuario_email').val(usuario.email || '');
+        $('#usuario_primer_nombre').val(usuario.primer_nombre || '');
+        $('#usuario_apellido_paterno').val(usuario.apellido_paterno || '');
+        $('#usuario_apellido_materno').val(usuario.apellido_materno || '');
+        $('#usuario_telefono').val(usuario.telefono || '');
+        $('#usuario_rol_id').val(usuario.rol_id || '');
+        $('#usuario_estado').val(usuario.estado ?? 1);
+        $('#usuario_password').prop('required', false).val('');
+        $('#cont_usuario_password label').html('Contraseña <small class="text-muted">(dejar en blanco para no cambiar)</small>');
+        $('#cont_usuario_estado').show();
+
+        $('#usuario_sede_id').val(userInfo?.sede_id || '');
+
+        // Abrir modal con todo listo
+        modalUsuario.show();
     } catch (error) {
+        // Restaurar botón en caso de error
+        $btn.prop('disabled', false).html(originalHtml);
         console.error('Error al obtener usuario:', error);
-        Utils.closeLoading();
-        Utils.showToast('Ocurrió un problema al obtener el usuario', 'error');
+        Utils.showAlert('Ocurrió un problema al obtener el usuario', 'error');
     }
 }
 
-function validarFormularioUsuario(esEdicion) {
+function validarFormularioUsuario() {
     let esValido = true;
     Utils.limpiarValidaciones('form_usuario');
 
-    if (!Utils.validarCampo('usuario_username', 'El usuario (login) es obligatorio')) esValido = false;
-    if (!Utils.validarCampo('usuario_email', 'El email es obligatorio')) esValido = false;
-    if (!Utils.validarCampo('usuario_primer_nombre', 'Los nombres son obligatorios')) esValido = false;
-    if (!Utils.validarCampo('usuario_apellido_paterno', 'El apellido paterno es obligatorio')) esValido = false;
+    const usuarioId = $('#usuario_id').val();
+    const esEdicion = usuarioId !== '';
+
+    const camposObligatorios = [
+        { id: 'usuario_username', mensaje: 'El usuario (login) es obligatorio' },
+        { id: 'usuario_email', mensaje: 'El email es obligatorio' },
+        { id: 'usuario_primer_nombre', mensaje: 'Los nombres son obligatorios' },
+        { id: 'usuario_apellido_paterno', mensaje: 'El apellido paterno es obligatorio' },
+        { id: 'usuario_rol_id', mensaje: 'El rol es obligatorio' }
+    ];
+
+    camposObligatorios.forEach((campo) => {
+        if (!Utils.validarCampo(campo.id, campo.mensaje)) {
+            esValido = false;
+        }
+    });
 
     if (!esEdicion) {
         const pass = $('#usuario_password').val() || '';
@@ -233,10 +364,17 @@ function validarFormularioUsuario(esEdicion) {
 }
 
 async function guardarUsuario() {
+    if (!validarFormularioUsuario()) {
+        return;
+    }
+
     const usuarioId = $('#usuario_id').val();
     const esEdicion = usuarioId !== '';
 
-    if (!validarFormularioUsuario(esEdicion)) return;
+    // Deshabilitar botón de guardar para evitar doble clic
+    const $btnGuardar = $('#form_usuario button[type="submit"]');
+    const originalBtnHtml = $btnGuardar.html();
+    $btnGuardar.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin me-1"></i>Guardando...');
 
     const payload = {
         sede_id: userInfo?.sede_id || '',
@@ -259,22 +397,28 @@ async function guardarUsuario() {
     }
 
     try {
-        Utils.showLoading(esEdicion ? 'Actualizando usuario...' : 'Registrando usuario...');
         const endpoint = esEdicion ? 'usuarios/update' : 'usuarios/register';
         const respuesta = await API.post(endpoint, payload);
-        Utils.closeLoading();
+
+        // Restaurar botón
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
 
         if (respuesta && respuesta.ok) {
-            Utils.showToast(respuesta.msj, 'success');
+            Utils.showAlert(respuesta.msj || (esEdicion ? 'Usuario actualizado correctamente' : 'Usuario registrado correctamente'), 'success');
             modalUsuario.hide();
-            await cargarUsuarios();
+            // Recargar tabla sin mostrar loading manual
+            tablaUsuarios.ajax.reload();
         } else {
-            Utils.showToast(respuesta?.msj || 'No se pudo guardar el usuario', 'error');
+            // Mostrar el mensaje del servidor o uno genérico
+            const mensajeError = respuesta?.msj || 'No se pudo guardar el usuario';
+            Utils.showAlert(mensajeError, 'error');
+            console.error('Error al guardar:', respuesta);
         }
     } catch (error) {
+        // Restaurar botón en caso de error
+        $btnGuardar.prop('disabled', false).html(originalBtnHtml);
         console.error('Error al guardar usuario:', error);
-        Utils.closeLoading();
-        Utils.showToast('Ocurrió un problema al guardar', 'error');
+        Utils.showAlert('Ocurrió un problema al guardar el usuario', 'error');
     }
 }
 
@@ -287,36 +431,30 @@ function limpiarFormularioUsuario() {
 }
 
 function darDeBajaUsuario(id) {
-    Swal.fire({
-        title: '¿Dar de baja al usuario?',
-        text: 'El usuario dejará de poder iniciar sesión. Puede reactivarlo editando y cambiando el estado.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, dar de baja',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#f0ad4e',
-        cancelButtonColor: '#6c757d'
-    }).then(async (result) => {
+    Utils.showConfirm(
+        '¿Dar de baja al usuario?',
+        'El usuario dejará de poder iniciar sesión. Puede reactivarlo editando y cambiando el estado.',
+        'Sí, dar de baja',
+        'Cancelar'
+    ).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                Utils.showLoading('Procesando...');
                 const respuesta = await API.post('usuarios/disable', {
                     id: id,
                     sede_id: userInfo?.sede_id,
                     modificado_por: userInfo?.nombre_completo || 'SYSTEM'
                 });
-                Utils.closeLoading();
 
                 if (respuesta && respuesta.ok) {
-                    Utils.showToast(respuesta.msj, 'success');
-                    await cargarUsuarios();
+                    Utils.showAlert(respuesta.msj, 'success');
+                    // Recargar tabla sin mostrar loading manual
+                    tablaUsuarios.ajax.reload();
                 } else {
-                    Utils.showToast(respuesta?.msj || 'No se pudo dar de baja', 'error');
+                    Utils.showAlert(respuesta?.msj || 'No se pudo dar de baja al usuario', 'error');
                 }
             } catch (error) {
                 console.error('Error al dar de baja:', error);
-                Utils.closeLoading();
-                Utils.showToast('Ocurrió un problema', 'error');
+                Utils.showAlert('Ocurrió un problema al dar de baja al usuario', 'error');
             }
         }
     });

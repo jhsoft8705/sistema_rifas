@@ -184,19 +184,24 @@ CREATE PROCEDURE generate_rifa_numeros (
 proc: BEGIN
     DECLARE v_numero INT;
     DECLARE v_formateado VARCHAR(50);
+    DECLARE v_insertados INT DEFAULT 0;
+    DECLARE v_error_msg VARCHAR(255);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-        SET p_mensaje = 'Error al generar los números de la rifa';
+        GET DIAGNOSTICS CONDITION 1
+            v_error_msg = MESSAGE_TEXT;
+        SET p_mensaje = CONCAT('Error al generar los números de la rifa: ', IFNULL(v_error_msg, 'Error desconocido'));
+        -- NO hacer ROLLBACK aquí porque el procedimiento padre maneja la transacción
     END;
 
-    START TRANSACTION;
+    -- NO usar START TRANSACTION aquí porque este procedimiento se llama desde otros que ya tienen transacción
+    -- El procedimiento padre (update_rifa o register_rifa) maneja la transacción
 
     SET v_numero = p_numero_inicial;
     WHILE v_numero <= p_numero_final DO
         SET v_formateado = CONCAT(IFNULL(p_prefijo_numero, ''), LPAD(v_numero, IFNULL(p_cantidad_digitos, 4), '0'), IFNULL(p_sufijo_numero, ''));
-
+        
         INSERT IGNORE INTO numeros_rifa (
             sede_id,
             rifa_id,
@@ -210,12 +215,21 @@ proc: BEGIN
             v_formateado,
             'DISPONIBLE'
         );
+        
+        -- Contar insertados (INSERT IGNORE retorna 0 si el número ya existe, 1 si se insertó)
+        IF ROW_COUNT() > 0 THEN
+            SET v_insertados = v_insertados + 1;
+        END IF;
 
         SET v_numero = v_numero + 1;
     END WHILE;
 
-    COMMIT;
-    SET p_mensaje = 'Números generados correctamente';
+    -- NO hacer COMMIT aquí - el procedimiento padre lo hace
+    IF v_insertados > 0 THEN
+        SET p_mensaje = CONCAT('Números generados correctamente. Se insertaron ', v_insertados, ' número(s) nuevo(s) del ', p_numero_inicial, ' al ', p_numero_final, '.');
+    ELSE
+        SET p_mensaje = CONCAT('Todos los números del rango ', p_numero_inicial, ' al ', p_numero_final, ' ya existen. No se insertaron números nuevos.');
+    END IF;
 END proc //
 
 -- ==========================================================
@@ -473,6 +487,10 @@ CREATE PROCEDURE update_rifa (
 proc: BEGIN
     DECLARE v_tickets_asignados INT DEFAULT 0;
     DECLARE v_mensaje_numeros VARCHAR(255);
+    DECLARE v_numero_inicial_actual INT;
+    DECLARE v_numero_final_actual INT;
+    DECLARE v_tickets_fuera_rango INT DEFAULT 0;
+    DECLARE v_mensaje_cambio VARCHAR(255) DEFAULT '';
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -487,6 +505,10 @@ proc: BEGIN
         ROLLBACK;
         LEAVE proc;
     END IF;
+
+    -- Obtener valores originales ANTES del UPDATE para detectar cambios en numeración
+    SELECT numero_inicial, numero_final INTO v_numero_inicial_actual, v_numero_final_actual
+    FROM rifas WHERE id = p_id AND sede_id = p_sede_id;
 
     -- Validar que no se pueda cambiar el estado de una rifa cerrada o finalizada
     IF EXISTS (
@@ -559,6 +581,148 @@ proc: BEGIN
     WHERE id = p_id
       AND sede_id = p_sede_id;
 
+    -- Manejo inteligente de cambios en numeración
+    -- Solo procesar cambios si usa numeración de boletos
+    IF p_usa_numeracion_boletos = 1 THEN
+        -- Verificar si cambió el rango de números (manejar NULLs correctamente)
+        -- Usar comparación explícita para evitar problemas con NULLs
+        IF ((v_numero_inicial_actual IS NULL AND p_numero_inicial IS NOT NULL) 
+            OR (v_numero_inicial_actual IS NOT NULL AND p_numero_inicial IS NULL)
+            OR (v_numero_inicial_actual IS NOT NULL AND p_numero_inicial IS NOT NULL AND v_numero_inicial_actual != p_numero_inicial)
+            OR (v_numero_final_actual IS NULL AND p_numero_final IS NOT NULL)
+            OR (v_numero_final_actual IS NOT NULL AND p_numero_final IS NULL)
+            OR (v_numero_final_actual IS NOT NULL AND p_numero_final IS NOT NULL AND v_numero_final_actual != p_numero_final)) THEN
+            SET v_mensaje_cambio = '';
+            
+            -- Asegurar que los valores originales no sean NULL para comparaciones (usar 0 como default)
+            SET v_numero_inicial_actual = COALESCE(v_numero_inicial_actual, 0);
+            SET v_numero_final_actual = COALESCE(v_numero_final_actual, 0);
+        
+        -- CASO 1: AUMENTO DEL RANGO (numero_final mayor) - Agregar solo números nuevos
+        IF p_numero_final > v_numero_final_actual THEN
+            -- Agregar solo los números nuevos (desde el final actual + 1 hasta el nuevo final)
+            CALL generate_rifa_numeros(
+                p_id,
+                p_sede_id,
+                v_numero_final_actual + 1,
+                p_numero_final,
+                IFNULL(p_cantidad_digitos, 4),
+                p_prefijo_numero,
+                p_sufijo_numero,
+                p_modificado_por,
+                v_mensaje_numeros
+            );
+            
+            -- Verificar si hubo error en la generación
+            IF v_mensaje_numeros LIKE '%Error%' OR v_mensaje_numeros LIKE '%error%' THEN
+                SET p_mensaje = CONCAT('Error al agregar números nuevos: ', v_mensaje_numeros);
+                ROLLBACK;
+                LEAVE proc;
+            END IF;
+            
+            SET v_mensaje_cambio = CONCAT(v_mensaje_cambio, IF(v_mensaje_cambio != '', '. ', ''), 'Se agregaron números del ', (v_numero_final_actual + 1), ' al ', p_numero_final);
+        END IF;
+        
+        -- CASO 2: REDUCCIÓN DEL RANGO (numero_final menor) - Eliminar solo números DISPONIBLES fuera del nuevo rango
+        -- Los números VENDIDOS se mantienen aunque estén fuera del nuevo rango (por seguridad e integridad)
+        IF p_numero_final < v_numero_final_actual THEN
+            -- Contar tickets vendidos fuera del nuevo rango (solo informativo)
+            SELECT COUNT(*)
+            INTO v_tickets_fuera_rango
+            FROM numeros_rifa
+            WHERE rifa_id = p_id
+              AND ticket_id IS NOT NULL
+              AND numero_entero > p_numero_final;
+            
+            -- Eliminar SOLO números disponibles fuera del nuevo rango (los vendidos se mantienen)
+            DELETE FROM numeros_rifa 
+            WHERE rifa_id = p_id 
+              AND numero_entero > p_numero_final
+              AND ticket_id IS NULL
+              AND estado = 'DISPONIBLE';
+            
+            IF v_tickets_fuera_rango > 0 THEN
+                SET v_mensaje_cambio = CONCAT(v_mensaje_cambio, IF(v_mensaje_cambio != '', '. ', ''), 
+                    'Rango reducido a ', p_numero_final, '. Se eliminaron números disponibles fuera del rango. ',
+                    'Nota: Se mantienen ', v_tickets_fuera_rango, ' ticket(s) vendido(s) fuera del nuevo rango.');
+            ELSE
+                SET v_mensaje_cambio = CONCAT(v_mensaje_cambio, IF(v_mensaje_cambio != '', '. ', ''), 
+                    'Rango reducido a ', p_numero_final, ' (números disponibles eliminados)');
+            END IF;
+        END IF;
+        
+        -- CASO 3: CAMBIO EN numero_inicial (menor) - Agregar números desde el nuevo inicial hasta el inicial anterior - 1
+        IF p_numero_inicial < v_numero_inicial_actual THEN
+            CALL generate_rifa_numeros(
+                p_id,
+                p_sede_id,
+                p_numero_inicial,
+                v_numero_inicial_actual - 1,
+                IFNULL(p_cantidad_digitos, 4),
+                p_prefijo_numero,
+                p_sufijo_numero,
+                p_modificado_por,
+                v_mensaje_numeros
+            );
+            
+            -- Verificar si hubo error en la generación
+            IF v_mensaje_numeros LIKE '%Error%' OR v_mensaje_numeros LIKE '%error%' THEN
+                SET p_mensaje = CONCAT('Error al agregar números iniciales: ', v_mensaje_numeros);
+                ROLLBACK;
+                LEAVE proc;
+            END IF;
+            
+            SET v_mensaje_cambio = CONCAT(v_mensaje_cambio, IF(v_mensaje_cambio != '', '. ', ''), 'Se agregaron números del ', p_numero_inicial, ' al ', (v_numero_inicial_actual - 1));
+        END IF;
+        
+        -- CASO 4: CAMBIO EN numero_inicial (mayor) - Eliminar solo números DISPONIBLES antes del nuevo inicial
+        -- Los números VENDIDOS se mantienen aunque estén fuera del nuevo rango
+        IF p_numero_inicial > v_numero_inicial_actual THEN
+            -- Contar tickets vendidos antes del nuevo inicial (solo informativo)
+            SELECT COUNT(*)
+            INTO v_tickets_fuera_rango
+            FROM numeros_rifa
+            WHERE rifa_id = p_id
+              AND ticket_id IS NOT NULL
+              AND numero_entero < p_numero_inicial;
+            
+            -- Eliminar SOLO números disponibles antes del nuevo inicial (los vendidos se mantienen)
+            DELETE FROM numeros_rifa 
+            WHERE rifa_id = p_id 
+              AND numero_entero < p_numero_inicial
+              AND ticket_id IS NULL
+              AND estado = 'DISPONIBLE';
+            
+            IF v_tickets_fuera_rango > 0 THEN
+                SET v_mensaje_cambio = CONCAT(v_mensaje_cambio, IF(v_mensaje_cambio != '', '. ', ''), 
+                    'Número inicial aumentado a ', p_numero_inicial, '. Se eliminaron números disponibles antes del nuevo inicial. ',
+                    'Nota: Se mantienen ', v_tickets_fuera_rango, ' ticket(s) vendido(s) fuera del nuevo rango.');
+            ELSE
+                SET v_mensaje_cambio = CONCAT(v_mensaje_cambio, IF(v_mensaje_cambio != '', '. ', ''), 
+                    'Número inicial aumentado a ', p_numero_inicial, ' (números disponibles eliminados)');
+            END IF;
+        END IF;
+        
+        -- Si se cambió prefijo/sufijo/cantidad_digitos, actualizar formato de números existentes
+        IF (SELECT COUNT(*) FROM numeros_rifa WHERE rifa_id = p_id AND ticket_id IS NULL) > 0 THEN
+            UPDATE numeros_rifa
+            SET numero_formateado = CONCAT(
+                IFNULL(p_prefijo_numero, ''),
+                LPAD(numero_entero, IFNULL(p_cantidad_digitos, 4), '0'),
+                IFNULL(p_sufijo_numero, '')
+            )
+            WHERE rifa_id = p_id
+              AND ticket_id IS NULL;
+        END IF;
+        
+            -- Asignar mensaje de cambio si existe
+            IF v_mensaje_cambio != '' THEN
+                SET p_mensaje = CONCAT('Rifa actualizada correctamente. ', v_mensaje_cambio);
+            END IF;
+        END IF;
+    END IF;
+    
+    -- REGENERACIÓN COMPLETA (solo si se marca explícitamente el checkbox y NO hay tickets)
     IF p_regenerar_numeros = 1 THEN
         SELECT COUNT(*)
         INTO v_tickets_asignados
@@ -567,7 +731,7 @@ proc: BEGIN
           AND ticket_id IS NOT NULL;
 
         IF v_tickets_asignados > 0 THEN
-            SET p_mensaje = 'No se puede regenerar la numeración porque existen tickets asignados.';
+            SET p_mensaje = 'No se puede regenerar completamente la numeración porque existen tickets asignados. Use el cambio de rango para agregar números nuevos.';
             ROLLBACK;
             LEAVE proc;
         END IF;
@@ -585,10 +749,16 @@ proc: BEGIN
             p_modificado_por,
             v_mensaje_numeros
         );
+        
+        IF p_mensaje IS NULL OR p_mensaje = '' THEN
+            SET p_mensaje = 'Rifa actualizada correctamente. Numeración regenerada completamente.';
+        END IF;
     END IF;
 
     COMMIT;
-    SET p_mensaje = 'Rifa actualizada correctamente';
+    IF p_mensaje IS NULL OR p_mensaje = '' THEN
+        SET p_mensaje = 'Rifa actualizada correctamente';
+    END IF;
 END proc //
 
 -- ==========================================================

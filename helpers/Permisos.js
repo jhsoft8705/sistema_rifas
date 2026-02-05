@@ -42,20 +42,8 @@ const Permisos = {
      * @returns {boolean} True si tiene el permiso
      */
     tienePermiso(permiso_nombre) {
-        // Si es SUPERADMIN, tiene todos los permisos
-        if (this.esSuperAdmin()) {
-            return true;
-        }
-        
-        const permisos = this.getNombresPermisos();
-        const tiene = permisos.includes(permiso_nombre);
-        
-        // Log para debug (solo en desarrollo)
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.log(`Verificando permiso "${permiso_nombre}": ${tiene ? 'SÍ' : 'NO'}`, permisos);
-        }
-        
-        return tiene;
+        if (this.esSuperAdmin()) return true;
+        return this.getNombresPermisos().includes(permiso_nombre);
     },
 
     /**
@@ -96,28 +84,10 @@ const Permisos = {
      * @returns {boolean} True si es SUPERADMIN
      */
     esSuperAdmin() {
-        if (typeof Auth === 'undefined') {
-            return false;
-        }
-        
+        if (typeof Auth === 'undefined') return false;
         const userInfo = Auth.getUserInfo();
-        if (!userInfo) {
-            return false;
-        }
-        
-        const rolNombre = (userInfo.rol_nombre || '').toUpperCase().trim();
-        const esSuperAdmin = rolNombre === 'SUPERADMIN';
-        
-        // Log para debug
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.log('Verificando si es SUPERADMIN:', {
-                rolNombre: rolNombre,
-                esSuperAdmin: esSuperAdmin,
-                userInfo: userInfo
-            });
-        }
-        
-        return esSuperAdmin;
+        if (!userInfo) return false;
+        return (userInfo.rol_nombre || '').toUpperCase().trim() === 'SUPERADMIN';
     },
 
     /**

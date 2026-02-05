@@ -12,6 +12,9 @@ class Validator
      */
     public static function validarCamposRequeridos($data, $required)
     {
+        if (!is_array($data)) {
+            return ['ok' => false, 'msj' => 'Datos requeridos', 'campo' => $required[0] ?? null];
+        }
         foreach ($required as $campo) {
             if (!isset($data[$campo]) || (is_string($data[$campo]) && trim($data[$campo]) === '')) {
                 return [

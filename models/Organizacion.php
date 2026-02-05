@@ -76,7 +76,7 @@ class Organizacion extends Conectar
     {
         try {
             $conectar = parent::Conexion();
-            $sql = "CALL update_sede(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
+            $sql = "CALL update_sede(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @mensaje)";
             $query = $conectar->prepare($sql);
             $query->bindValue(1, $this->getValue($data, 'id'), PDO::PARAM_INT);
             $query->bindValue(2, $this->getValue($data, 'codigo'), PDO::PARAM_STR);

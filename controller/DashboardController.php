@@ -36,6 +36,12 @@ class DashboardController
             case 'getDashboardCompleto':
                 $this->get_dashboard_completo($sede_id);
                 break;
+            case 'getKPIsCompletos':
+                $this->get_kpis_completos($sede_id);
+                break;
+            case 'getGraficosVentasEstado':
+                $this->get_graficos_ventas_estado($sede_id);
+                break;
             case 'getKPIsVentasTickets':
                 $this->get_kpis_ventas_tickets($sede_id);
                 break;
@@ -92,6 +98,39 @@ class DashboardController
             error_log("Error en get_dashboard_completo: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'msj' => 'Error al obtener el dashboard']);
+        }
+    }
+
+    /**
+     * Obtener KPIs completos (Ventas+Tickets + Estado Operativo + Rifas)
+     */
+    private function get_kpis_completos(int $sede_id): void
+    {
+        try {
+            $resultado = $this->dashboard->get_kpis_completos($sede_id);
+            http_response_code($resultado['ok'] ? 200 : 500);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en get_kpis_completos: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener KPIs']);
+        }
+    }
+
+    /**
+     * Obtener gráficos Ventas en Tiempo + Estado de Tickets
+     */
+    private function get_graficos_ventas_estado(int $sede_id): void
+    {
+        try {
+            $dias = isset($_GET['dias']) ? (int) $_GET['dias'] : 30;
+            $resultado = $this->dashboard->get_graficos_ventas_estado($sede_id, $dias);
+            http_response_code($resultado['ok'] ? 200 : 500);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en get_graficos_ventas_estado: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'msj' => 'Error al obtener gráficos']);
         }
     }
 

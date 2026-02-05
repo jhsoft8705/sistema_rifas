@@ -1,6 +1,7 @@
 /**
  * Gestión de Datos de la Organización (Sede)
  * Listado = getById de la sede actual; solo actualizar.
+ * Usa SweetAlert (Utils.showAlert) y loading en botón (sin preload global).
  */
 
 let userInfo = null;
@@ -12,7 +13,7 @@ $(document).ready(async function () {
 
     userInfo = Auth.getUserInfo();
     if (!userInfo || !userInfo.sede_id) {
-        Utils.showToast('No se pudo obtener la sede actual', 'error');
+        Utils.showAlert('No se pudo obtener la sede actual', 'error');
         return;
     }
 
@@ -45,21 +46,24 @@ function inicializarEventosOrganizacion() {
 async function cargarOrganizacion() {
     if (!userInfo || !userInfo.sede_id) return;
 
-    try {
-        Utils.showLoading('Cargando datos de la organización...');
+    const $btn = $('#btn_guardar_organizacion');
+    const originalBtnHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin me-1"></i>Cargando...');
 
+    try {
         const respuesta = await API.get('organizacion/getById', { id: userInfo.sede_id });
-        Utils.closeLoading();
+
+        $btn.prop('disabled', false).html(originalBtnHtml);
 
         if (respuesta && respuesta.ok && respuesta.data) {
             rellenarFormulario(respuesta.data);
         } else {
-            Utils.showToast(respuesta?.msj || 'No se pudo cargar la organización', 'warning');
+            Utils.showAlert(respuesta?.msj || 'No se pudo cargar la organización', 'warning');
         }
     } catch (error) {
-        Utils.closeLoading();
+        $btn.prop('disabled', false).html(originalBtnHtml);
         console.error('Error al cargar organización:', error);
-        Utils.showToast('Error de conexión al cargar la organización', 'error');
+        Utils.showAlert('Error de conexión al cargar la organización', 'error');
     }
 }
 
@@ -103,7 +107,7 @@ async function guardarOrganizacion() {
 
     const id = $('#organizacion_id').val();
     if (!id) {
-        Utils.showToast('No hay organización cargada para actualizar', 'warning');
+        Utils.showAlert('No hay organización cargada para actualizar', 'warning');
         return;
     }
 
@@ -127,20 +131,24 @@ async function guardarOrganizacion() {
         modificado_por: userInfo?.nombre_completo || 'SYSTEM'
     };
 
+    const $btn = $('#btn_guardar_organizacion');
+    const originalBtnHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="ri-loader-4-line animate-spin me-1"></i>Guardando...');
+
     try {
-        Utils.showLoading('Guardando cambios...');
         const respuesta = await API.post('organizacion/update', payload);
-        Utils.closeLoading();
+
+        $btn.prop('disabled', false).html(originalBtnHtml);
 
         if (respuesta && respuesta.ok) {
-            Utils.showToast(respuesta.msj, 'success');
+            Utils.showAlert(respuesta.msj, 'success');
             await cargarOrganizacion();
         } else {
-            Utils.showToast(respuesta?.msj || 'No se pudo actualizar la organización', 'error');
+            Utils.showAlert(respuesta?.msj || 'No se pudo actualizar la organización', 'error');
         }
     } catch (error) {
+        $btn.prop('disabled', false).html(originalBtnHtml);
         console.error('Error al guardar organización:', error);
-        Utils.closeLoading();
-        Utils.showToast('Ocurrió un problema al guardar', 'error');
+        Utils.showAlert('Ocurrió un problema al guardar', 'error');
     }
 }

@@ -51,7 +51,7 @@ $base_url = Enrutamiento::dominio();
                                         <div class="position-relative h-100 d-flex flex-column">
                                             <div class="mb-4">
                                                 <a href="admin-login" class="d-block">
-                                                    <img src="assets/images/9d2b0233-c9e7-448a-b617-8a096bb41049.png" alt="" height="250">
+                                                    <img src="assets/images/9d2b0233-c9e7-448a-b617-8a096bb4104911.png" alt="" height="280">
                                                 </a>
                                             </div>
                                             <div class="mt-auto">
@@ -253,16 +253,12 @@ $base_url = Enrutamiento::dominio();
                 const username = $('#username').val().trim();
                 const password = $('#password').val();
 
-                // Validar campos
+                // Validar campos antes de enviar
                 if (!username || !password) {
-                    $.toast({
-                        heading: 'Campos incompletos',
-                        text: 'Por favor complete todos los campos',
+                    Swal.fire({
                         icon: 'warning',
-                        position: 'top-right',
-                        loader: true,
-                        loaderBg: '#f8b739',
-                        hideAfter: 3000
+                        title: 'Campos incompletos',
+                        text: 'Por favor ingrese su usuario y contraseña'
                     });
                     return;
                 }

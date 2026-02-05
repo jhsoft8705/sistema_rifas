@@ -11,6 +11,8 @@ function RoutesDashboard(string $url, string $method): void
 
     $routes = [
         'api/dashboard/getDashboardCompleto' => ['GET'],
+        'api/dashboard/getKPIsCompletos' => ['GET'],
+        'api/dashboard/getGraficosVentasEstado' => ['GET'],
         'api/dashboard/getKPIsVentasTickets' => ['GET'],
         'api/dashboard/getKPIsEstadoOperativo' => ['GET'],
         'api/dashboard/getKPIsRifas' => ['GET'],
@@ -50,6 +52,12 @@ function RoutesDashboard(string $url, string $method): void
     switch ($url) {
         case 'api/dashboard/getDashboardCompleto':
             $controller->handleRequest('getDashboardCompleto');
+            break;
+        case 'api/dashboard/getKPIsCompletos':
+            $controller->handleRequest('getKPIsCompletos');
+            break;
+        case 'api/dashboard/getGraficosVentasEstado':
+            $controller->handleRequest('getGraficosVentasEstado');
             break;
         case 'api/dashboard/getKPIsVentasTickets':
             $controller->handleRequest('getKPIsVentasTickets');

@@ -3,8 +3,7 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
 ?>
 <!-- Base URL para rutas relativas -->
 <base href="<?= Enrutamiento::dominio() ?>/">
-
-<!-- App favicon -->
+ <!-- App favicon -->
 <link rel="shortcut icon" href="assets/images/favicon.ico">
  <!-- Layout config Js -->
 <script src="assets/js/layout.js"></script>

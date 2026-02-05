@@ -33,8 +33,8 @@ class Conectar
 
             return $conectar;
         } catch (Exception $e) {
-            print "Error Conexion BD" . $e->getMessage() . "<br/>";
-            die();
+            error_log("Error Conexion BD: " . $e->getMessage());
+            throw $e;
         }
     }
 

@@ -1,6 +1,13 @@
 /**
  * Dashboard JavaScript
- * Manejo de carga de datos, gráficos y tablas del dashboard
+ * CARGA EN CASCADA (de arriba hacia abajo):
+ * Cada sección se carga secuencialmente y se muestra al instante.
+ * El usuario ve el contenido aparecer progresivamente sin experimentar lentitud.
+ *
+ * Endpoints optimizados:
+ * 1. getKPIsCompletos - Ventas+Tickets + Estado Operativo + Rifas (1 request)
+ * 2. getGraficosVentasEstado - Ventas en tiempo + Estado tickets (1 request)
+ * 3. getAvanceRifas, getCanalesVenta, getUltimosMovimientos, getUltimosGanadores, getTicketsAprobados
  */
 
 // Variables globales para los gráficos
@@ -9,6 +16,126 @@ let chartEstadoTickets = null;
 let chartAvanceRifas = null;
 let chartCanalesVenta = null;
 let diasVentas = 30;
+let userInfo = null;
+
+$(document).ready(function () {
+    if (!Auth.requireAuth()) {
+        return;
+    }
+
+    userInfo = Auth.getUserInfo();
+
+    // Iniciar carga en cascada (de arriba hacia abajo)
+    cargarDashboardEnCascada();
+});
+
+// ==========================================================
+// CARGA EN CASCADA - Secuencial de arriba hacia abajo
+// ==========================================================
+async function cargarDashboardEnCascada() {
+    try {
+        // ----- FASE 1: KPIs completos (1 request) -----
+        const kpisCompletos = await API.get('dashboard/getKPIsCompletos');
+        if (kpisCompletos && kpisCompletos.ok && kpisCompletos.data) {
+            const d = kpisCompletos.data;
+            actualizarKPIVentasTickets({ ok: true, data: d.ventas_tickets });
+            actualizarKPIEstadoOperativo({ ok: true, data: d.estado_operativo });
+            actualizarKPIRifas({ ok: true, data: d.rifas });
+        } else {
+            // Si falla, mostrar valores por defecto en lugar del spinner
+            actualizarKPIVentasTickets({ ok: true, data: {} });
+            actualizarKPIEstadoOperativo({ ok: true, data: {} });
+            actualizarKPIRifas({ ok: true, data: {} });
+        }
+        ocultarBannerCarga();
+
+        // ----- FASE 2: Ventas en tiempo + Estado tickets (1 request) -----
+        const graficosVentasEstado = await API.get(`dashboard/getGraficosVentasEstado?dias=${diasVentas}`);
+        if (graficosVentasEstado && graficosVentasEstado.ok && graficosVentasEstado.data) {
+            const d = graficosVentasEstado.data;
+            if (d.ventas_tiempo && d.ventas_tiempo.length) {
+                inicializarGraficoVentasTiempo(d.ventas_tiempo);
+            }
+            if (d.estado_tickets && d.estado_tickets.length) {
+                inicializarGraficoEstadoTickets(d.estado_tickets);
+            }
+        }
+
+        // ----- FASE 3: Avance de rifas -----
+        const avanceRifas = await API.get('dashboard/getAvanceRifas');
+        if (avanceRifas && avanceRifas.ok && avanceRifas.data) {
+            inicializarGraficoAvanceRifas(avanceRifas.data);
+        }
+
+        // ----- FASE 4: Canales de venta -----
+        const canalesVenta = await API.get('dashboard/getCanalesVenta');
+        if (canalesVenta && canalesVenta.ok && canalesVenta.data) {
+            inicializarGraficoCanalesVenta(canalesVenta.data);
+        }
+
+        // ----- FASE 5: Últimos movimientos -----
+        const ultimosMovimientos = await API.get('dashboard/getUltimosMovimientos');
+        if (ultimosMovimientos && ultimosMovimientos.ok && ultimosMovimientos.data) {
+            cargarTablaUltimosMovimientos(ultimosMovimientos.data);
+        }
+
+        // ----- FASE 6: Últimos ganadores -----
+        const ultimosGanadores = await API.get('dashboard/getUltimosGanadores?limite=10');
+        if (ultimosGanadores && ultimosGanadores.ok && ultimosGanadores.data) {
+            cargarTablaUltimosGanadores(ultimosGanadores.data);
+        }
+
+        // ----- FASE 7: Tickets aprobados -----
+        const ticketsAprobados = await API.get('dashboard/getTicketsAprobados?limite=50');
+        if (ticketsAprobados && ticketsAprobados.ok && ticketsAprobados.data) {
+            cargarTablaTicketsAprobados(ticketsAprobados.data);
+        }
+    } catch (error) {
+        console.error('Error al cargar dashboard:', error);
+        ocultarBannerCarga();
+        mostrarError('Error al cargar el dashboard');
+    }
+}
+
+function actualizarKPIVentasTickets(response) {
+    const kpis = (response && response.ok && response.data) ? response.data : {};
+    const setKpi = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    setKpi('kpi_tickets_vendidos_hoy', kpis.tickets_vendidos_hoy ?? 0);
+    setKpi('kpi_ingresos_hoy', formatearMoneda(parseFloat(kpis.ingresos_hoy || 0)));
+    setKpi('kpi_ingresos_mes', formatearMoneda(parseFloat(kpis.ingresos_mes || 0)));
+    setKpi('kpi_ticket_promedio', formatearMoneda(parseFloat(kpis.ticket_promedio || 0)));
+}
+
+function actualizarKPIEstadoOperativo(response) {
+    const kpis = (response && response.ok && response.data) ? response.data : {};
+    const setKpi = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    setKpi('kpi_tickets_pendientes', kpis.tickets_pendientes_validacion ?? 0);
+    setKpi('kpi_pagos_rechazados', kpis.pagos_rechazados_hoy ?? 0);
+    setKpi('kpi_tickets_expirar', kpis.tickets_por_expirar ?? 0);
+    setKpi('kpi_personas_unicas', kpis.personas_unicas_participantes ?? 0);
+}
+
+function actualizarKPIRifas(response) {
+    const kpis = (response && response.ok && response.data) ? response.data : {};
+    const setKpi = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    setKpi('kpi_rifas_activas', kpis.rifas_activas ?? 0);
+    setKpi('kpi_rifa_mas_vendida', kpis.rifa_mas_vendida || '-');
+    setKpi('kpi_rifa_menor_avance', kpis.rifa_menor_avance || '-');
+}
+
+
+// ==========================================================
+// FUNCIONES DE UTILIDAD
+// ==========================================================
 
 // Función para formatear moneda
 function formatearMoneda(valor) {
@@ -60,83 +187,9 @@ function getChartColorsArray(chartId) {
     }
 }
 
-// Cargar dashboard completo
-async function cargarDashboard() {
-    try {
-        const response = await API.get('dashboard/getDashboardCompleto');
-        
-        if (response.ok && response.data) {
-            const data = response.data;
-            
-            // Cargar KPIs
-            cargarKPIs(data);
-            
-            // Cargar gráficos
-            cargarGraficos(data);
-            
-            // Cargar tablas
-            cargarTablas(data);
-        } else {
-            console.error('Error al cargar dashboard:', response.msj);
-            mostrarError('Error al cargar el dashboard');
-        }
-    } catch (error) {
-        console.error('Error en cargarDashboard:', error);
-        mostrarError('Error de conexión al cargar el dashboard');
-    }
-}
-
-// Cargar KPIs
-function cargarKPIs(data) {
-    // Ventas & Tickets
-    const kpisVentas = data.kpis_ventas_tickets?.data;
-    if (kpisVentas) {
-        document.getElementById('kpi_tickets_vendidos_hoy').textContent = kpisVentas.tickets_vendidos_hoy || 0;
-        document.getElementById('kpi_ingresos_hoy').textContent = formatearMoneda(parseFloat(kpisVentas.ingresos_hoy || 0));
-        document.getElementById('kpi_ingresos_mes').textContent = formatearMoneda(parseFloat(kpisVentas.ingresos_mes || 0));
-        document.getElementById('kpi_ticket_promedio').textContent = formatearMoneda(parseFloat(kpisVentas.ticket_promedio || 0));
-    }
-
-    // Estado Operativo
-    const kpisEstado = data.kpis_estado_operativo?.data;
-    if (kpisEstado) {
-        document.getElementById('kpi_tickets_pendientes').textContent = kpisEstado.tickets_pendientes_validacion || 0;
-        document.getElementById('kpi_pagos_rechazados').textContent = kpisEstado.pagos_rechazados_hoy || 0;
-        document.getElementById('kpi_tickets_expirar').textContent = kpisEstado.tickets_por_expirar || 0;
-        document.getElementById('kpi_personas_unicas').textContent = kpisEstado.personas_unicas_participantes || 0;
-    }
-
-    // Rifas
-    const kpisRifas = data.kpis_rifas?.data;
-    if (kpisRifas) {
-        document.getElementById('kpi_rifas_activas').textContent = kpisRifas.rifas_activas || 0;
-        document.getElementById('kpi_rifa_mas_vendida').textContent = kpisRifas.rifa_mas_vendida || '-';
-        document.getElementById('kpi_rifa_menor_avance').textContent = kpisRifas.rifa_menor_avance || '-';
-    }
-}
-
-// Cargar gráficos
-function cargarGraficos(data) {
-    // Ventas en el tiempo
-    if (data.ventas_tiempo?.data) {
-        inicializarGraficoVentasTiempo(data.ventas_tiempo.data);
-    }
-
-    // Estado de tickets
-    if (data.estado_tickets?.data) {
-        inicializarGraficoEstadoTickets(data.estado_tickets.data);
-    }
-
-    // Avance de rifas
-    if (data.avance_rifas?.data) {
-        inicializarGraficoAvanceRifas(data.avance_rifas.data);
-    }
-
-    // Canales de venta
-    if (data.canales_venta?.data) {
-        inicializarGraficoCanalesVenta(data.canales_venta.data);
-    }
-}
+// ==========================================================
+// INICIALIZACIÓN DE GRÁFICOS
+// ==========================================================
 
 // Inicializar gráfico de ventas en el tiempo
 function inicializarGraficoVentasTiempo(datos) {
@@ -373,23 +426,9 @@ function inicializarGraficoCanalesVenta(datos) {
     }
 }
 
-// Cargar tablas
-function cargarTablas(data) {
-    // Últimos movimientos
-    if (data.ultimos_movimientos?.data) {
-        cargarTablaUltimosMovimientos(data.ultimos_movimientos.data);
-    }
-
-    // Últimos ganadores
-    if (data.ultimos_ganadores?.data) {
-        cargarTablaUltimosGanadores(data.ultimos_ganadores.data);
-    }
-
-    // Tickets aprobados
-    if (data.tickets_aprobados?.data) {
-        cargarTablaTicketsAprobados(data.tickets_aprobados.data);
-    }
-}
+// ==========================================================
+// CARGAR TABLAS
+// ==========================================================
 
 // Cargar tabla de últimos movimientos
 function cargarTablaUltimosMovimientos(datos) {
@@ -484,22 +523,40 @@ function cargarTablaTicketsAprobados(datos) {
     }).join('');
 }
 
-// Recargar ventas en el tiempo con diferentes días
+// ==========================================================
+// FUNCIONES ADICIONALES
+// ==========================================================
+
+// Recargar ventas en el tiempo con diferentes días (botones 7/30 días)
 async function cargarVentasTiempo(dias) {
     diasVentas = dias;
     try {
-        const response = await API.get(`dashboard/getVentasTiempo?dias=${dias}`);
-        if (response.ok && response.data) {
-            inicializarGraficoVentasTiempo(response.data.data);
+        const response = await API.get(`dashboard/getGraficosVentasEstado?dias=${dias}`);
+        if (response && response.ok && response.data) {
+            const d = response.data;
+            if (d.ventas_tiempo && d.ventas_tiempo.length) {
+                inicializarGraficoVentasTiempo(d.ventas_tiempo);
+            }
         }
     } catch (error) {
         console.error('Error al cargar ventas en el tiempo:', error);
     }
 }
 
+// Ocultar banner de carga cuando los KPIs estén listos
+function ocultarBannerCarga() {
+    const banner = document.getElementById('dashboard-loading-banner');
+    if (banner) {
+        banner.classList.add('fade');
+        setTimeout(() => banner.remove(), 300);
+    }
+}
+
 // Mostrar error
 function mostrarError(mensaje) {
-    if (typeof Swal !== 'undefined') {
+    if (typeof Utils !== 'undefined' && Utils.showAlert) {
+        Utils.showAlert(mensaje, 'error');
+    } else if (typeof Swal !== 'undefined') {
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -509,15 +566,3 @@ function mostrarError(mensaje) {
         alert(mensaje);
     }
 }
-
-// Inicializar dashboard cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar autenticación
-    if (!Auth.isAuthenticated()) {
-        window.location.href = window.BASE_URL;
-        return;
-    }
-
-    // Cargar dashboard
-    cargarDashboard();
-});

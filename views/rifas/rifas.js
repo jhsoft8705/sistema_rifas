@@ -42,6 +42,7 @@ let userInfo = null;
 let premiosCatalogo = [];
 let rifaSeleccionada = null;
 let rifasData = [];
+let valoresOriginalesNumeros = { numero_inicial: null, numero_final: null }; // Para detectar cambios
 
 let modalRifa = null;
 let modalPremios = null;
@@ -377,6 +378,9 @@ function limpiarFormularioRifa() {
     $('#sede_id_rifa').val(userInfo?.sede_id || '');
     $('#contenedor_regenerar_numeros').addClass('d-none');
     $('#regenerar_numeros').prop('checked', false);
+    valoresOriginalesNumeros.numero_inicial = null;
+    valoresOriginalesNumeros.numero_final = null;
+    $('#info_cambio_numeros').hide();
 
     ['fecha_inicio_venta', 'fecha_fin_venta', 'fecha_sorteo'].forEach((id) => setFechaCampo(id, ''));
 
@@ -391,6 +395,62 @@ function limpiarFormularioRifa() {
     $('#mostrar_tickets_vendidos').val('1');
     $('#permitir_seleccion_numero').prop('checked', true);
     $('#asignacion_automatica').prop('checked', true);
+}
+
+/**
+ * Detectar cambios en numeración y mostrar información
+ */
+function actualizarInfoCambioNumeros() {
+    if (!valoresOriginalesNumeros.numero_inicial || !valoresOriginalesNumeros.numero_final) {
+        $('#info_cambio_numeros').hide();
+        return;
+    }
+    
+    const inicialActual = parseInt($('#numero_inicial').val(), 10);
+    const finalActual = parseInt($('#numero_final').val(), 10);
+    const inicialOriginal = valoresOriginalesNumeros.numero_inicial;
+    const finalOriginal = valoresOriginalesNumeros.numero_final;
+    
+    if (isNaN(inicialActual) || isNaN(finalActual)) {
+        $('#info_cambio_numeros').hide();
+        return;
+    }
+    
+    const cambioInicial = inicialActual !== inicialOriginal;
+    const cambioFinal = finalActual !== finalOriginal;
+    
+    if (!cambioInicial && !cambioFinal) {
+        $('#info_cambio_numeros').hide();
+        return;
+    }
+    
+    let mensaje = '';
+    let tipoAlerta = 'info';
+    
+    if (finalActual > finalOriginal) {
+        const nuevosNumeros = finalActual - finalOriginal;
+        mensaje = `Se agregarán automáticamente ${nuevosNumeros} número(s) nuevo(s) (del ${finalOriginal + 1} al ${finalActual}). Los números existentes se mantendrán.`;
+        tipoAlerta = 'success';
+    } else if (finalActual < finalOriginal) {
+        mensaje = `Se reducirá el rango a ${finalActual}. Si hay tickets vendidos fuera de este rango, la actualización será rechazada.`;
+        tipoAlerta = 'warning';
+    }
+    
+    if (inicialActual < inicialOriginal) {
+        const nuevosIniciales = inicialOriginal - inicialActual;
+        mensaje += (mensaje ? ' ' : '') + `Se agregarán números del ${inicialActual} al ${inicialOriginal - 1}.`;
+    } else if (inicialActual > inicialOriginal) {
+        mensaje += (mensaje ? ' ' : '') + `El número inicial aumentará a ${inicialActual}. Si hay tickets vendidos antes de este número, la actualización será rechazada.`;
+        tipoAlerta = 'warning';
+    }
+    
+    if (mensaje) {
+        $('#texto_cambio_numeros').text(mensaje);
+        $('#info_cambio_numeros').removeClass('alert-soft-info alert-soft-success alert-soft-warning')
+            .addClass(`alert-soft-${tipoAlerta}`).show();
+    } else {
+        $('#info_cambio_numeros').hide();
+    }
 }
 
 function setFechaCampo(id, valor) {
@@ -447,6 +507,9 @@ async function abrirModalRifa(detalle = null) {
         $('#descripcion_rifa').val(detalle.descripcion || '');
         $('#numero_inicial').val(detalle.numero_inicial);
         $('#numero_final').val(detalle.numero_final);
+        // Guardar valores originales para detectar cambios
+        valoresOriginalesNumeros.numero_inicial = detalle.numero_inicial;
+        valoresOriginalesNumeros.numero_final = detalle.numero_final;
         $('#cantidad_digitos').val(detalle.cantidad_digitos || 4);
         $('#cantidad_maxima_por_persona').val(detalle.cantidad_maxima_por_persona || 1);
         $('#cantidad_maxima_tickets').val(detalle.cantidad_maxima_tickets || '');
@@ -467,6 +530,10 @@ async function abrirModalRifa(detalle = null) {
         setFechaCampo('fecha_sorteo', formatearFechaInput(detalle.fecha_sorteo));
 
         $('#contenedor_regenerar_numeros').toggleClass('d-none', false);
+        actualizarInfoCambioNumeros();
+        
+        // Listeners para detectar cambios en números
+        $('#numero_inicial, #numero_final').off('input change').on('input change', actualizarInfoCambioNumeros);
     } else {
         $('#modal_rifa_title').text('Nueva rifa');
         $('#estado_rifa').val('BORRADOR');

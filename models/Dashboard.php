@@ -323,6 +323,64 @@ class Dashboard extends Conectar
     }
 
     /**
+     * Obtener KPIs completos (Ventas+Tickets + Estado Operativo + Rifas) en una sola llamada
+     * Optimiza la carga reduciendo 3 requests a 1
+     */
+    public function get_kpis_completos(int $sede_id): array
+    {
+        try {
+            $kpisVentas = $this->get_kpis_ventas_tickets($sede_id);
+            $kpisEstado = $this->get_kpis_estado_operativo($sede_id);
+            $kpisRifas = $this->get_kpis_rifas($sede_id);
+
+            return [
+                'ok' => true,
+                'msj' => 'KPIs obtenidos correctamente',
+                'data' => [
+                    'ventas_tickets' => $kpisVentas['ok'] ? $kpisVentas['data'] : null,
+                    'estado_operativo' => $kpisEstado['ok'] ? $kpisEstado['data'] : null,
+                    'rifas' => $kpisRifas['ok'] ? $kpisRifas['data'] : null
+                ]
+            ];
+        } catch (Exception $e) {
+            error_log("Error en get_kpis_completos: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener KPIs',
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Obtener gráficos de Ventas en Tiempo + Estado de Tickets en una sola llamada
+     * Optimiza la carga reduciendo 2 requests a 1
+     */
+    public function get_graficos_ventas_estado(int $sede_id, int $dias = 30): array
+    {
+        try {
+            $ventasTiempo = $this->get_ventas_tiempo($sede_id, $dias);
+            $estadoTickets = $this->get_estado_tickets($sede_id);
+
+            return [
+                'ok' => true,
+                'msj' => 'Gráficos obtenidos correctamente',
+                'data' => [
+                    'ventas_tiempo' => $ventasTiempo['ok'] ? $ventasTiempo['data'] : [],
+                    'estado_tickets' => $estadoTickets['ok'] ? $estadoTickets['data'] : []
+                ]
+            ];
+        } catch (Exception $e) {
+            error_log("Error en get_graficos_ventas_estado: " . $e->getMessage());
+            return [
+                'ok' => false,
+                'msj' => 'Error al obtener gráficos',
+                'data' => null
+            ];
+        }
+    }
+
+    /**
      * Obtener todos los datos del dashboard
      */
     public function get_dashboard_completo(int $sede_id, int $dias_ventas = 30): array

@@ -24,6 +24,12 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
         <div class="main-content">
             <div class="page-content">
                 <div class="container-fluid">
+                    <!-- Indicador de carga (se oculta al completar fase 1) -->
+                    <div id="dashboard-loading-banner" class="alert alert-info fade show mb-3 d-flex align-items-center" role="alert">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        <span>Cargando dashboard...</span>
+                    </div>
+
                     <!-- Page Title -->
                     <div class="row">
                         <div class="col-12">
@@ -61,7 +67,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Tickets Vendidos Hoy</p>
-                                                            <h4 class="my-1" id="kpi_tickets_vendidos_hoy">0</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_tickets_vendidos_hoy">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -80,7 +89,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Ingresos Hoy</p>
-                                                            <h4 class="my-1" id="kpi_ingresos_hoy">S/ 0.00</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_ingresos_hoy">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -99,7 +111,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Ingresos del Mes</p>
-                                                            <h4 class="my-1" id="kpi_ingresos_mes">S/ 0.00</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_ingresos_mes">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -118,7 +133,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Ticket Promedio</p>
-                                                            <h4 class="my-1" id="kpi_ticket_promedio">S/ 0.00</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_ticket_promedio">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -152,7 +170,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Pendientes Validación</p>
-                                                            <h4 class="my-1" id="kpi_tickets_pendientes">0</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_tickets_pendientes">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -171,7 +192,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Pagos Rechazados Hoy</p>
-                                                            <h4 class="my-1" id="kpi_pagos_rechazados">0</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_pagos_rechazados">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -190,7 +214,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Tickets por Expirar</p>
-                                                            <h4 class="my-1" id="kpi_tickets_expirar">0</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_tickets_expirar">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -209,7 +236,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Personas Únicas</p>
-                                                            <h4 class="my-1" id="kpi_personas_unicas">0</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_personas_unicas">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -243,7 +273,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Rifas Activas</p>
-                                                            <h4 class="my-1" id="kpi_rifas_activas">0</h4>
+                                                            <h4 class="my-1 d-flex align-items-center" id="kpi_rifas_activas">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -262,7 +295,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Rifa Más Vendida</p>
-                                                            <h5 class="my-1 text-truncate" id="kpi_rifa_mas_vendida" style="max-width: 200px;">-</h5>
+                                                            <h5 class="my-1 d-flex align-items-center text-truncate" id="kpi_rifa_mas_vendida" style="max-width: 200px;">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h5>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -281,7 +317,10 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <p class="text-uppercase fw-medium text-muted mb-0">Rifa Menor Avance</p>
-                                                            <h5 class="my-1 text-truncate" id="kpi_rifa_menor_avance" style="max-width: 200px;">-</h5>
+                                                            <h5 class="my-1 d-flex align-items-center text-truncate" id="kpi_rifa_menor_avance" style="max-width: 200px;">
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                                <span class="small text-muted fw-normal">Cargando...</span>
+                                                            </h5>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -461,11 +500,6 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
 
     <!-- Dashboard Init -->
     <script>
-        // Proteger ruta - Requiere autenticación
-        if (!Auth.isAuthenticated()) {
-            window.location.href = window.BASE_URL;
-        }
-
         // Manejar errores de elementos null del app.js
         window.addEventListener('error', function(e) {
             if (e.message && e.message.includes("Cannot read properties of null")) {
@@ -474,8 +508,6 @@ require_once __DIR__ . "/../../config/Enrutamiento.php";
                 return true;
             }
         }, true);
-
-        console.log('✓ Dashboard cargado correctamente');
     </script>
 
 </body>
