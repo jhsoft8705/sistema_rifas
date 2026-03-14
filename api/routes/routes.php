@@ -33,14 +33,21 @@ function Routes(): void
     }
     
     $url = trim($url, '/');  
-    $method = $_SERVER['REQUEST_METHOD']; 
+    $method = $_SERVER['REQUEST_METHOD'];
+
+    // Normalizar: si llega "auth/login" (sin api/), usar "api/auth/login"
+    if (strpos($url, 'api/') !== 0 && (strpos($url, 'auth/') === 0 || strpos($url, 'auth') === 0)) {
+        $url = 'api/' . ltrim($url, '/');
+    }
 
     // ====================================
-    // RUTAS PÚBLICAS (No requieren autenticación)
+    // RUTAS PÚBLICAS (No requieren token)
     // ====================================
     $rutasPublicas = [
         'api/auth/login',
         'api/auth/verificar',
+        'auth/login',
+        'auth/verificar',
         'api/rifas/publicas',
         'api/rifas/proximoSorteo',
         'api/rifas/getById',
@@ -54,11 +61,18 @@ function Routes(): void
         'api/tickets/uploadComprobante',
         'api/juegos/ganadoresPublicos',
         'api/contactos/register',
-        'api/premios/destacados' // Ruta pública para premios destacados
+        'api/premios/destacados'
     ];
 
-    // Si NO es una ruta pública, verificar autenticación
-    if (!in_array($url, $rutasPublicas)) {
+    // Verificar si es ruta pública (incluye variaciones: basePath, trailing slash, subdominio)
+    $urlNorm = rtrim($url, '/');
+    $esRutaPublica = in_array($url, $rutasPublicas)
+        || in_array($urlNorm, $rutasPublicas)
+        || strpos($urlNorm, 'api/auth/login') === 0
+        || $urlNorm === 'auth/login';
+
+    // Si NO es ruta pública, exigir token
+    if (!$esRutaPublica) {
         AuthMiddleware::verificarAutenticacion();
     }
 

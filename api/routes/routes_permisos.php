@@ -2,7 +2,7 @@
 /**
  * Rutas para el módulo de Permisos
  */
-require_once(__DIR__ . "/../../config/Conexion.php");
+require_once(__DIR__ . "/../../config/conexion.php");
 require_once(__DIR__ . "/../../controller/PermisoController.php");
 
 function RoutesPermisos(string $url, string $method): void

@@ -9,6 +9,7 @@ $base_url = Enrutamiento::dominio();
 
 <head> 
     <meta charset="utf-8" />
+    <base href="<?= $base_url ?>/">
     <title>Sig In | Rifas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Sistema profesional de gestión de rifas y sorteos" name="description" />
@@ -25,9 +26,9 @@ $base_url = Enrutamiento::dominio();
     <!-- App Css-->
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <!-- custom Css-->
-    <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= $base_url ?>/assets/css/custom.css" rel="stylesheet" type="text/css" />
     <!-- jQuery Toast Plugin CSS -->
-    <link href="node_modules/jquery-toast-plugin/dist/jquery.toast.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= $base_url ?>/node_modules/jquery-toast-plugin/dist/jquery.toast.min.css" rel="stylesheet" type="text/css" />
 
     <!-- SweetAlert2 CSS -->
     <link href="assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css">
@@ -209,7 +210,7 @@ $base_url = Enrutamiento::dominio();
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- jQuery Toast Plugin -->
-    <script src="node_modules/jquery-toast-plugin/dist/jquery.toast.min.js"></script>
+    <script src="<?= $base_url ?>/node_modules/jquery-toast-plugin/dist/jquery.toast.min.js"></script>
 
     <!-- SweetAlert2 -->
     <script src="assets/libs/sweetalert2/sweetalert2.min.js"></script>
@@ -232,7 +233,7 @@ $base_url = Enrutamiento::dominio();
     <script src="assets/js/plugins.js"></script>
 
     <!-- password-addon init -->
-    <script src="assets/js/pages/password-addon.init.js"></script>
+    <script src="<?= $base_url ?>/assets/js/pages/password-addon.init.js"></script>
 
     <!-- SweetAlert2 -->
     <script src="assets/libs/sweetalert2/sweetalert2.min.js"></script>

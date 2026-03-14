@@ -3,7 +3,6 @@
  * Controlador de Permisos
  * Manejo de operaciones CRUD para permisos
  */
-require_once(__DIR__ . '/../config/Conexion.php');
 require_once(__DIR__ . '/../config/conexion.php');
 require_once(__DIR__ . '/../models/Permiso.php');
 require_once(__DIR__ . '/../helpers/AuthMiddleware.php');

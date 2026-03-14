@@ -2,7 +2,7 @@
 /**
  * Rutas para el módulo de Roles
  */
-require_once(__DIR__ . "/../../config/Conexion.php");
+require_once(__DIR__ . "/../../config/conexion.php");
 require_once(__DIR__ . "/../../controller/RolController.php");
 
 function RoutesRoles(string $url, string $method): void

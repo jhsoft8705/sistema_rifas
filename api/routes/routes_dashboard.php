@@ -2,7 +2,7 @@
 /**
  * Rutas para el módulo de Dashboard
  */
-require_once(__DIR__ . "/../../config/Conexion.php");
+require_once(__DIR__ . "/../../config/conexion.php");
 require_once(__DIR__ . "/../../controller/DashboardController.php");
 
 function RoutesDashboard(string $url, string $method): void

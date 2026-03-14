@@ -3,7 +3,6 @@
  * Controlador de Dashboard
  * Manejo de operaciones para el dashboard
  */
-require_once(__DIR__ . '/../config/Conexion.php');
 require_once(__DIR__ . '/../config/conexion.php');
 require_once(__DIR__ . '/../models/Dashboard.php');
 require_once(__DIR__ . '/../helpers/AuthMiddleware.php');

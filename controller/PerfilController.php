@@ -3,7 +3,6 @@
  * Controlador de Perfil
  * Manejo de operaciones para el perfil del usuario autenticado
  */
-require_once(__DIR__ . '/../config/Conexion.php');
 require_once(__DIR__ . '/../config/conexion.php');
 require_once(__DIR__ . '/../models/Perfil.php');
 require_once(__DIR__ . '/../helpers/AuthMiddleware.php');

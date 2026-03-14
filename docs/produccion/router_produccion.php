@@ -1,11 +1,20 @@
 <?php
+/**
+ * ROUTER PRODUCCIÓN - Subdominio y Dominio
+ * 
+ * Compatible con:
+ * - Subdominio: ganadoresya.jhsoftperu.com (doc root = ganadoresya)
+ * - Dominio: jhsoftperu.com (doc root = public_html)
+ * 
+ * INSTRUCCIONES: Copiar este archivo a web/router.php reemplazando el original
+ */
 require_once __DIR__ . "/../config/conexion.php";
 
-// Detectar ruta base: en producción (doc root = proyecto) usar raíz
 $project_root = dirname(__DIR__);
 $doc_root = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
 $project_root_norm = rtrim(str_replace('\\', '/', realpath($project_root) ?: $project_root), '/');
 
+// En producción: si el document root ES el proyecto, usar raíz
 if ($doc_root === $project_root_norm) {
     $base_path = $project_root;
     $base_path_url = '/';
@@ -23,7 +32,6 @@ if (strpos($url, $base_path_url) === 0 && $base_path_url !== '/') {
 }
 $url = trim($url, '/');
 
-// Definir rutas disponibles
 $routes = [
     '' => $base_path . '/index.php',
     'admin-login' => $base_path . '/views/login/index.php',
@@ -42,23 +50,19 @@ $routes = [
     'admin-reporte-recaudacion' => $base_path . '/views/reportes/recaudacion/index.php',
     'admin-roles' => $base_path . '/views/roles/index.php',
     'admin-permisos' => $base_path . '/views/permisos/index.php',
-
     'cargos' => $base_path . '/views/cargos/index.php',
     'empleados' => $base_path . '/views/empleados/index.php',
     'marcaciones' => $base_path . '/views/marcaciones/index.php',
     'empleadosregistro' => $base_path . '/views/empleados/register/index.php',
     'terminos' => $base_path . '/views/web/terminos/index.php',
     'rifa-numeros' => $base_path . '/views/rifas/numeros/index.php',
-   ];
+];
 
-// Hacer disponible la ruta base para las vistas
 $GLOBALS['BASE_URL'] = $base_path_url;
 
-// Manejar rutas con parámetros dinámicos
 $urlParts = explode('/', $url);
 $routeMatched = false;
 
-// Verificar ruta de números de rifa con ID encryptado
 if (count($urlParts) === 2 && $urlParts[0] === 'rifa-numeros') {
     $encryptedId = $urlParts[1];
     $file = $base_path . '/views/rifas/numeros/index.php';
@@ -69,7 +73,6 @@ if (count($urlParts) === 2 && $urlParts[0] === 'rifa-numeros') {
     }
 }
 
-// Verificar si la ruta existe en el array estático
 if (!$routeMatched && array_key_exists($url, $routes)) {
     $file = $routes[$url];
     if (file_exists($file)) {
@@ -78,7 +81,6 @@ if (!$routeMatched && array_key_exists($url, $routes)) {
     }
 }
 
-// Si no se encontró ninguna ruta
 if (!$routeMatched) {
     http_response_code(404);
     $error_file = $base_path . '/views/404.php';
@@ -91,6 +93,4 @@ if (!$routeMatched) {
               <a href='{$home}'>Volver al inicio</a>";
     }
 }
-
-
 ?>

@@ -1,0 +1,16 @@
+# api/.htaccess PRODUCCIÓN - SUBDOMINIO
+# Destino: ganadoresya.jhsoftperu.com
+# Ruta API: https://ganadoresya.jhsoftperu.com/api/
+#
+# INSTRUCCIONES: Renombrar a .htaccess y colocar dentro de la carpeta api/
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /api/
+    # Pasar Authorization header a PHP (Apache no lo envía por defecto)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [QSA,L]
+</IfModule>

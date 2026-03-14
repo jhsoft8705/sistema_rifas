@@ -2,7 +2,7 @@
 /**
  * Rutas para el módulo de Perfil
  */
-require_once(__DIR__ . "/../../config/Conexion.php");
+require_once(__DIR__ . "/../../config/conexion.php");
 require_once(__DIR__ . "/../../controller/PerfilController.php");
 
 function RoutesPerfil(string $url, string $method): void

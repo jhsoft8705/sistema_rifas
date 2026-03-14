@@ -1,5 +1,11 @@
-# .htaccess principal (raíz del proyecto)
+# .htaccess PRODUCCIÓN - SUBDOMINIO
+# Destino: ganadoresya.jhsoftperu.com
+# Ruta: /home/u696088465/domains/jhsoftperu.com/public_html/ganadoresya
+#
+# INSTRUCCIONES: Renombrar a .htaccess y colocar en la raíz del proyecto
+
 RewriteEngine On
+RewriteBase /
 
 # Bloquear acceso directo a la carpeta web/ y router.php
 RewriteCond %{THE_REQUEST} \s/+web/ [NC]

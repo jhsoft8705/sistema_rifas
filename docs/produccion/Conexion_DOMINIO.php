@@ -1,37 +1,37 @@
 <?php
-//config/conexion.php
-
+/**
+ * CONFIGURACIÓN PRODUCCIÓN - DOMINIO
+ * 
+ * Destino: jhsoftperu.com
+ * Ruta en Hostinger: /home/u696088465/domains/jhsoftperu.com/public_html
+ * 
+ * INSTRUCCIONES: Copiar este archivo a config/conexion.php reemplazando el original
+ */
 session_start();
 
 class Conectar
 {
-    protected $dbh; 
-    //Solo cambia esto según tu ambiente:
-    // 'dev', 'testing' o 'prod'
-    private $ambiente = 'dev'; // <-- CAMBIA
+    protected $dbh;
+    private $ambiente = 'prod'; // PRODUCCIÓN
 
     protected function Conexion()
     {
         try {
             if ($this->ambiente == 'dev') {
-                // DESARROLLO
-                 
-                 $conectar = $this->dbh = new PDO("mysql:host=88.223.84.166;dbname=u696088465_bd_sorteos","u696088465_user_sorteos","@2Zq0s>q8P");
-
-                // Establecer zona horaria de Perú
+                $conectar = $this->dbh = new PDO("mysql:host=88.223.84.166;dbname=u696088465_bd_sorteos", "u696088465_user_sorteos", "@2Zq0s>q8P");
                 $conectar->exec("SET time_zone = '-05:00';");
             } elseif ($this->ambiente == 'testing') {
-                // TESTING
                 $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=db_rifas", "root", "");
-                // Establecer zona horaria de Perú
                 $conectar->exec("SET time_zone = '-05:00';");
             } else {
-                // PRODUCCION
-                $conectar = $this->dbh = new PDO("mysql:host=localhost;dbname=db_rifas", "root", "");
-                // Establecer zona horaria de Perú
+                // PRODUCCIÓN - Hostinger (jhsoftperu.com)
+                $conectar = $this->dbh = new PDO(
+                    "mysql:host=localhost;dbname=u696088465_bd_sorteos",
+                    "u696088465_user_sorteos",
+                    "TU_PASSWORD_BD"  // Reemplazar con la contraseña real
+                );
                 $conectar->exec("SET time_zone = '-05:00';");
             }
-
             return $conectar;
         } catch (Exception $e) {
             error_log("Error Conexion BD: " . $e->getMessage());
@@ -39,23 +39,16 @@ class Conectar
         }
     }
 
-    /**
-     * Summary of obtenerBaseUrl
-     * @return string
-     * Ruta importante para el funcionamiento de la API
-     */
     public static function obtenerBaseUrl()
     {
         $instance = new self();
-
         if ($instance->ambiente == 'dev') {
             return "/sistema_rifas/";
         } elseif ($instance->ambiente == 'testing') {
             return "/testing/";
         } else {
-            return "/frm.db_rifas.gob.pe/"; // prod
+            return "/"; // Dominio: raíz de jhsoftperu.com
         }
     }
- 
 }
 ?>

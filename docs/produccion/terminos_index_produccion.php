@@ -1,3 +1,15 @@
+<?php
+/**
+ * TÉRMINOS Y CONDICIONES - Versión Producción
+ * 
+ * Usa Enrutamiento::dominio() para rutas absolutas.
+ * Compatible con subdominio y dominio.
+ * 
+ * INSTRUCCIONES: Copiar a views/web/terminos/index.php
+ */
+require_once __DIR__ . '/../../../config/Enrutamiento.php';
+$base_url = Enrutamiento::dominio();
+?>
 <!doctype html>
 <html lang="es" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none">
 
@@ -7,54 +19,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Términos y condiciones del sistema de rifas" name="description" />
     <meta content="Sistema de Rifas" name="author" />
-    
-    <?php
-    require_once __DIR__ . '/../../../config/Enrutamiento.php';
-    $base_url = Enrutamiento::dominio();
-    ?>
-    
-    <!-- App favicon -->
-    <link rel="shortcut icon" href="<?= $base_url ?>/assets/images/favicon.ico">
 
-    <!-- Layout config Js -->
+    <link rel="shortcut icon" href="<?= $base_url ?>/assets/images/favicon.ico">
     <script src="<?= $base_url ?>/assets/js/layout.js"></script>
-    <!-- Bootstrap Css -->
     <link href="<?= $base_url ?>/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <!-- Icons Css -->
     <link href="<?= $base_url ?>/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-    <!-- App Css-->
     <link href="<?= $base_url ?>/assets/css/app.min.css" rel="stylesheet" type="text/css" />
-    <!-- custom Css-->
     <link href="<?= $base_url ?>/assets/css/custom.min.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body data-bs-spy="scroll" data-bs-target="#navbar-example">
 
-    <!-- Begin page -->
     <div class="layout-wrapper landing">
-  <!--       <nav class="navbar navbar-expand-lg navbar-landing fixed-top" id="navbar">
-            <div class="container">
-                <a class="navbar-brand" href="<?= $base_url ?>">
-                    <img src="<?= $base_url ?>/assets/images/logo-dark.png" class="card-logo card-logo-dark" alt="logo dark" height="17">
-                    <img src="<?= $base_url ?>/assets/images/logo-light.png" class="card-logo card-logo-light" alt="logo light" height="17">
-                </a>
-                <button class="navbar-toggler py-0 fs-20 text-body" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-                    <i class="mdi mdi-menu"></i>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav mx-auto mt-2 mt-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= $base_url ?>">Volver al Inicio</a>
-                        </li>
-                    </ul>
-                    <div class="">
-                        <a href="<?= $base_url ?>/admin-login" class="btn btn-primary"><i class="ri-admin-line me-1"></i> Panel Administrador</a>
-                    </div>
-                </div>
-            </div>
-        </nav> -->
-
-        <!-- Contenido -->
         <section class="section pt-5 mt-5">
             <div class="container">
                 <div class="row justify-content-center">
@@ -67,10 +43,9 @@
                                 </div>
 
                                 <div class="terms-content">
-                                    
                                     <h4 class="mb-3">1. Aceptación de los Términos</h4>
                                     <p class="text-muted mb-4">
-                                        Al participar en cualquiera de nuestras rifas, usted acepta estar legalmente vinculado por estos términos y condiciones. 
+                                        Al participar en cualquiera de nuestras rifas, usted acepta estar legalmente vinculado por estos términos y condiciones.
                                         Si no está de acuerdo con alguna parte de estos términos, no debe participar en nuestras rifas.
                                     </p>
 
@@ -185,14 +160,14 @@
 
                                     <h4 class="mb-3">12. Modificaciones</h4>
                                     <p class="text-muted mb-4">
-                                        Nos reservamos el derecho de modificar estos términos y condiciones en cualquier momento. 
-                                        Los cambios entrarán en vigor inmediatamente después de su publicación en el sitio web. 
+                                        Nos reservamos el derecho de modificar estos términos y condiciones en cualquier momento.
+                                        Los cambios entrarán en vigor inmediatamente después de su publicación en el sitio web.
                                         Es responsabilidad del usuario revisar periódicamente estos términos.
                                     </p>
 
                                     <h4 class="mb-3">13. Ley Aplicable y Jurisdicción</h4>
                                     <p class="text-muted mb-4">
-                                        Estos términos se rigen por las leyes del país donde se realiza la rifa. 
+                                        Estos términos se rigen por las leyes del país donde se realiza la rifa.
                                         Cualquier disputa será resuelta en los tribunales competentes de dicha jurisdicción.
                                     </p>
 
@@ -209,7 +184,7 @@
                                     <div class="alert alert-info border-0 mt-5">
                                         <h6 class="alert-heading"><i class="ri-information-line me-2"></i>Aceptación</h6>
                                         <p class="mb-0">
-                                            Al marcar la casilla "Acepto los términos y condiciones" en el formulario de compra, 
+                                            Al marcar la casilla "Acepto los términos y condiciones" en el formulario de compra,
                                             usted confirma que ha leído, entendido y acepta cumplir con todos estos términos y condiciones.
                                         </p>
                                     </div>
@@ -220,7 +195,6 @@
                                         </a>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -228,7 +202,6 @@
             </div>
         </section>
 
-        <!-- Footer -->
         <footer class="custom-footer bg-dark py-4 position-relative mt-5">
             <div class="container">
                 <div class="row text-center">
@@ -242,7 +215,6 @@
         </footer>
     </div>
 
-    <!-- JAVASCRIPT -->
     <script src="<?= $base_url ?>/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="<?= $base_url ?>/assets/libs/simplebar/simplebar.min.js"></script>
     <script src="<?= $base_url ?>/assets/libs/node-waves/waves.min.js"></script>
@@ -252,4 +224,3 @@
 </body>
 
 </html>
-

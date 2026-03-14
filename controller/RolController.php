@@ -3,7 +3,6 @@
  * Controlador de Roles
  * Manejo de operaciones CRUD para roles y asignación de permisos
  */
-require_once(__DIR__ . '/../config/Conexion.php');
 require_once(__DIR__ . '/../config/conexion.php');
 require_once(__DIR__ . '/../models/Rol.php');
 require_once(__DIR__ . '/../models/Permiso.php');
